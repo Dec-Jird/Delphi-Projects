@@ -1,0 +1,23 @@
+首先要卸载Delphi7中的Indy9. 卸载方法如下：
+1、进入D7的目录，双击Borland Delphi7.msi。
+2、在弹出的对话框中选“Modify”。
+3、然后点“Next”，在接下来的对话框中，找到Indy，点“Do Not Install”。之后一路“Next”,最后完成，就卸载成功了。
+ 
+ 
+安装:
+1、把下列路径加入Delphi的Library Path
+indy10\Source\Core
+indy10\Source\Protocols
+indy10\Source\SuperCore
+indy10\Source\System
+
+
+2、打开\System\IndySystem70.dpk，点Compile。
+3、打开\Core\IndyCore70.dpk，点Compile。
+4、打开\Protocols\IndyProtocols70.dpk，点Compile。
+5、打开\SuperCore\IndySuperCore70.dpk，点Compile。//可选
+
+
+6、打开\Core\dclIndyCore70.dpk，点install。
+7、打开\Protocols\dclIndyProtocols70.dpk，点install。
+8、打开\SuperCore\dclIndySuperCore70.dpk，点install。//可选

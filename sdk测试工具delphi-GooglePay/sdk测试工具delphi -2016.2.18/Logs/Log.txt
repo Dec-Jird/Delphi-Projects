@@ -1,0 +1,23 @@
+[20160223 133856] -----------------------------------------------------------
+[20160223 133856] HttpChkThreadPool init successful.
+[20160223 133856] [IOCPServer] WSAStartup() successful.
+[20160223 133856] [IOCPServer] CreateIOCompletionPort() successful.
+[20160223 133856] [IOCPServer] IOCPServer init successful.
+[20160223 133856] [IOCPServer] Server is running...
+[20160223 133856] PayServer init successful.
+[20160223 133912] DBServer finalized.
+[20160223 133913] [IOCPServer] Number of client clean: 0
+[20160223 133913] [IOCPServer] Number of connection clean: 9
+[20160223 133913] -----------------------------------------------------------
+[20160223 133913] [IOCPServer] Number of invalid close: 0
+[20160223 133913] [IOCPServer] Number of PerIOData clean: 10
+[20160223 133913] [IOCPServer] Number of PerHandleData clean: 1
+[20160223 133913] -----------------------------------------------------------
+[20160223 134036] [IOCPServer] Number of invalid close: 0
+[20160223 134036] [IOCPServer] Number of PerIOData clean: 0
+[20160223 134036] [IOCPServer] Number of PerHandleData clean: 0
+[20160223 134036] -----------------------------------------------------------
+[20160226 105456] [IOCPServer] Number of invalid close: 0
+[20160226 105456] [IOCPServer] Number of PerIOData clean: 0
+[20160226 105456] [IOCPServer] Number of PerHandleData clean: 0
+[20160226 105456] -----------------------------------------------------------

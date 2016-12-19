@@ -1,0 +1,7 @@
+编辑修改并运行reg.bat注册一个DLL
+
+编辑修改并运行ureg.bat反注册一个DLL
+
+注册完DLL后，点菜单栏 -> Project -> Import Type Library ->
+Add -> 选择DLL文件所对应的.tlb文件（文件名相同）
+-> 修改Unit dir name为当前工程的根目录 -> Create Unity -> 最后点击install。
