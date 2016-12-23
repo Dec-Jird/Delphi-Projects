@@ -9,7 +9,7 @@ uses
    IdCustomHTTPServer, IdHTTPServer, XMLIntf, XMLDoc,
    IdTCPConnection, IdTCPClient, IdHTTP, OleCtrls, SHDocVw, IdTCPServer,JpushSDK,
    {IdHMACSHA1, }IdCoderMIME,HmacSha1_TLB, httpDll_TLB, SignAndVerify_TLB,
-   WanDouJiaRSAVerify_TLB,iapppaySigndll_TLB,DES3Dll_TLB,IdCustomTCPServer;
+   WanDouJiaRSAVerify_TLB,iapppaySigndll_TLB,DES3Dll_TLB,IdCustomTCPServer,activex;
 
 type
 
@@ -366,7 +366,6 @@ type
     RequestTimes:Integer;  //请求次数
     Balance:Integer; //腾讯 最新游戏币余额
     SaveAmt:Integer;  //腾讯 累计充值的游戏币数量
-    PayTimeTick:Cardinal;  //计时用
     IsSuccess:boolean;  //是否到帐
 //  Response:string;  //获取用户游戏币余额响应
   end;
@@ -392,12 +391,15 @@ type
     TencentCoin:TTencentCoin;
 
     procedure SetCookies(payPlatform: Integer; requestURL, orgLoc, serverIp: string);//设置cookie
+
     function TencentGetBalanceRequest (zoneid, Data: string):string; //查询余额请求构造
-    function processBalanceRequest (request: string):Boolean; //发送查询余额请求
+    function processTencentGetBalance (request: string):Boolean; //执行查询余额请求
+
     //使用游戏币支付、取消游戏币支付、赠送游戏币的请求构造
     function TencentGameCoinRequest (CoinAmount:Integer; ZoneId,BillNo,Data,OpenAPI: string):string;
-//  function TencentGetBalanceThread(Param:Pointer):Integer;stdcall;   //请求余额线程  ; times:Integer
-
+    function processTencentCoinAction(ReqInfo:TTencentCoin; OpenAPI:string):Boolean;   //执行游戏币请求
+ //  function TencentGetBalanceThread(Param:Pointer):Integer;stdcall;   //请求余额线程  ; times:Integer
+    
   public
     //同步腾讯游戏币余额和玩家的元宝余额
     procedure TencentSynchroBalance (zoneid, Data: string; reqTimes:Integer); //同步余额
@@ -2245,33 +2247,35 @@ end;
 function TencentGetBalanceThread(Param:Pointer):Integer; stdcall;   //请求余额线程 ; times:Integer
 var
   Server:TTencentPayServer;
-  returnJs: string;
-  jsdata: TlkJSONobject;
   reqResult: boolean;
-  i:Integer;
+  
+  times:Integer;
+  CurrentTick, StartTick:Cardinal;
+
 begin
   Server:=TTencentPayServer(Param);
   Server.TencentBalance.IsSuccess := False;
   
-  while True do
+  while Server.TencentBalance.RequestTimes > 0 do
   begin
-    if Server.TencentBalance.RequestTimes > 0 then
-    begin
-       Server.TencentBalance.IsSuccess := Server.processBalanceRequest(Server.TencentBalance.Request);
 
-       if Server.TencentBalance.IsSuccess then   //IsSuccess表示腾讯游戏币充值是否到帐
-       begin
+    CurrentTick := GetTickCount;//获取当前时间
+    if (CurrentTick-StartTick) > 1500 then //每15s请求一次(15000)，计算距离上次请求的时间间隔。
+    begin
+      StartTick := CurrentTick;   //记录当前请求时间
+
+      Server.TencentBalance.IsSuccess := Server.processTencentGetBalance(Server.TencentBalance.Request);
+      if Server.TencentBalance.IsSuccess then   //IsSuccess表示腾讯游戏币充值是否到帐
+      begin
          Server.MainOutMessage('[Log] 支付已到帐！用户余额：'+IntToStr(Server.TencentBalance.Balance));
          Break;
-       end;
+      end;
+
+      Dec(Server.TencentBalance.RequestTimes); //请求次数减一
     end
-    else
-    begin
-      Server.MainOutMessage('[Log] 查询余额完成！用户余额：'+IntToStr(Server.TencentBalance.Balance));
-      Break;
-    end;
 
   end;
+  Server.MainOutMessage('[Log] 查询余额完成！用户余额：'+IntToStr(Server.TencentBalance.Balance));
 
   //通过Server.TencentBalance中数据，对比同步元宝余额 TencentBalance.Balance
 
@@ -2300,6 +2304,7 @@ var
   HmacSha1:HmacSha1Class;
 begin
   jsdata := nil;
+  CoInitialize(nil);
   HmacSha1:= CoHmacSha1Class.Create;
   timestamp := DateTimeToUnix(Now)-8*60*60;
 
@@ -2378,7 +2383,7 @@ begin
   MainOutMessage('[Log] 查询余额请求: '+requestStr);
 
   SetCookies(payPlatform, TENCENT_GET_BALANCE_URL, '/mpay/get_balance_m', SERVER_IP);
-
+  CounInitialize;
   //使用计时器进行多次请求
  { TencentTimer.Enabled := True;
   TencentTimer.Interval := 15000;//每隔15秒请求一次
@@ -2394,11 +2399,11 @@ begin
   TencentBalance.RequestTimes := reqTimes;
   TencentBalance.Balance := -1;
   TencentBalance.SaveAmt := -1;
-  TencentBalance.Request := TencentGetBalanceRequest(zoneid, Data); //请求数据
+  TencentBalance.Request := TencentGetBalanceRequest(zoneid, Data); //构造请求
 
   if Trim(TencentBalance.Request) = '' then
   begin
-    MainOutMessage('[error] TencentSynchroBalancee Failed. Request can not be null! Request: '+TencentBalance.Request);
+    MainOutMessage('[error] TencentSynchroBalance Failed. Request can not be null! Request: '+TencentBalance.Request);
     Exit;
   end;
 
@@ -2411,26 +2416,21 @@ begin
   
 end;
 
-function TTencentPayServer.processBalanceRequest (request: string):Boolean; //发送查询余额请求
+function TTencentPayServer.processTencentGetBalance (request: string):Boolean; //发送查询余额请求
 var
   returnJs: string;
   jsdata: TlkJSONobject;
   save_amt: Integer;
-  StartTick:Cardinal;
+  //StartTick:Cardinal;
   
 begin
   jsdata := nil;
   Result := False;
-  StartTick := GetTickCount;//获取当前时间
-
-  if (StartTick-TencentBalance.PayTimeTick) > 1500 then //每15s请求一次(15000)，计算距离上次请求的时间间隔。
-  begin
-    TencentBalance.PayTimeTick := StartTick;   //记录当前请求时间
-    try
+  
+  try
       //然后 发起查询用元宝余额的请求.
       returnJs := Utf8ToAnsi(HttpsGet(TencentBalance.Request));
       MainOutMessage('[Log] 查询余额请求响应 ('+IntToStr(TencentBalance.RequestTimes)+') '+returnJs);
-      Dec(TencentBalance.RequestTimes);   //请求次数减一
 
       {"ret" : 0,"balance" : 167,"gen_balance" : 57,"first_save" : 0,"save_amt" : 110,
       "gen_expire" : 0,"tss_list" : [],"save_sum" : 237,"cost_sum" : 70,"present_sum" : 127}
@@ -2470,15 +2470,14 @@ begin
         Exit;
       end;
 
-    except on E:Exception do
-      begin
-        MainOutMessage('[Error] Tencent Timer Get Balance Failed. unknown exception!. returnJs: ' + returnJs);
-        jsdata.Free;
-        Exit;
-      end;
-    end;
-
+  except on E:Exception do
+  begin
+      MainOutMessage('[Error] Tencent Timer Get Balance Failed. unknown exception!. returnJs: ' + returnJs);
+      jsdata.Free;
+      Exit;
   end;
+  end;
+  
 end;
 
 {使用计时器在2分钟之内间隔15秒多次调用，查询余额是否有变化
@@ -2597,6 +2596,7 @@ var
 
   HmacSha1:HmacSha1Class;
 begin
+  CoInitialize(nil);   //初始化COM对象，在主方法加入该句子有时候不能解决问题，因为默认是初始化主线程的，只有在子线程或方法加入才行。
   jsdata := nil;
   HmacSha1:= CoHmacSha1Class.Create;
 
@@ -2692,58 +2692,166 @@ begin
   Result := requestStr;
   //然后 发起查询用元宝余额的请求.
   //Result := Utf8ToAnsi(HttpsGet(requestStr));
+  CoUninitialize();   //解除初始化COM对象
 end;
 
-function TencentCoinActionThread(Param:Pointer):Integer; stdcall;   //请求余额线程 ; times:Integer
+function TencentCoinActionThread(Param:Pointer):Integer; stdcall;   //请求游戏币操作线程 ; times:Integer
 var
   Server:TTencentPayServer;
-  ReqInfo:TTencentCoin;
-  request, returnJs: string;
-  jsdata: TlkJSONobject;
-  i:Integer;
+  //ReqInfo:TTencentCoin;
+  times:Integer;
+  executeTimeTick, StartTick:Cardinal;
 begin
   Server:=TTencentPayServer(Param);
-  ReqInfo:= Server.TencentCoin;
+  //ReqInfo:= Server.TencentCoin;
+  times := 3;
 
- {  Server.MainOutMessage('[Log] CoinAmount '+IntToStr(ReqInfo.CoinAmount)+', ZoneId '+ReqInfo.ZoneId+', BillNo '+ReqInfo.BillNo+', Data '+ReqInfo.Data+', OpenAPI '+ReqInfo.OpenAPI);
+  //操作失败要再试几遍，否则腾讯和我们游戏的游戏币数量会不统一，最好在腾讯这边操作成功后再同步
+  while times > 0 do
+  begin
 
-  request := Server.TencentGameCoinRequest(ReqInfo.CoinAmount,ReqInfo.ZoneId,ReqInfo.BillNo,ReqInfo.Data,ReqInfo.OpenAPI);
+    StartTick := GetTickCount;//获取当前时间
+    if (StartTick-executeTimeTick) > 1500 then //每15s请求一次(15000)，计算距离上次请求的时间间隔。
+    begin
+      executeTimeTick := StartTick;   //记录当前请求时间
+
+      Server.TencentCoin.isSuccess := Server.processTencentCoinAction(Server.TencentCoin, Server.TencentCoin.OpenAPI);
+      if Server.TencentCoin.isSuccess then
+        break;
+
+      Dec(times); //请求次数减一
+    end;
+
+  end;
+  Server.MainOutMessage('[Log] 游戏币操作完成！用户余额：'+IntToStr(Server.TencentCoin.Balance));
+  //Server.TencentCoin.isSuccess := Server.TencentCoinActionExecute(Server.TencentCoin, Server.TencentCoin.OpenAPI);
+
+end;
+
+function TTencentPayServer.processTencentCoinAction(ReqInfo:TTencentCoin; OpenAPI:string):Boolean;   //执行请求
+var
+  request, returnJs: string;
+  jsdata: TlkJSONobject;
+  success: Boolean; //是否发货成功
+  
+  ret:Integer;//返回码。0：成功；1001：参数错误；1018：登陆校验失败。
+  balance:Integer;//操作之后的游戏币余额（包含了赠送游戏币）
+  billno:string; //操作流水号
+begin
+  ret := -1;
+  Result := False;
+
+  //构造请求
+  request := TencentGameCoinRequest(ReqInfo.CoinAmount,ReqInfo.ZoneId,ReqInfo.BillNo,ReqInfo.Data,OpenAPI);
   if Trim(request) = '' then
   begin
-    Server.MainOutMessage('[error] TencentCoinActionThread Failed. Request can not be null! Request: '+request);
+    MainOutMessage('[error] Tencent CoinActionThread Failed. Request can not be null! Request: '+request);
     Exit;
   end;
-  Server.MainOutMessage('[Log] 游戏币操作请求: '+request);       }
+  MainOutMessage('[Log] 游戏币操作请求: '+request);
 
-  //发送请求
-  returnJs := Utf8ToAnsi(HttpsGet(Server.TencentCoin.Request));
-  Server.MainOutMessage('[Log] 游戏币操作请求结果：' + returnJs);    
-
+  //发起元宝操作的请求.
+  returnJs := Utf8ToAnsi(HttpsGet(request));
+  MainOutMessage('[Log] 游戏币操作请求响应: '+returnJs);
+  
   //扣除游戏币
   {"ret":0,"balance":142,"gen_balance":32,"billno":"86756","used_gen_amt":10}
   //取消支付
   {"ret":0,"balance":152,"gen_balance":42,"billno":"86756"}
   //直接赠送游戏币
   {"ret":0,"balance":157,"gen_balance":47,"billno":"86756"}
+  //解析返回json，保存参数
+  try
+    jsdata := TlkJSON.ParseText(returnJs) as TlkJSONobject;
+    if not assigned(jsdata) then
+    begin
+        MainOutMessage('[Error] Tencent CoinActionThread Request Failed. Data: ' + returnJs);
+        exit;
+    end;
 
-  if ReqInfo.OpenAPI = '/mpay/present_m' then   //赠送游戏币
+    if (jsdata.IndexOfName('ret')>=0) then
+      ret:=jsdata.Field['ret'].Value;
+      
+    if (jsdata.IndexOfName('balance')>=0) then
+      TencentCoin.Balance:=jsdata.Field['balance'].Value;
+
+    if (jsdata.IndexOfName('billno')>=0) then
+      billno:=jsdata.Field['billno'].Value;
+
+  except on E:Exception do
   begin
+    MainOutMessage('[Error] Tencent CoinActionThread Return Data error: unknown exception. Data: ' + returnJs);
+    jsdata.Free;
+    Exit;
+  end;
+  end;
+  jsdata.Free;
+
+  {判断操作是否成功}
+  if OpenAPI = '/mpay/present_m' then   //赠送游戏币
+  begin
+  
+    if ret=0 then  //赠送成功，同步客户端游戏币余额 （发元宝）
+    begin
+      MainOutMessage('[Log] Tencent CoinActionThread 赠送游戏币成功，余额：'+IntToStr(balance));
+      Result := True;
+    end
+    else  //赠送游戏币失败，不发元宝
+    begin
+      MainOutMessage('[Log] Tencent CoinActionThread 赠送游戏币失败. Data: ' + returnJs);
+
+    end;
 
   end
-  else        //游戏币支付或取消支付
+  else if OpenAPI = '/mpay/pay_m' then        //游戏币支付
   begin
 
-  end;
+    if ret=0 then //扣除游戏币成功，发道具   1018
+    begin
+      MainOutMessage('[Log] Tencent CoinActionThread 扣除元宝成功，进行发货. Data: ' + returnJs);
 
-  if ReqInfo.IsSuccess then   //IsSuccess表示腾讯游戏币充值是否到帐
+      //发货
+      success := False;
+      
+      //发货成功，同步元宝余额
+      if success then
+      begin
+        Result := True;
+      end
+      else
+      begin
+        //发货失败，调用取消支付接口，退还已扣除游戏币
+        processTencentCoinAction(ReqInfo, '/mpay/cancel_pay_m');
+      end;
+      
+    end
+    {扣除游戏币失败（失败要再试几遍，否则腾讯和我们游戏的游戏币数量会不统一【出现把已经买了道具的元宝返还玩家情况】，
+    最好在腾讯这边操作成功后再同步） }
+    else //游戏币支付失败，不发放道具
+    begin
+      MainOutMessage('[Log] Tencent CoinActionThread 扣除游戏币失败. Data: ' + returnJs);
+    end;
+
+  end
+  else if OpenAPI = '/mpay/cancel_pay_m' then //取消支付
   begin
-    Server.MainOutMessage('[Log] 扣除游戏币请求成功！游戏币余额：'+IntToStr(ReqInfo.Balance));
-    //请求扣除游戏币成功，发送道具，更新游戏币余额
+
+    if ret=0 then //退款成功
+    begin
+      MainOutMessage('[Log] Tencent CoinActionThread 退还已扣除游戏币成功. Data: ' + returnJs);
+      //发货失败，调用取消支付接口，退还已扣除游戏币
+      Result := True;
+    end
+    else //退款失败
+    begin
+      MainOutMessage('[Log] Tencent CoinActionThread 退还已扣除游戏币失败. Data: ' + returnJs);
+
+    end;
+
   end
   else
   begin
-    Server.MainOutMessage('[Log] 扣除游戏币请求失败！游戏币余额：'+IntToStr(ReqInfo.Balance));
-    //调用退款接口（退还游戏币）
+     MainOutMessage('[Error] Tencent CoinActionThread Request error: 未知请求类型: '+OpenAPI+'. Data: ' + returnJs);
   end;
 
 end;
@@ -2760,14 +2868,6 @@ begin
   TencentCoin.Data := Data; //请求数据
   TencentCoin.OpenAPI := OpenAPI; //请求类型
   TencentCoin.IsSuccess := False;
-
-  TencentCoin.Request := TencentGameCoinRequest(CoinAmount,ZoneId,BillNo,Data,OpenAPI);
-  if Trim(TencentCoin.Request) = '' then
-  begin
-    MainOutMessage('[error] TencentCoinActionThread Failed. Request can not be null! Request: '+TencentCoin.Request);
-    Exit;
-  end;
-  MainOutMessage('[Log] 游戏币操作请求: '+TencentCoin.Request);
 
   //开一个线程，请求余额，逻辑判断只请求一次，还是请求多次。
   FTencentCoinThread := CreateThread(nil,0,@TencentCoinActionThread,Pointer(Self),0,ThreadID);
