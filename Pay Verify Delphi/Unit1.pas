@@ -24,7 +24,6 @@ type
     Memo1: TMemo;
     Button1: TButton;
     Button2: TButton;
-    Button3: TButton;
     Button4: TButton;
     Button5: TButton;
     Button8: TButton;
@@ -241,16 +240,21 @@ type
     YYHPayVerifyBtn: TButton;
     MEIZU: TTabSheet;
     TabSheet35: TTabSheet;
-    MEIZULoginEdit: TLabeledEdit;
+    MZLoginEdit: TLabeledEdit;
     AIYOUXILoginEdit: TLabeledEdit;
     AIYouXiLoginBtn: TButton;
     AIYOUXIPayIF2Btn: TButton;
-    Button52: TButton;
     QQLoginEdit: TLabeledEdit;
     WXLoginEdit: TLabeledEdit;
+    AliOrderBtn: TButton;
+    AliLoginVerifyBtn: TButton;
+    MZLoginBtn: TButton;
+    MZOrderBtn: TButton;
+    MZOrderEdit: TLabeledEdit;
+    PayDataEdit: TLabeledEdit;
+    PayVerifyBtn: TButton;
     procedure FormCreate(Sender: TObject);
     procedure Button2Click(Sender: TObject);
-    procedure Button3Click(Sender: TObject);
     procedure Button4Click(Sender: TObject);
     procedure Button5Click(Sender: TObject);
     procedure Button7Click(Sender: TObject);
@@ -354,6 +358,11 @@ type
     procedure YYHPayVerifyBtnClick(Sender: TObject);
     procedure AIYouXiLoginBtnClick(Sender: TObject);
     procedure AIYOUXIPayIF2BtnClick(Sender: TObject);
+    procedure AliOrderBtnClick(Sender: TObject);
+    procedure AliLoginVerifyBtnClick(Sender: TObject);
+    procedure MZLoginBtnClick(Sender: TObject);
+    procedure MZOrderBtnClick(Sender: TObject);
+    procedure PayVerifyBtnClick(Sender: TObject);
 
   private
     { Private declarations }
@@ -642,64 +651,6 @@ begin
   Showmessage(IntToStr(DateTimeToUnix(now()) - 8*60*60));
 end;
 
-procedure TForm1.Button3Click(Sender: TObject);
-var
-  gamejs: TlkJSONobject;
-  datajs: TlkJSONobject;
-  js: TlkJSONobject;
-  sig: string;
-  id: Int64;
-  post: string;
-begin
-  url := 'http://sdk.g.uc.cn/cp/account.verifySession';
-  //url := 'http://115.159.89.253:9988/ucpay';
-
-  gamejs := TlkJSONobject.Create();
-
-  gamejs.Add('gameId', 537935);    //
-
-  datajs := TlkJSONobject.Create();
-
-  datajs.Add('sid', LabeledEdit8.Text);
-
-  id := DateTimeToUnix(now()) - 8*60*60;
-
-  //进行签名字符串拼接
-  //(*
-  sig :='sid=' + LabeledEdit8.Text + 'f350c8a80c728eadc88fa36c3250e232';
-  //*)
-
-  //sig := 'sid=' + LabeledEdit8.Text + 'f350c8a80c728eadc88fa36c3250e232';
-
-  {memo1.Lines.Add('');
-  memo1.Lines.Add(sig);
-  memo1.Lines.Add('');
-  }
-  sig := md5( AnsiToUtf8(sig) );
-
-  {memo1.Lines.Add('');
-  memo1.Lines.Add(sig);
-  memo1.Lines.Add('');
-  }
-  js := TlkJSONobject.Create();
-
-  js.Add('id', id);
-  js.Add('data', datajs);
-  js.Add('game', gamejs);
-  js.Add('sign', sig);
-
-  post := AnsiToUtf8(TlkJSON.GenerateText(js));
-  memo1.Lines.Add(post);
-  {memo1.Lines.Add('');
-  memo1.Lines.Add(post);
-  memo1.Lines.Add('');
-
-  sig:= 'accountId=12221222211123amount=100.00callbackInfo=custominfo=xxxxx#user=xxxxcpOrderId=1234567creator=JYfailedDesc=gameId=123orderId=abcf1330orderStatus=SpayWay=1202cb962234w4ers2aaa';
-  sig:= MD5(sig);
-  memo1.Lines.Add('sig: '+sig);
-  }
-  memo1.Lines.Add(Utf8ToAnsi(HttpsPost(url, post )));
-end;
 
 procedure TForm1.Button4Click(Sender: TObject);
 begin
@@ -5297,12 +5248,16 @@ var
   retJs: TlkJSONobject;
   RsaMd5:SignAndVerifyClass;
   retList : TStringList;
+
+  I:Integer;
+  S:string;
+  
 begin
   Data:=YYHPayEdit.Text;
   retJs := nil;
   RsaMd5 := CoSignAndVerifyClass.Create;
-
-  //成功：transdata={"transid":"11111"}&sign=xxxxxx&signtype=RSA
+  
+  //成功：transdata={"transid":"11111"}
   //失败：transdata={"code":"1001","errmsg":"签名验证失败"}
   try
       retList := TStringList.Create;
@@ -5348,6 +5303,13 @@ begin
           money := retjs['money'].value;
           result := retjs['result'].value;
           cpprivate := retjs['cpprivate'].value;
+
+          I:= retjs['waresid'].value;
+          S := retjs['cporderid'].value;
+          MainOutMessage('====I: ' + IntToStr(I)+', S: ' + S);
+
+          S:= retjs['waresid'].value;
+          MainOutMessage('====I: ' + IntToStr(I)+', S: ' + S);
 
           if result = 0 then    //交易成功
           begin
@@ -5425,7 +5387,7 @@ begin
             +'&grant_type=authorization_code&sign_method=MD5'+'&timestamp='+timestamp+'&sign_sort=timestamp%26sign_method%26client_secret%26client_id%26version'
             +'&signature='+sign+'&version='+AIYOUXI_VERSION;
       MainOutMessage('请求：' + url + SLineBreak);
-      
+
       respData := Utf8ToAnsi(HttpsGet(url, Header));
       MainOutMessage('返回结果：' + respData + SLineBreak);
     end
@@ -5596,4 +5558,218 @@ begin
 
 end;
 
+procedure TForm1.AliLoginVerifyBtnClick(Sender: TObject);
+const
+  ALI_API_KEY = 'f350c8a80c728eadc88fa36c3250e232';
+
+var
+  gamejs: TlkJSONobject;
+  datajs: TlkJSONobject;
+  js: TlkJSONobject;
+  sig: string;
+  id: Int64;
+  post: string;
+begin
+//豌豆荚的 "sid":"ssh1wndj86ecfbe86d5b461483d3f98c9b666a63158184"
+//UC 登录成功: ssh1game3edb9a212864407a823e293cc1777c46177926
+
+  //url := 'http://sdk.g.uc.cn/cp/account.verifySession';
+  url:='http://sdk.test4.9game.cn/cp/account.verifySession';
+
+  gamejs := TlkJSONobject.Create();
+  gamejs.Add('gameId', 537935);    //
+
+  datajs := TlkJSONobject.Create();
+  datajs.Add('sid', LabeledEdit8.Text);
+
+  id := DateTimeToUnix(now()) - 8*60*60;
+
+  //进行签名字符串拼接
+  sig :='sid=' + LabeledEdit8.Text + ALI_API_KEY;
+  sig := md5( AnsiToUtf8(sig) );
+  
+  js := TlkJSONobject.Create();
+  js.Add('id', id);
+  js.Add('data', datajs);
+  js.Add('game', gamejs);
+  js.Add('sign', sig);
+
+  post := AnsiToUtf8(TlkJSON.GenerateText(js));
+  memo1.Lines.Add('postData: '+post);
+  
+  memo1.Lines.Add('请求结果：'+Utf8ToAnsi(HttpsPost(url, post )));
+
+  //uc
+  {"id":1482485060,"state":{"code":1,"msg":"操作成功"}
+  //,"data":{"accountId":"5f30b4af0bc5c7322bd10558ad5ece2b","nickName":"九游玩家593962385621","creator":"JY"}}
+
+  //wdj
+  {"id":1482485265,"state":{"code":1,"msg":"操作成功"}
+  //,"data":{"accountId":"229777554","nickName":"","creator":"WDJ"}}
+end;
+
+
+procedure TForm1.AliOrderBtnClick(Sender: TObject);
+const
+  ALI_API_KEY = 'f350c8a80c728eadc88fa36c3250e232';
+var
+  accountId,callbackInfo,cpOrderId,sign,signStr:string;
+  amount:Integer;
+begin
+  //uc 5f30b4af0bc5c7322bd10558ad5ece2b
+  //wdj 229777554
+  {"CallBackInf
+o":"VXNlcklEPThfNTFAMTY1Jkl0ZW1JRD0xJkJpbGxJRD0xNDgyOTI0OTAzMDAwMCZTZXJ2ZXJJRD0y
+\r\n","price":600,"BillID":"14829249030000","signType":"MD5","sign":"63e3e4ec96d
+5a41e080d51e3c88a929e"}
+//, sign: 1ab1d6f5521ab9ff9f89ef5a35c43eb5
+
+  accountId:='5f30b4af0bc5c7322bd10558ad5ece2b';
+  amount:=600;
+  callbackInfo:='VXNlcklEPThfNTFAMTY1Jkl0ZW1JRD0xJkJpbGxJRD0xNDgyOTI0OTAzMDAwMCZTZXJ2ZXJJRD0y'+#13#10;
+  cpOrderId:='14829249030000';//FormatDateTime('yyyymmddhhnnss',now());//测试时使用当前时间为订单号.
+
+  //删除构造callBackInfo产生的换行
+  callbackInfo := StringReplace(callbackInfo, #13, '', [rfReplaceAll]);
+  callbackInfo := StringReplace(callbackInfo, #10, '', [rfReplaceAll]);
+
+  //保留2位小数
+  signStr:='accountId='+accountId+'amount='+formatfloat('0.00',amount/100)+'callbackInfo='+callbackInfo+'cpOrderId='+cpOrderId
+    +ALI_API_KEY;
+
+ //C#中\n = Delphi中#10, #13 - 回车, #10 - 换行
+  {signStr := 'accountId=229777554amount=6.00callbackinfo=VXNlcklEPThfNTFAMTY1Jkl0ZW1JRD0xJkJpbGxJRD0xNDgyOTMyMDY5MDAwMCZTZXJ2ZXJJRD0y'+
+    #13#10+'cpOrderId=14829320690000f350c8a80c728eadc88fa36c3250e232';   }
+
+  sign := MD5(signStr);
+
+  MainOutMessage('[Log] ALi signStr: ' + signStr+', sign: ' + sign);
+
+
+  //支付回调
+  {"sign":"217bfc8631e84523ad24b21e85f2b2d5",
+  "data":{"failedDesc":"","amount":"10.00","callbackInfo":"","accountId":"U1934961476992057125225f1b6ce72d","gameId":"537935","payWay":"101","orderStatus":"S","orderId":"201503161457018400426","creator":"JY"}
+  //,"ver":"2.0"}
+end;
+
+procedure TForm1.MZLoginBtnClick(Sender: TObject);
+const
+  //以下是刀塔参数
+  MZ_LOGIN_URL = 'https://api.game.meizu.com/game/security/checksession';
+  MZ_APP_ID = '2841864';
+  MZ_APP_SECRET='uWeTtqK66IudkSMVHl4qdnP568YQdrW8';
+  MZ_APP_KEY = '0fd65185b29643cbbf431f3b3583f505';
+  Header = 'Content-Type: application/x-www-form-urlencoded; charset=UTF-8';
+
+var
+  Data,PostData,respData, user_id:string;
+  Token, sign,timestamp:string;
+  jsdata,retjs:TlkJSONobject;
+  SysTime: TSystemTime;
+
+begin
+  jsdata := nil;
+  retjs := nil;
+  //一个code只能使用一次.
+  {"flag":0,"mUid":"133468864","session":"eyJ2IjozLCJnIjpmYWxzZSwidSI6IjEzMzQ2ODg2NCIsInQiOjE0ODI5MTA1NjUwNTcsInMiOiJucyIsInIiOiJTUzZGYTZxdUtBZE5WN3dTNVRnTCIsImEiOiI0RDE3RTMzREI4NzFFMUUzNDdCMTIxNzU0MjY2MkMyRCIsImwiOiI4RDY0RTk5Rjk1MDVENjk1RUYwQjM5MEQ1MThGREZFNCJ9"}
+  Data := MZLoginEdit.Text;
+  try
+    jsdata := TlkJSON.ParseText(Data) as TlkJSONobject;
+    if not assigned(jsdata) then
+    begin
+        MainOutMessage('[Error] MeiZu Login Request Failed. Client Data error. Data: ' + Data);
+        exit;
+    end;
+    //http://api.appchina.com/appchina-usersdk/user/v2/get.json?login_id=1&login_key=3c480af8&ticket=926d1cc2-1c66-4dcf-b0df-13ba294c9107%20%7F%C2%A0
+    if (jsdata.IndexOfName('session')>=0) and (jsdata.IndexOfName('mUid')>=0) then
+    begin
+      Token:= jsdata.Field['session'].Value;
+      user_id := jsdata.Field['mUid'].Value;
+      timestamp := IntToStr(DateTimeToUnix(Now)-8*60*60);
+      GetSystemTime(SysTime);
+      //得到十三位的时间戳
+      timestamp := FormatFloat('#', CompToDouble(TimeStampToMSecs(DateTimeToTimeStamp(SystemTimeToDateTime(SysTime)))) - TimeStampToMSecs(DateTimeToTimeStamp(StrToDateTime('1970/1/1'))));
+
+      //sign=MD5(app_id=appId&session_id=session_id&ts=时间戳&uid=魅族用户ID:appsecret)
+      sign:= MD5(UTF8Encode('app_id='+MZ_APP_ID+'&session_id='+Token+'&ts='+timestamp+'&uid='+user_id+':'+MZ_APP_SECRET));
+
+      PostData:='app_id='+MZ_APP_ID+'&session_id='+Token+'&uid='+user_id+'&ts='+timestamp+'&sign_type=md5&sign='+sign;
+      MainOutMessage('请求PostData：' + PostData + SLineBreak);
+
+      respData := Utf8ToAnsi(HttpsPost(MZ_LOGIN_URL, PostData, Header));
+      MainOutMessage('返回结果：' + respData + SLineBreak);
+    end
+    else
+      MainOutMessage('[Error] MeiZu Login Request Failed. Client Data error: Parameter is not Exists! Data: ' + Data);
+
+  except on E:Exception do
+  begin
+    MainOutMessage(format('[Error] MeiZu Login Request Failed. unknown exception. error: %s, Data: %s',
+        [e.message, Data]));
+    jsdata.Free;
+    Exit;
+  end;
+  end;
+  jsdata.Free;
+
+  //respData:='{"code":200,"message":"","redirect":"","value":null}';
+  //登陆验证
+  try
+      retjs := TlkJSON.ParseText(respData) as TlkJSONobject;
+      if not assigned(retjs) then
+      begin
+        MainOutMessage('[Error] MeiZu Login Verify Failed. Response Data error. respData: ' + respData);
+        exit;
+      end;
+
+      if retjs.IndexOfName('code')>=0 then
+      begin
+        if retjs.Field['code'].Value = 200 then
+        begin
+        
+          MainOutMessage('[log] MeiZu Login Verify Success! UID: ' +
+            user_id + SLineBreak);
+
+        end
+        else
+        begin
+          MainOutMessage(format('[Error] MeiZu Login Verify Failed. respData: %s',[respData]));
+        end;
+
+      end
+      else
+      begin
+        MainOutMessage(format('[Error] MeiZu Login Verify Failed. Parameter not exists or Request failed! respData: %s',[respData]));
+      end;
+      retjs.Free;
+
+  except on E:Exception do
+  begin
+    MainOutMessage('[Error] MeiZu Login Verify Failed. unexpect exception! error. respData: ' + respData);
+    retjs.Free;
+    Exit;
+  end;
+  end;
+
+end;
+
+procedure TForm1.MZOrderBtnClick(Sender: TObject);
+var
+  Data, orderId:string;
+begin
+  orderId:=MZOrderEdit.Text;
+  
+end;
+
+procedure TForm1.PayVerifyBtnClick(Sender: TObject);
+var
+  Data:string;
+begin
+  Data:=PayDataEdit.Text;
+
+end;
+
 end.
+
+
+

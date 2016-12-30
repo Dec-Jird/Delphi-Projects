@@ -1,6 +1,6 @@
 object Form1: TForm1
   Left = -1
-  Top = 107
+  Top = 114
   BorderIcons = [biSystemMenu, biMinimize]
   BorderStyle = bsSingle
   Caption = 'Form1'
@@ -21,10 +21,10 @@ object Form1: TForm1
     Top = 16
     Width = 289
     Height = 417
-    ActivePage = TabSheet21
-    TabOrder = 7
+    ActivePage = MEIZU
+    TabOrder = 6
     object TabSheet2: TTabSheet
-      Caption = 'UC'
+      Caption = #38463#37324
       ImageIndex = 1
       object LabeledEdit8: TLabeledEdit
         Left = 8
@@ -36,7 +36,7 @@ object Form1: TForm1
         EditLabel.Caption = 'sid'
         ImeName = #20013#25991' ('#31616#20307') - '#25628#29399#25340#38899#36755#20837#27861
         TabOrder = 0
-        Text = '9e2774446bbe29754afea2b21cd07e1a993bc'
+        Text = 'ssh1mobibd205ba8832b4ba1983b8c10a482fae6116318'
       end
       object LabeledEdit9: TLabeledEdit
         Left = 8
@@ -54,6 +54,24 @@ object Form1: TForm1
           '2057125225f1b6ce72d","gameId":"537935","payWay":"101","orderStat' +
           'us":"S","orderId":"201503161457018400426","creator":"JY"},"ver":' +
           '"2.0"}'
+      end
+      object AliOrderBtn: TButton
+        Left = 64
+        Top = 208
+        Width = 153
+        Height = 25
+        Caption = #38463#37324#26500#36896#19979#21333#35831#27714
+        TabOrder = 2
+        OnClick = AliOrderBtnClick
+      end
+      object AliLoginVerifyBtn: TButton
+        Left = 72
+        Top = 144
+        Width = 145
+        Height = 25
+        Caption = #38463#37324#30331#24405#39564#35777
+        TabOrder = 3
+        OnClick = AliLoginVerifyBtnClick
       end
     end
     object TabSheet3: TTabSheet
@@ -1243,7 +1261,7 @@ object Form1: TForm1
         Height = 21
         ImeName = #20013#25991'('#31616#20307') - '#30334#24230#36755#20837#27861
         TabOrder = 6
-        Text = '9409330245'
+        Text = '20170101-'
       end
       object QQLoginEdit: TLabeledEdit
         Left = 16
@@ -1989,7 +2007,7 @@ object Form1: TForm1
     object MEIZU: TTabSheet
       Caption = #39749#26063
       ImageIndex = 35
-      object MEIZULoginEdit: TLabeledEdit
+      object MZLoginEdit: TLabeledEdit
         Left = 8
         Top = 32
         Width = 265
@@ -1999,14 +2017,62 @@ object Form1: TForm1
         EditLabel.Caption = 'Login Data:'
         ImeName = #20013#25991'('#31616#20307') - '#30334#24230#36755#20837#27861
         TabOrder = 0
+        Text = 
+          '{"flag":0,"mUid":"133468864","session":"eyJ2IjozLCJnIjpmYWxzZSwi' +
+          'dSI6IjEzMzQ2ODg2NCIsInQiOjE0ODI5OTQzODk5MjQsInMiOiJucyIsInIiOiJi' +
+          'YmtIZEdLR2dBT2hwM0t5czRIUiIsImEiOiI0RDE3RTMzREI4NzFFMUUzNDdCMTIx' +
+          'NzU0MjY2MkMyRCIsImwiOiI1OEVDRjA0NzhDOTJDOTk3MTBFREY1NzAwMzM1REVG' +
+          'QyJ9"}'
       end
-      object Button52: TButton
-        Left = 184
-        Top = 80
+      object MZLoginBtn: TButton
+        Left = 192
+        Top = 88
         Width = 75
         Height = 25
-        Caption = 'Button52'
+        Caption = 'Login Verify'
         TabOrder = 1
+        OnClick = MZLoginBtnClick
+      end
+      object MZOrderBtn: TButton
+        Left = 192
+        Top = 184
+        Width = 75
+        Height = 25
+        Caption = #35746#21333#31614#21517
+        TabOrder = 2
+        OnClick = MZOrderBtnClick
+      end
+      object MZOrderEdit: TLabeledEdit
+        Left = 16
+        Top = 144
+        Width = 121
+        Height = 21
+        EditLabel.Width = 48
+        EditLabel.Height = 13
+        EditLabel.Caption = #35746#21333#21495#65306
+        ImeName = #20013#25991'('#31616#20307') - '#30334#24230#36755#20837#27861
+        TabOrder = 3
+        Text = '20170101-23892'
+      end
+      object PayDataEdit: TLabeledEdit
+        Left = 8
+        Top = 248
+        Width = 273
+        Height = 21
+        EditLabel.Width = 84
+        EditLabel.Height = 13
+        EditLabel.Caption = #25903#20184#22238#35843#25968#25454#65306
+        ImeName = #20013#25991'('#31616#20307') - '#30334#24230#36755#20837#27861
+        TabOrder = 4
+      end
+      object PayVerifyBtn: TButton
+        Left = 200
+        Top = 296
+        Width = 75
+        Height = 25
+        Caption = #25903#20184#39564#31614
+        TabOrder = 5
+        OnClick = PayVerifyBtnClick
       end
     end
     object TabSheet35: TTabSheet
@@ -2046,7 +2112,7 @@ object Form1: TForm1
   end
   object Memo1: TMemo
     Left = 8
-    Top = 24
+    Top = 32
     Width = 385
     Height = 417
     ImeName = #20013#25991' ('#31616#20307') - '#25628#29399#25340#38899#36755#20837#27861
@@ -2070,22 +2136,13 @@ object Form1: TForm1
     TabOrder = 2
     OnClick = Button2Click
   end
-  object Button3: TButton
-    Left = 200
-    Top = 440
-    Width = 75
-    Height = 25
-    Caption = 'UC'#30331#24405
-    TabOrder = 3
-    OnClick = Button3Click
-  end
   object Button4: TButton
     Left = 280
     Top = 440
     Width = 75
     Height = 25
     Caption = #26865#38236#30331#38470
-    TabOrder = 4
+    TabOrder = 3
     OnClick = Button4Click
   end
   object Button5: TButton
@@ -2094,7 +2151,7 @@ object Form1: TForm1
     Width = 75
     Height = 25
     Caption = #26865#38236'md5'
-    TabOrder = 5
+    TabOrder = 4
     OnClick = Button5Click
   end
   object Button8: TButton
@@ -2103,7 +2160,7 @@ object Form1: TForm1
     Width = 75
     Height = 25
     Caption = 'test'
-    TabOrder = 6
+    TabOrder = 5
     OnClick = Button8Click
   end
   object Button29: TButton
@@ -2112,7 +2169,7 @@ object Form1: TForm1
     Width = 75
     Height = 25
     Caption = 'QQlogVerity'
-    TabOrder = 8
+    TabOrder = 7
   end
   object Button30: TButton
     Left = 536
@@ -2120,7 +2177,7 @@ object Form1: TForm1
     Width = 75
     Height = 25
     Caption = 'QQPayVerity'
-    TabOrder = 9
+    TabOrder = 8
     OnClick = Button30Click
   end
   object Button31: TButton
@@ -2129,7 +2186,7 @@ object Form1: TForm1
     Width = 75
     Height = 25
     Caption = 'clear LJ'
-    TabOrder = 10
+    TabOrder = 9
     OnClick = Button31Click
   end
   object Button32: TButton
@@ -2138,7 +2195,7 @@ object Form1: TForm1
     Width = 75
     Height = 25
     Caption = 'clear Show'
-    TabOrder = 11
+    TabOrder = 10
     OnClick = Button32Click
   end
   object Button33: TButton
@@ -2147,7 +2204,7 @@ object Form1: TForm1
     Width = 75
     Height = 25
     Caption = 'clear ALL'
-    TabOrder = 12
+    TabOrder = 11
     OnClick = Button33Click
   end
   object IdHTTPServer1: TIdHTTPServer
