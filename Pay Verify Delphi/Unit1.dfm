@@ -2064,6 +2064,13 @@ object Form1: TForm1
         EditLabel.Caption = #25903#20184#22238#35843#25968#25454#65306
         ImeName = #20013#25991'('#31616#20307') - '#30334#24230#36755#20837#27861
         TabOrder = 4
+        Text = 
+          'app_id=464013&buy_amount=1&cp_order_id=2680&create_time=14137760' +
+          '92239&notify_id=1413776113206&notify_time=2014-10-2011:35:13&ord' +
+          'er_id=14102000000298934&partner_id=5458428&pay_time=141377611321' +
+          '9&pay_type=0&product_id=2&product_per_price=1.0&product_unit='#26522'&t' +
+          'otal_price=1.0&trade_status=3&uid=9700193&user_info='#22238#35843'CallbackIn' +
+          'fo&sign=e2023c2de1fbc54ebcdac297c902fa58&sign_type=MD5'
       end
       object PayVerifyBtn: TButton
         Left = 200

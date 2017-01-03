@@ -4402,7 +4402,7 @@ begin
 
       MainOutMessage('[Log] Letv Pay Verify Success: original_price: ' + original_price);
       //验证订单数据CallbackInfo:extra_info
-      
+
     end
     else
     begin
@@ -5754,19 +5754,159 @@ begin
 end;
 
 procedure TForm1.MZOrderBtnClick(Sender: TObject);
+const
+  MZ_APP_SECRET='uWeTtqK66IudkSMVHl4qdnP568YQdrW8';
+  MZ_APP_KEY='0fd65185b29643cbbf431f3b3583f505';
+  MZ_APP_ID='2841864';
+
 var
-  Data, orderId:string;
+  signStr, orderId:string;
+  SysTime: TSystemTime;
+
+  //app_id: string;//  游戏 ID(不能为空)
+  cp_order_id: string;//  CP 定单 ID(不能为空)
+  uid: string;//  flymeUID(不能为空)
+  product_id: string;//  CP 游戏道具 ID,默认值：”0”
+  product_subject: string;//  订单标题,格式为：”购买 N 枚金币”
+  product_body: string;//    游戏道具说明，默认值：””
+  product_unit: string;//  游戏道具的单位，默认值：””
+  buy_amount: string;//  道具购买的数量，默认值：”1”
+  product_per_price: string;//  游戏道具单价，默认值：总金额
+  total_price: string;//  总金额
+  timestamp: string;//  创建时间戳
+  pay_type: string;//  支付方式，默认值：”0”（即定额支付）
+  user_info: string;//  CP 自定义信息，默认值：””
+  sign: string;//  参数签名(不能为空)
+  sign_type: string;//  签名算法，默认值：”md5”(不能为空)
+
 begin
-  orderId:=MZOrderEdit.Text;
-  
+  cp_order_id:=MZOrderEdit.Text;
+  cp_order_id:='123456';
+
+  //'2841864', '1',    '123456',     '0',     '财神',        '1',        '0.01',           '元宝',           '个',        '0.01',   '128402267', 'tnyoo', 'uWeTtqK66IudkSMVHl4qdnP568YQdrW8'
+  //app_id; buy_amount; cp_order_id; pay_type; product_body; product_id; product_per_price; product_subject; product_unit; total_price; uid; user_info; APP_SECRET
+
+  uid:='128402267';
+  product_id:='1';//  CP 游戏道具 ID,默认值：”0”
+  product_subject:='元宝';//  订单标题,格式为：”购买 N 枚金币”
+  product_body:='财神';//    游戏道具说明，默认值：””
+  product_unit:='个';//  游戏道具的单位，默认值：””
+  buy_amount:='1';//  道具购买的数量，默认值：”1”
+  product_per_price:='0.01';//  游戏道具单价，默认值：总金额
+  total_price:='0.01';//  总金额
+  pay_type:='0';//  支付方式，默认值：”0”（即定额支付）
+  user_info:='tnyoo';//'Happy Birthday! From Future, I am You.';//  CP 自定义信息，默认值：””
+  sign_type:='md5'; //  签名算法，默认值：”md5”(不能为空)
+
+
+  GetSystemTime(SysTime);
+  //得到十三位的时间戳
+  timestamp := FormatFloat('#', CompToDouble(TimeStampToMSecs(DateTimeToTimeStamp(SystemTimeToDateTime(SysTime)))) - TimeStampToMSecs(DateTimeToTimeStamp(StrToDateTime('1970/1/1'))));
+  timestamp:='1483087434330';
+
+  //签名字符串的顺序一定不能乱
+  signstr := 'app_id=' + MZ_APP_ID + '&buy_amount=' + buy_amount + '&cp_order_id=' + cp_order_id + '&create_time=' + timestamp +
+        '&pay_type=' + pay_type + '&product_body=' + product_body + '&product_id=' + product_id + '&product_per_price=' +
+        product_per_price + '&product_subject=' + product_subject + '&product_unit=' + product_unit + '&total_price=' +
+        total_price + '&uid=' + uid + '&user_info=' + user_info + ':' + MZ_APP_SECRET;
+
+  sign := MD5(AnsiToUtf8(signstr));
+
+  MainOutMessage('[log] MeiZu signStr:'+signStr+', sign: ' + sign);
+
 end;
 
 procedure TForm1.PayVerifyBtnClick(Sender: TObject);
+const
+  MZ_APP_SECRET = 'uWeTtqK66IudkSMVHl4qdnP568YQdrW8';
+  
 var
-  Data:string;
-begin
-  Data:=PayDataEdit.Text;
+  Data,signStr,locSign:string;
+  
+  notify_time: string;//支付成功时间：CP 需要保存该时间进行后续的对账，对账时间以支付成功时间为统计
+  notify_id: string;//  Y  通知 id
+  order_id: string;//  Y  订单 id
+  app_id: string;//  Y  应用 id
+  uid: string;//  Y  用户 id
+  partner_id: string;//  Y  商户 id
+  cp_order_id: string;//  Y  游戏订单 id
+  product_id: string;//  Y  产品 id
+  product_unit: string;//  N  产品单位
+  buy_amount: string;//  N  购买数量
+  product_per_price: string;//  n  产品单价
+  total_price: string;//  Y  购买总价
+  trade_status: string;//  Y  交易状态：1：待支付（订单已创建）2：支付中3：已支付4：取消订单5：未知异常取消订单
+  create_time: string;//  Y  订单时间
+  pay_time: string;//  Y  支付时间
+  pay_type: string;//  N  支付类型：1  不定金额充值，0  购买
+  user_info: string;//  N  用户自定义信息
+  sign: string;//    Y  参数签名
+  sign_type: string;//  Y  签名类型，常量 md5
 
+  I: Integer;
+  retList : TStringList;
+begin
+   Data:=PayDataEdit.Text;
+
+{app_id=464013&buy_amount=1&cp_order_id=2680&create_time=1413776092239&notify_id=1413776113206&notify_ti
+me=2014-10-2011:35:13&order_id=14102000000298934&partner_id=5458428&pay_time=1413776113219&pay_type=0
+&product_id=2&product_per_price=1.0&product_unit=枚&total_price=1.0&trade_status=3&uid=9700193&user_info=这里填写游戏相
+关附加信息，发货时将回传该字段:appSecret   }
+
+  try
+    retList := TStringList.Create;
+    //第一个参数是分隔符; 第二个参数是开头被忽略的字符
+    ExtractStrings(['&'],[],PChar(HttpDecode(Data)),retList);//ExtractStrings能避免空格也被视作分隔符的bug
+    retList.Sort;
+
+    signStr := '';
+    for i:=0 to retList.Count-1 do
+    begin
+      if (retList.Names[i] = 'sign')or(retList.Names[i] = 'sign_type') then
+        continue;
+
+      if signStr = '' then
+        signStr := retList.Names[i]+'='+retList.Values[retList.Names[i]]
+      else
+        signStr := signStr+'&'+retList.Names[i]+'='+retList.Values[retList.Names[i]];
+
+      //MainOutMessage(retList.Names[i] + '  -->  ' + retList.Values[retList.Names[i]]);
+    end;
+    signStr := signStr + ':' + MZ_APP_SECRET;
+
+    locSign := LowerCase(MD5(AnsiToUtf8(signStr)));
+    MainOutMessage('[Log] MeiZu  Pay Verify signStr: '+signStr +', sign: ' + locSign);
+
+    sign:= retList.Values['sign'];
+    trade_status:= retList.Values['trade_status'];
+    if (sign = locSign) and (trade_status = '3') then
+    begin
+      order_id:= retList.Values['order_id'];
+      uid:= retList.Values['uid'];
+      partner_id:= retList.Values['partner_id'];
+      cp_order_id:= retList.Values['cp_order_id'];
+      user_info:= retList.Values['user_info'];
+      product_id:= retList.Values['product_id'];
+      total_price:= retList.Values['total_price'];
+      user_info:= retList.Values['user_info'];//callbackInfo
+
+      MainOutMessage('[Log] MeiZu Pay Verify Success: total_price: ' + total_price);
+      //验证CallbackInfo，*需要校验回调的金额是否跟商品的真实价格一致：total_price 和 CP 创建订单时该订单的总金额是否一致。：
+
+    end
+    else
+    begin
+      MainOutMessage('[Error] MeiZu Pay Verify Failed. 签名验证失败或未支付成功! sign: '+sign+', locSign: '+locSign+'; Data: ' + Data);
+    end;
+    retList.Free;
+
+  except on E:Exception do
+  begin
+    MainOutMessage('[Error] MeiZu Pay Verify Failed: unexpect exception! error(1). respData: ' + Data);
+    retList.Free;
+    Exit;
+  end;
+  end;
 end;
 
 end.
