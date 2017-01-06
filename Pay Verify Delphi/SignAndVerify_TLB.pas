@@ -1,14 +1,14 @@
 unit SignAndVerify_TLB;
 
 // ************************************************************************ //
-// WARNING                                                                    
-// -------                                                                    
-// The types declared in this file were generated from data read from a       
-// Type Library. If this type library is explicitly or indirectly (via        
-// another type library referring to this type library) re-imported, or the   
-// 'Refresh' command of the Type Library Editor activated while editing the   
-// Type Library, the contents of this file will be regenerated and all        
-// manual modifications will be lost.                                         
+// WARNING
+// -------
+// The types declared in this file were generated from data read from a
+// Type Library. If this type library is explicitly or indirectly (via
+// another type library referring to this type library) re-imported, or the
+// 'Refresh' command of the Type Library Editor activated while editing the
+// Type Library, the contents of this file will be regenerated and all
+// manual modifications will be lost.
 // ************************************************************************ //
 
 // PASTLWTR : 1.2
@@ -18,9 +18,9 @@ unit SignAndVerify_TLB;
 // Type Lib: D:\TynooProject\DephiProjects\sdk≤‚ ‘π§æﬂdelphi-Huawei\SignAndVerify.tlb (1)
 // LIBID: {BB2DBDEB-86B2-48FC-8099-0E12CB0FA92A}
 // LCID: 0
-// Helpfile: 
-// HelpString: 
-// DepndLst: 
+// Helpfile:
+// HelpString:
+// DepndLst:
 //   (1) v2.0 stdole, (C:\Windows\SysWOW64\stdole2.tlb)
 //   (2) v2.4 mscorlib, (C:\Windows\Microsoft.NET\Framework\v4.0.30319\mscorlib.tlb)
 // Errors:
@@ -28,31 +28,31 @@ unit SignAndVerify_TLB;
 //   Error creating palette bitmap of (TSignAndVerifyClass) : Server mscoree.dll contains no icons
 // ************************************************************************ //
 // *************************************************************************//
-// NOTE:                                                                      
-// Items guarded by $IFDEF_LIVE_SERVER_AT_DESIGN_TIME are used by properties  
-// which return objects that may need to be explicitly created via a function 
-// call prior to any access via the property. These items have been disabled  
-// in order to prevent accidental use from within the object inspector. You   
-// may enable them by defining LIVE_SERVER_AT_DESIGN_TIME or by selectively   
-// removing them from the $IFDEF blocks. However, such items must still be    
-// programmatically created via a method of the appropriate CoClass before    
-// they can be used.                                                          
-{$TYPEDADDRESS OFF} // Unit must be compiled without type-checked pointers. 
+// NOTE:
+// Items guarded by $IFDEF_LIVE_SERVER_AT_DESIGN_TIME are used by properties
+// which return objects that may need to be explicitly created via a function
+// call prior to any access via the property. These items have been disabled
+// in order to prevent accidental use from within the object inspector. You
+// may enable them by defining LIVE_SERVER_AT_DESIGN_TIME or by selectively
+// removing them from the $IFDEF blocks. However, such items must still be
+// programmatically created via a method of the appropriate CoClass before
+// they can be used.
+{$TYPEDADDRESS OFF} // Unit must be compiled without type-checked pointers.
 {$WARN SYMBOL_PLATFORM OFF}
 {$WRITEABLECONST ON}
 {$VARPROPSETTER ON}
 interface
 
 uses Windows, ActiveX, Classes, Graphics, mscorlib_TLB, OleServer, StdVCL, Variants;
-  
+
 
 
 // *********************************************************************//
-// GUIDS declared in the TypeLibrary. Following prefixes are used:        
-//   Type Libraries     : LIBID_xxxx                                      
-//   CoClasses          : CLASS_xxxx                                      
-//   DISPInterfaces     : DIID_xxxx                                       
-//   Non-DISP interfaces: IID_xxxx                                        
+// GUIDS declared in the TypeLibrary. Following prefixes are used:
+//   Type Libraries     : LIBID_xxxx
+//   CoClasses          : CLASS_xxxx
+//   DISPInterfaces     : DIID_xxxx
+//   Non-DISP interfaces: IID_xxxx
 // *********************************************************************//
 const
   // TypeLibrary Major and minor versions
@@ -66,14 +66,14 @@ const
 type
 
 // *********************************************************************//
-// Forward declaration of types defined in TypeLibrary                    
+// Forward declaration of types defined in TypeLibrary
 // *********************************************************************//
   SignAndVerifyInterface = interface;
   SignAndVerifyInterfaceDisp = dispinterface;
 
 // *********************************************************************//
-// Declaration of CoClasses defined in Type Library                       
-// (NOTE: Here we map each CoClass to its Default Interface)              
+// Declaration of CoClasses defined in Type Library
+// (NOTE: Here we map each CoClass to its Default Interface)
 // *********************************************************************//
   SignAndVerifyClass = SignAndVerifyInterface;
 
@@ -88,10 +88,10 @@ type
     function HmacSha1Sign(const text: WideString; const key: WideString; const type_: WideString): WideString; safecall;
     function RsaSha1Sign(const content: WideString; const privateKey: WideString): WideString; safecall;
     function RsaMd5Sign(const content: WideString; const privateKey: WideString): WideString; safecall;
-    function RsaMd5Verify(const BillInfo: WideString; const PublicKey: WideString; 
-                          const sign: WideString): WordBool; safecall;
-    function RsaSha1Verify(const BillInfo: WideString; const PublicKey: WideString; 
-                           const sign: WideString): WordBool; safecall;
+    function RsaMd5Verify(const BillInfo: WideString; const PublicKey: WideString;
+      const sign: WideString): WordBool; safecall;
+    function RsaSha1Verify(const BillInfo: WideString; const PublicKey: WideString;
+      const sign: WideString): WordBool; safecall;
   end;
 
 // *********************************************************************//
@@ -104,18 +104,18 @@ type
     function HmacSha1Sign(const text: WideString; const key: WideString; const type_: WideString): WideString; dispid 1610743808;
     function RsaSha1Sign(const content: WideString; const privateKey: WideString): WideString; dispid 1610743809;
     function RsaMd5Sign(const content: WideString; const privateKey: WideString): WideString; dispid 1610743810;
-    function RsaMd5Verify(const BillInfo: WideString; const PublicKey: WideString; 
-                          const sign: WideString): WordBool; dispid 1610743811;
-    function RsaSha1Verify(const BillInfo: WideString; const PublicKey: WideString; 
-                           const sign: WideString): WordBool; dispid 1610743812;
+    function RsaMd5Verify(const BillInfo: WideString; const PublicKey: WideString;
+      const sign: WideString): WordBool; dispid 1610743811;
+    function RsaSha1Verify(const BillInfo: WideString; const PublicKey: WideString;
+      const sign: WideString): WordBool; dispid 1610743812;
   end;
 
 // *********************************************************************//
-// The Class CoSignAndVerifyClass provides a Create and CreateRemote method to          
-// create instances of the default interface SignAndVerifyInterface exposed by              
-// the CoClass SignAndVerifyClass. The functions are intended to be used by             
-// clients wishing to automate the CoClass objects exposed by the         
-// server of this typelibrary.                                            
+// The Class CoSignAndVerifyClass provides a Create and CreateRemote method to
+// create instances of the default interface SignAndVerifyInterface exposed by
+// the CoClass SignAndVerifyClass. The functions are intended to be used by
+// clients wishing to automate the CoClass objects exposed by the
+// server of this typelibrary.
 // *********************************************************************//
   CoSignAndVerifyClass = class
     class function Create: SignAndVerifyInterface;
@@ -126,38 +126,38 @@ type
 // *********************************************************************//
 // OLE Server Proxy class declaration
 // Server Object    : TSignAndVerifyClass
-// Help String      : 
+// Help String      :
 // Default Interface: SignAndVerifyInterface
 // Def. Intf. DISP? : No
-// Event   Interface: 
+// Event   Interface:
 // TypeFlags        : (2) CanCreate
 // *********************************************************************//
 {$IFDEF LIVE_SERVER_AT_DESIGN_TIME}
-  TSignAndVerifyClassProperties= class;
+  TSignAndVerifyClassProperties = class;
 {$ENDIF}
   TSignAndVerifyClass = class(TOleServer)
   private
-    FIntf:        SignAndVerifyInterface;
+    FIntf: SignAndVerifyInterface;
 {$IFDEF LIVE_SERVER_AT_DESIGN_TIME}
-    FProps:       TSignAndVerifyClassProperties;
-    function      GetServerProperties: TSignAndVerifyClassProperties;
+    FProps: TSignAndVerifyClassProperties;
+    function GetServerProperties: TSignAndVerifyClassProperties;
 {$ENDIF}
-    function      GetDefaultInterface: SignAndVerifyInterface;
+    function GetDefaultInterface: SignAndVerifyInterface;
   protected
     procedure InitServerData; override;
   public
     constructor Create(AOwner: TComponent); override;
-    destructor  Destroy; override;
+    destructor Destroy; override;
     procedure Connect; override;
     procedure ConnectTo(svrIntf: SignAndVerifyInterface);
     procedure Disconnect; override;
     function HmacSha1Sign(const text: WideString; const key: WideString; const type_: WideString): WideString;
     function RsaSha1Sign(const content: WideString; const privateKey: WideString): WideString;
     function RsaMd5Sign(const content: WideString; const privateKey: WideString): WideString;
-    function RsaMd5Verify(const BillInfo: WideString; const PublicKey: WideString; 
-                          const sign: WideString): WordBool;
-    function RsaSha1Verify(const BillInfo: WideString; const PublicKey: WideString; 
-                           const sign: WideString): WordBool;
+    function RsaMd5Verify(const BillInfo: WideString; const PublicKey: WideString;
+      const sign: WideString): WordBool;
+    function RsaSha1Verify(const BillInfo: WideString; const PublicKey: WideString;
+      const sign: WideString): WordBool;
     property DefaultInterface: SignAndVerifyInterface read GetDefaultInterface;
   published
 {$IFDEF LIVE_SERVER_AT_DESIGN_TIME}
@@ -172,10 +172,10 @@ type
 // (This object is used by the IDE's Property Inspector to allow editing
 //  of the properties of this server)
 // *********************************************************************//
- TSignAndVerifyClassProperties = class(TPersistent)
+  TSignAndVerifyClassProperties = class(TPersistent)
   private
-    FServer:    TSignAndVerifyClass;
-    function    GetDefaultInterface: SignAndVerifyInterface;
+    FServer: TSignAndVerifyClass;
+    function GetDefaultInterface: SignAndVerifyInterface;
     constructor Create(AServer: TSignAndVerifyClass);
   protected
   public
@@ -209,9 +209,9 @@ end;
 procedure TSignAndVerifyClass.InitServerData;
 const
   CServerData: TServerData = (
-    ClassID:   '{2A40FEF5-E0B1-38AE-867C-C7F901328E9E}';
-    IntfIID:   '{8DD41868-0645-30CE-93BF-61FAB4E0E1A6}';
-    EventIID:  '';
+    ClassID: '{2A40FEF5-E0B1-38AE-867C-C7F901328E9E}';
+    IntfIID: '{8DD41868-0645-30CE-93BF-61FAB4E0E1A6}';
+    EventIID: '';
     LicenseKey: nil;
     Version: 500);
 begin
@@ -225,7 +225,7 @@ begin
   if FIntf = nil then
   begin
     punk := GetServer;
-    Fintf:= punk as SignAndVerifyInterface;
+    Fintf := punk as SignAndVerifyInterface;
   end;
 end;
 
@@ -268,14 +268,15 @@ begin
 end;
 
 {$IFDEF LIVE_SERVER_AT_DESIGN_TIME}
+
 function TSignAndVerifyClass.GetServerProperties: TSignAndVerifyClassProperties;
 begin
   Result := FProps;
 end;
 {$ENDIF}
 
-function TSignAndVerifyClass.HmacSha1Sign(const text: WideString; const key: WideString; 
-                                          const type_: WideString): WideString;
+function TSignAndVerifyClass.HmacSha1Sign(const text: WideString; const key: WideString;
+  const type_: WideString): WideString;
 begin
   Result := DefaultInterface.HmacSha1Sign(text, key, type_);
 end;
@@ -290,19 +291,20 @@ begin
   Result := DefaultInterface.RsaMd5Sign(content, privateKey);
 end;
 
-function TSignAndVerifyClass.RsaMd5Verify(const BillInfo: WideString; const PublicKey: WideString; 
-                                          const sign: WideString): WordBool;
+function TSignAndVerifyClass.RsaMd5Verify(const BillInfo: WideString; const PublicKey: WideString;
+  const sign: WideString): WordBool;
 begin
   Result := DefaultInterface.RsaMd5Verify(BillInfo, PublicKey, sign);
 end;
 
-function TSignAndVerifyClass.RsaSha1Verify(const BillInfo: WideString; const PublicKey: WideString; 
-                                           const sign: WideString): WordBool;
+function TSignAndVerifyClass.RsaSha1Verify(const BillInfo: WideString; const PublicKey: WideString;
+  const sign: WideString): WordBool;
 begin
   Result := DefaultInterface.RsaSha1Verify(BillInfo, PublicKey, sign);
 end;
 
 {$IFDEF LIVE_SERVER_AT_DESIGN_TIME}
+
 constructor TSignAndVerifyClassProperties.Create(AServer: TSignAndVerifyClass);
 begin
   inherited Create;

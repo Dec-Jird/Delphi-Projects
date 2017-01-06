@@ -1,14 +1,14 @@
 unit DES3Dll_TLB;
 
 // ************************************************************************ //
-// WARNING                                                                    
-// -------                                                                    
-// The types declared in this file were generated from data read from a       
-// Type Library. If this type library is explicitly or indirectly (via        
-// another type library referring to this type library) re-imported, or the   
-// 'Refresh' command of the Type Library Editor activated while editing the   
-// Type Library, the contents of this file will be regenerated and all        
-// manual modifications will be lost.                                         
+// WARNING
+// -------
+// The types declared in this file were generated from data read from a
+// Type Library. If this type library is explicitly or indirectly (via
+// another type library referring to this type library) re-imported, or the
+// 'Refresh' command of the Type Library Editor activated while editing the
+// Type Library, the contents of this file will be regenerated and all
+// manual modifications will be lost.
 // ************************************************************************ //
 
 // PASTLWTR : 1.2
@@ -18,40 +18,40 @@ unit DES3Dll_TLB;
 // Type Lib: D:\TynooProject\DephiProjects\Pay Verify Delphi\DES3Dll.tlb (1)
 // LIBID: {B5BA506A-9F0F-4488-A7CF-433FB154D5E9}
 // LCID: 0
-// Helpfile: 
-// HelpString: 
-// DepndLst: 
+// Helpfile:
+// HelpString:
+// DepndLst:
 //   (1) v2.0 stdole, (C:\Windows\SysWOW64\stdole2.tlb)
 //   (2) v2.4 mscorlib, (C:\Windows\Microsoft.NET\Framework\v4.0.30319\mscorlib.tlb)
 // Errors:
 //   Error creating palette bitmap of (TDES3DllClass) : Server mscoree.dll contains no icons
 // ************************************************************************ //
 // *************************************************************************//
-// NOTE:                                                                      
-// Items guarded by $IFDEF_LIVE_SERVER_AT_DESIGN_TIME are used by properties  
-// which return objects that may need to be explicitly created via a function 
-// call prior to any access via the property. These items have been disabled  
-// in order to prevent accidental use from within the object inspector. You   
-// may enable them by defining LIVE_SERVER_AT_DESIGN_TIME or by selectively   
-// removing them from the $IFDEF blocks. However, such items must still be    
-// programmatically created via a method of the appropriate CoClass before    
-// they can be used.                                                          
-{$TYPEDADDRESS OFF} // Unit must be compiled without type-checked pointers. 
+// NOTE:
+// Items guarded by $IFDEF_LIVE_SERVER_AT_DESIGN_TIME are used by properties
+// which return objects that may need to be explicitly created via a function
+// call prior to any access via the property. These items have been disabled
+// in order to prevent accidental use from within the object inspector. You
+// may enable them by defining LIVE_SERVER_AT_DESIGN_TIME or by selectively
+// removing them from the $IFDEF blocks. However, such items must still be
+// programmatically created via a method of the appropriate CoClass before
+// they can be used.
+{$TYPEDADDRESS OFF} // Unit must be compiled without type-checked pointers.
 {$WARN SYMBOL_PLATFORM OFF}
 {$WRITEABLECONST ON}
 {$VARPROPSETTER ON}
 interface
 
 uses Windows, ActiveX, Classes, Graphics, mscorlib_TLB, OleServer, StdVCL, Variants;
-  
+
 
 
 // *********************************************************************//
-// GUIDS declared in the TypeLibrary. Following prefixes are used:        
-//   Type Libraries     : LIBID_xxxx                                      
-//   CoClasses          : CLASS_xxxx                                      
-//   DISPInterfaces     : DIID_xxxx                                       
-//   Non-DISP interfaces: IID_xxxx                                        
+// GUIDS declared in the TypeLibrary. Following prefixes are used:
+//   Type Libraries     : LIBID_xxxx
+//   CoClasses          : CLASS_xxxx
+//   DISPInterfaces     : DIID_xxxx
+//   Non-DISP interfaces: IID_xxxx
 // *********************************************************************//
 const
   // TypeLibrary Major and minor versions
@@ -65,14 +65,14 @@ const
 type
 
 // *********************************************************************//
-// Forward declaration of types defined in TypeLibrary                    
+// Forward declaration of types defined in TypeLibrary
 // *********************************************************************//
   DES3DllInterface = interface;
   DES3DllInterfaceDisp = dispinterface;
 
 // *********************************************************************//
-// Declaration of CoClasses defined in Type Library                       
-// (NOTE: Here we map each CoClass to its Default Interface)              
+// Declaration of CoClasses defined in Type Library
+// (NOTE: Here we map each CoClass to its Default Interface)
 // *********************************************************************//
   DES3DllClass = DES3DllInterface;
 
@@ -100,11 +100,11 @@ type
   end;
 
 // *********************************************************************//
-// The Class CoDES3DllClass provides a Create and CreateRemote method to          
-// create instances of the default interface DES3DllInterface exposed by              
-// the CoClass DES3DllClass. The functions are intended to be used by             
-// clients wishing to automate the CoClass objects exposed by the         
-// server of this typelibrary.                                            
+// The Class CoDES3DllClass provides a Create and CreateRemote method to
+// create instances of the default interface DES3DllInterface exposed by
+// the CoClass DES3DllClass. The functions are intended to be used by
+// clients wishing to automate the CoClass objects exposed by the
+// server of this typelibrary.
 // *********************************************************************//
   CoDES3DllClass = class
     class function Create: DES3DllInterface;
@@ -115,28 +115,28 @@ type
 // *********************************************************************//
 // OLE Server Proxy class declaration
 // Server Object    : TDES3DllClass
-// Help String      : 
+// Help String      :
 // Default Interface: DES3DllInterface
 // Def. Intf. DISP? : No
-// Event   Interface: 
+// Event   Interface:
 // TypeFlags        : (2) CanCreate
 // *********************************************************************//
 {$IFDEF LIVE_SERVER_AT_DESIGN_TIME}
-  TDES3DllClassProperties= class;
+  TDES3DllClassProperties = class;
 {$ENDIF}
   TDES3DllClass = class(TOleServer)
   private
-    FIntf:        DES3DllInterface;
+    FIntf: DES3DllInterface;
 {$IFDEF LIVE_SERVER_AT_DESIGN_TIME}
-    FProps:       TDES3DllClassProperties;
-    function      GetServerProperties: TDES3DllClassProperties;
+    FProps: TDES3DllClassProperties;
+    function GetServerProperties: TDES3DllClassProperties;
 {$ENDIF}
-    function      GetDefaultInterface: DES3DllInterface;
+    function GetDefaultInterface: DES3DllInterface;
   protected
     procedure InitServerData; override;
   public
     constructor Create(AOwner: TComponent); override;
-    destructor  Destroy; override;
+    destructor Destroy; override;
     procedure Connect; override;
     procedure ConnectTo(svrIntf: DES3DllInterface);
     procedure Disconnect; override;
@@ -156,10 +156,10 @@ type
 // (This object is used by the IDE's Property Inspector to allow editing
 //  of the properties of this server)
 // *********************************************************************//
- TDES3DllClassProperties = class(TPersistent)
+  TDES3DllClassProperties = class(TPersistent)
   private
-    FServer:    TDES3DllClass;
-    function    GetDefaultInterface: DES3DllInterface;
+    FServer: TDES3DllClass;
+    function GetDefaultInterface: DES3DllInterface;
     constructor Create(AServer: TDES3DllClass);
   protected
   public
@@ -193,9 +193,9 @@ end;
 procedure TDES3DllClass.InitServerData;
 const
   CServerData: TServerData = (
-    ClassID:   '{6641B701-4096-3E41-9B94-5A63DD154D5F}';
-    IntfIID:   '{B550593A-D436-3F41-AFF4-531107C829F0}';
-    EventIID:  '';
+    ClassID: '{6641B701-4096-3E41-9B94-5A63DD154D5F}';
+    IntfIID: '{B550593A-D436-3F41-AFF4-531107C829F0}';
+    EventIID: '';
     LicenseKey: nil;
     Version: 500);
 begin
@@ -209,7 +209,7 @@ begin
   if FIntf = nil then
   begin
     punk := GetServer;
-    Fintf:= punk as DES3DllInterface;
+    Fintf := punk as DES3DllInterface;
   end;
 end;
 
@@ -252,6 +252,7 @@ begin
 end;
 
 {$IFDEF LIVE_SERVER_AT_DESIGN_TIME}
+
 function TDES3DllClass.GetServerProperties: TDES3DllClassProperties;
 begin
   Result := FProps;
@@ -269,6 +270,7 @@ begin
 end;
 
 {$IFDEF LIVE_SERVER_AT_DESIGN_TIME}
+
 constructor TDES3DllClassProperties.Create(AServer: TDES3DllClass);
 begin
   inherited Create;

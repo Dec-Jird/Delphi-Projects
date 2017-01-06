@@ -21,7 +21,7 @@ object Form1: TForm1
     Top = 16
     Width = 289
     Height = 417
-    ActivePage = MEIZU
+    ActivePage = TabSheet22
     TabOrder = 6
     object TabSheet2: TTabSheet
       Caption = #38463#37324
@@ -2164,9 +2164,9 @@ object Form1: TForm1
   object Button8: TButton
     Left = 616
     Top = 440
-    Width = 75
+    Width = 81
     Height = 25
-    Caption = 'test'
+    Caption = #26500#36896'js '#27979#35797
     TabOrder = 5
     OnClick = Button8Click
   end

@@ -1,14 +1,14 @@
 unit WanDouJiaRSAVerify_TLB;
 
 // ************************************************************************ //
-// WARNING                                                                    
-// -------                                                                    
-// The types declared in this file were generated from data read from a       
-// Type Library. If this type library is explicitly or indirectly (via        
-// another type library referring to this type library) re-imported, or the   
-// 'Refresh' command of the Type Library Editor activated while editing the   
-// Type Library, the contents of this file will be regenerated and all        
-// manual modifications will be lost.                                         
+// WARNING
+// -------
+// The types declared in this file were generated from data read from a
+// Type Library. If this type library is explicitly or indirectly (via
+// another type library referring to this type library) re-imported, or the
+// 'Refresh' command of the Type Library Editor activated while editing the
+// Type Library, the contents of this file will be regenerated and all
+// manual modifications will be lost.
 // ************************************************************************ //
 
 // PASTLWTR : 1.2
@@ -18,9 +18,9 @@ unit WanDouJiaRSAVerify_TLB;
 // Type Lib: D:\TynooProject\DephiProjects\Pay Verify Delphi\WanDouJiaRSAVerify.tlb (1)
 // LIBID: {760FE270-823D-456E-A558-14E6EF9AD4F4}
 // LCID: 0
-// Helpfile: 
-// HelpString: 
-// DepndLst: 
+// Helpfile:
+// HelpString:
+// DepndLst:
 //   (1) v2.0 stdole, (C:\Windows\SysWOW64\stdole2.tlb)
 //   (2) v2.4 mscorlib, (C:\Windows\Microsoft.NET\Framework\v4.0.30319\mscorlib.tlb)
 // Errors:
@@ -30,31 +30,31 @@ unit WanDouJiaRSAVerify_TLB;
 //   Error creating palette bitmap of (TRSAUtils) : Server mscoree.dll contains no icons
 // ************************************************************************ //
 // *************************************************************************//
-// NOTE:                                                                      
-// Items guarded by $IFDEF_LIVE_SERVER_AT_DESIGN_TIME are used by properties  
-// which return objects that may need to be explicitly created via a function 
-// call prior to any access via the property. These items have been disabled  
-// in order to prevent accidental use from within the object inspector. You   
-// may enable them by defining LIVE_SERVER_AT_DESIGN_TIME or by selectively   
-// removing them from the $IFDEF blocks. However, such items must still be    
-// programmatically created via a method of the appropriate CoClass before    
-// they can be used.                                                          
-{$TYPEDADDRESS OFF} // Unit must be compiled without type-checked pointers. 
+// NOTE:
+// Items guarded by $IFDEF_LIVE_SERVER_AT_DESIGN_TIME are used by properties
+// which return objects that may need to be explicitly created via a function
+// call prior to any access via the property. These items have been disabled
+// in order to prevent accidental use from within the object inspector. You
+// may enable them by defining LIVE_SERVER_AT_DESIGN_TIME or by selectively
+// removing them from the $IFDEF blocks. However, such items must still be
+// programmatically created via a method of the appropriate CoClass before
+// they can be used.
+{$TYPEDADDRESS OFF} // Unit must be compiled without type-checked pointers.
 {$WARN SYMBOL_PLATFORM OFF}
 {$WRITEABLECONST ON}
 {$VARPROPSETTER ON}
 interface
 
 uses Windows, ActiveX, Classes, Graphics, mscorlib_TLB, OleServer, StdVCL, Variants;
-  
+
 
 
 // *********************************************************************//
-// GUIDS declared in the TypeLibrary. Following prefixes are used:        
-//   Type Libraries     : LIBID_xxxx                                      
-//   CoClasses          : CLASS_xxxx                                      
-//   DISPInterfaces     : DIID_xxxx                                       
-//   Non-DISP interfaces: IID_xxxx                                        
+// GUIDS declared in the TypeLibrary. Following prefixes are used:
+//   Type Libraries     : LIBID_xxxx
+//   CoClasses          : CLASS_xxxx
+//   DISPInterfaces     : DIID_xxxx
+//   Non-DISP interfaces: IID_xxxx
 // *********************************************************************//
 const
   // TypeLibrary Major and minor versions
@@ -74,7 +74,7 @@ const
 type
 
 // *********************************************************************//
-// Forward declaration of types defined in TypeLibrary                    
+// Forward declaration of types defined in TypeLibrary
 // *********************************************************************//
   _BerDecodeException = interface;
   _BerDecodeExceptionDisp = dispinterface;
@@ -86,8 +86,8 @@ type
   _RSAUtilsDisp = dispinterface;
 
 // *********************************************************************//
-// Declaration of CoClasses defined in Type Library                       
-// (NOTE: Here we map each CoClass to its Default Interface)              
+// Declaration of CoClasses defined in Type Library
+// (NOTE: Here we map each CoClass to its Default Interface)
 // *********************************************************************//
   WanDouRSAVerifyClass = WanDouRSAVerifyInterface;
   BerDecodeException = _BerDecodeException;
@@ -170,11 +170,11 @@ type
   end;
 
 // *********************************************************************//
-// The Class CoWanDouRSAVerifyClass provides a Create and CreateRemote method to          
-// create instances of the default interface WanDouRSAVerifyInterface exposed by              
-// the CoClass WanDouRSAVerifyClass. The functions are intended to be used by             
-// clients wishing to automate the CoClass objects exposed by the         
-// server of this typelibrary.                                            
+// The Class CoWanDouRSAVerifyClass provides a Create and CreateRemote method to
+// create instances of the default interface WanDouRSAVerifyInterface exposed by
+// the CoClass WanDouRSAVerifyClass. The functions are intended to be used by
+// clients wishing to automate the CoClass objects exposed by the
+// server of this typelibrary.
 // *********************************************************************//
   CoWanDouRSAVerifyClass = class
     class function Create: WanDouRSAVerifyInterface;
@@ -185,28 +185,28 @@ type
 // *********************************************************************//
 // OLE Server Proxy class declaration
 // Server Object    : TWanDouRSAVerifyClass
-// Help String      : 
+// Help String      :
 // Default Interface: WanDouRSAVerifyInterface
 // Def. Intf. DISP? : No
-// Event   Interface: 
+// Event   Interface:
 // TypeFlags        : (2) CanCreate
 // *********************************************************************//
 {$IFDEF LIVE_SERVER_AT_DESIGN_TIME}
-  TWanDouRSAVerifyClassProperties= class;
+  TWanDouRSAVerifyClassProperties = class;
 {$ENDIF}
   TWanDouRSAVerifyClass = class(TOleServer)
   private
-    FIntf:        WanDouRSAVerifyInterface;
+    FIntf: WanDouRSAVerifyInterface;
 {$IFDEF LIVE_SERVER_AT_DESIGN_TIME}
-    FProps:       TWanDouRSAVerifyClassProperties;
-    function      GetServerProperties: TWanDouRSAVerifyClassProperties;
+    FProps: TWanDouRSAVerifyClassProperties;
+    function GetServerProperties: TWanDouRSAVerifyClassProperties;
 {$ENDIF}
-    function      GetDefaultInterface: WanDouRSAVerifyInterface;
+    function GetDefaultInterface: WanDouRSAVerifyInterface;
   protected
     procedure InitServerData; override;
   public
     constructor Create(AOwner: TComponent); override;
-    destructor  Destroy; override;
+    destructor Destroy; override;
     procedure Connect; override;
     procedure ConnectTo(svrIntf: WanDouRSAVerifyInterface);
     procedure Disconnect; override;
@@ -225,10 +225,10 @@ type
 // (This object is used by the IDE's Property Inspector to allow editing
 //  of the properties of this server)
 // *********************************************************************//
- TWanDouRSAVerifyClassProperties = class(TPersistent)
+  TWanDouRSAVerifyClassProperties = class(TPersistent)
   private
-    FServer:    TWanDouRSAVerifyClass;
-    function    GetDefaultInterface: WanDouRSAVerifyInterface;
+    FServer: TWanDouRSAVerifyClass;
+    function GetDefaultInterface: WanDouRSAVerifyInterface;
     constructor Create(AServer: TWanDouRSAVerifyClass);
   protected
   public
@@ -239,11 +239,11 @@ type
 
 
 // *********************************************************************//
-// The Class CoBerDecodeException provides a Create and CreateRemote method to          
-// create instances of the default interface _BerDecodeException exposed by              
-// the CoClass BerDecodeException. The functions are intended to be used by             
-// clients wishing to automate the CoClass objects exposed by the         
-// server of this typelibrary.                                            
+// The Class CoBerDecodeException provides a Create and CreateRemote method to
+// create instances of the default interface _BerDecodeException exposed by
+// the CoClass BerDecodeException. The functions are intended to be used by
+// clients wishing to automate the CoClass objects exposed by the
+// server of this typelibrary.
 // *********************************************************************//
   CoBerDecodeException = class
     class function Create: _BerDecodeException;
@@ -254,28 +254,28 @@ type
 // *********************************************************************//
 // OLE Server Proxy class declaration
 // Server Object    : TBerDecodeException
-// Help String      : 
+// Help String      :
 // Default Interface: _BerDecodeException
 // Def. Intf. DISP? : No
-// Event   Interface: 
+// Event   Interface:
 // TypeFlags        : (2) CanCreate
 // *********************************************************************//
 {$IFDEF LIVE_SERVER_AT_DESIGN_TIME}
-  TBerDecodeExceptionProperties= class;
+  TBerDecodeExceptionProperties = class;
 {$ENDIF}
   TBerDecodeException = class(TOleServer)
   private
-    FIntf:        _BerDecodeException;
+    FIntf: _BerDecodeException;
 {$IFDEF LIVE_SERVER_AT_DESIGN_TIME}
-    FProps:       TBerDecodeExceptionProperties;
-    function      GetServerProperties: TBerDecodeExceptionProperties;
+    FProps: TBerDecodeExceptionProperties;
+    function GetServerProperties: TBerDecodeExceptionProperties;
 {$ENDIF}
-    function      GetDefaultInterface: _BerDecodeException;
+    function GetDefaultInterface: _BerDecodeException;
   protected
     procedure InitServerData; override;
   public
     constructor Create(AOwner: TComponent); override;
-    destructor  Destroy; override;
+    destructor Destroy; override;
     procedure Connect; override;
     procedure ConnectTo(svrIntf: _BerDecodeException);
     procedure Disconnect; override;
@@ -293,10 +293,10 @@ type
 // (This object is used by the IDE's Property Inspector to allow editing
 //  of the properties of this server)
 // *********************************************************************//
- TBerDecodeExceptionProperties = class(TPersistent)
+  TBerDecodeExceptionProperties = class(TPersistent)
   private
-    FServer:    TBerDecodeException;
-    function    GetDefaultInterface: _BerDecodeException;
+    FServer: TBerDecodeException;
+    function GetDefaultInterface: _BerDecodeException;
     constructor Create(AServer: TBerDecodeException);
   protected
   public
@@ -307,11 +307,11 @@ type
 
 
 // *********************************************************************//
-// The Class CoBigInteger provides a Create and CreateRemote method to          
-// create instances of the default interface _BigInteger exposed by              
-// the CoClass BigInteger. The functions are intended to be used by             
-// clients wishing to automate the CoClass objects exposed by the         
-// server of this typelibrary.                                            
+// The Class CoBigInteger provides a Create and CreateRemote method to
+// create instances of the default interface _BigInteger exposed by
+// the CoClass BigInteger. The functions are intended to be used by
+// clients wishing to automate the CoClass objects exposed by the
+// server of this typelibrary.
 // *********************************************************************//
   CoBigInteger = class
     class function Create: _BigInteger;
@@ -322,28 +322,28 @@ type
 // *********************************************************************//
 // OLE Server Proxy class declaration
 // Server Object    : TBigInteger
-// Help String      : 
+// Help String      :
 // Default Interface: _BigInteger
 // Def. Intf. DISP? : No
-// Event   Interface: 
+// Event   Interface:
 // TypeFlags        : (2) CanCreate
 // *********************************************************************//
 {$IFDEF LIVE_SERVER_AT_DESIGN_TIME}
-  TBigIntegerProperties= class;
+  TBigIntegerProperties = class;
 {$ENDIF}
   TBigInteger = class(TOleServer)
   private
-    FIntf:        _BigInteger;
+    FIntf: _BigInteger;
 {$IFDEF LIVE_SERVER_AT_DESIGN_TIME}
-    FProps:       TBigIntegerProperties;
-    function      GetServerProperties: TBigIntegerProperties;
+    FProps: TBigIntegerProperties;
+    function GetServerProperties: TBigIntegerProperties;
 {$ENDIF}
-    function      GetDefaultInterface: _BigInteger;
+    function GetDefaultInterface: _BigInteger;
   protected
     procedure InitServerData; override;
   public
     constructor Create(AOwner: TComponent); override;
-    destructor  Destroy; override;
+    destructor Destroy; override;
     procedure Connect; override;
     procedure ConnectTo(svrIntf: _BigInteger);
     procedure Disconnect; override;
@@ -361,10 +361,10 @@ type
 // (This object is used by the IDE's Property Inspector to allow editing
 //  of the properties of this server)
 // *********************************************************************//
- TBigIntegerProperties = class(TPersistent)
+  TBigIntegerProperties = class(TPersistent)
   private
-    FServer:    TBigInteger;
-    function    GetDefaultInterface: _BigInteger;
+    FServer: TBigInteger;
+    function GetDefaultInterface: _BigInteger;
     constructor Create(AServer: TBigInteger);
   protected
   public
@@ -375,11 +375,11 @@ type
 
 
 // *********************************************************************//
-// The Class CoRSAUtils provides a Create and CreateRemote method to          
-// create instances of the default interface _RSAUtils exposed by              
-// the CoClass RSAUtils. The functions are intended to be used by             
-// clients wishing to automate the CoClass objects exposed by the         
-// server of this typelibrary.                                            
+// The Class CoRSAUtils provides a Create and CreateRemote method to
+// create instances of the default interface _RSAUtils exposed by
+// the CoClass RSAUtils. The functions are intended to be used by
+// clients wishing to automate the CoClass objects exposed by the
+// server of this typelibrary.
 // *********************************************************************//
   CoRSAUtils = class
     class function Create: _RSAUtils;
@@ -390,28 +390,28 @@ type
 // *********************************************************************//
 // OLE Server Proxy class declaration
 // Server Object    : TRSAUtils
-// Help String      : 
+// Help String      :
 // Default Interface: _RSAUtils
 // Def. Intf. DISP? : No
-// Event   Interface: 
+// Event   Interface:
 // TypeFlags        : (2) CanCreate
 // *********************************************************************//
 {$IFDEF LIVE_SERVER_AT_DESIGN_TIME}
-  TRSAUtilsProperties= class;
+  TRSAUtilsProperties = class;
 {$ENDIF}
   TRSAUtils = class(TOleServer)
   private
-    FIntf:        _RSAUtils;
+    FIntf: _RSAUtils;
 {$IFDEF LIVE_SERVER_AT_DESIGN_TIME}
-    FProps:       TRSAUtilsProperties;
-    function      GetServerProperties: TRSAUtilsProperties;
+    FProps: TRSAUtilsProperties;
+    function GetServerProperties: TRSAUtilsProperties;
 {$ENDIF}
-    function      GetDefaultInterface: _RSAUtils;
+    function GetDefaultInterface: _RSAUtils;
   protected
     procedure InitServerData; override;
   public
     constructor Create(AOwner: TComponent); override;
-    destructor  Destroy; override;
+    destructor Destroy; override;
     procedure Connect; override;
     procedure ConnectTo(svrIntf: _RSAUtils);
     procedure Disconnect; override;
@@ -429,10 +429,10 @@ type
 // (This object is used by the IDE's Property Inspector to allow editing
 //  of the properties of this server)
 // *********************************************************************//
- TRSAUtilsProperties = class(TPersistent)
+  TRSAUtilsProperties = class(TPersistent)
   private
-    FServer:    TRSAUtils;
-    function    GetDefaultInterface: _RSAUtils;
+    FServer: TRSAUtils;
+    function GetDefaultInterface: _RSAUtils;
     constructor Create(AServer: TRSAUtils);
   protected
   public
@@ -466,9 +466,9 @@ end;
 procedure TWanDouRSAVerifyClass.InitServerData;
 const
   CServerData: TServerData = (
-    ClassID:   '{4B0CA498-5D0C-3734-9C7E-DCD89FFBD86C}';
-    IntfIID:   '{4950AFB2-7EC8-3E34-9664-F9CE4757955A}';
-    EventIID:  '';
+    ClassID: '{4B0CA498-5D0C-3734-9C7E-DCD89FFBD86C}';
+    IntfIID: '{4950AFB2-7EC8-3E34-9664-F9CE4757955A}';
+    EventIID: '';
     LicenseKey: nil;
     Version: 500);
 begin
@@ -482,7 +482,7 @@ begin
   if FIntf = nil then
   begin
     punk := GetServer;
-    Fintf:= punk as WanDouRSAVerifyInterface;
+    Fintf := punk as WanDouRSAVerifyInterface;
   end;
 end;
 
@@ -525,19 +525,21 @@ begin
 end;
 
 {$IFDEF LIVE_SERVER_AT_DESIGN_TIME}
+
 function TWanDouRSAVerifyClass.GetServerProperties: TWanDouRSAVerifyClassProperties;
 begin
   Result := FProps;
 end;
 {$ENDIF}
 
-function TWanDouRSAVerifyClass.RSAVerify(const data: WideString; const sign: WideString; 
-                                         const publickey: WideString): WordBool;
+function TWanDouRSAVerifyClass.RSAVerify(const data: WideString; const sign: WideString;
+  const publickey: WideString): WordBool;
 begin
   Result := DefaultInterface.RSAVerify(data, sign, publickey);
 end;
 
 {$IFDEF LIVE_SERVER_AT_DESIGN_TIME}
+
 constructor TWanDouRSAVerifyClassProperties.Create(AServer: TWanDouRSAVerifyClass);
 begin
   inherited Create;
@@ -564,9 +566,9 @@ end;
 procedure TBerDecodeException.InitServerData;
 const
   CServerData: TServerData = (
-    ClassID:   '{28F8E1CD-D5E4-35DC-997F-55FA59B12660}';
-    IntfIID:   '{3E3BC924-8713-3455-9782-FFEBF3268A73}';
-    EventIID:  '';
+    ClassID: '{28F8E1CD-D5E4-35DC-997F-55FA59B12660}';
+    IntfIID: '{3E3BC924-8713-3455-9782-FFEBF3268A73}';
+    EventIID: '';
     LicenseKey: nil;
     Version: 500);
 begin
@@ -580,7 +582,7 @@ begin
   if FIntf = nil then
   begin
     punk := GetServer;
-    Fintf:= punk as _BerDecodeException;
+    Fintf := punk as _BerDecodeException;
   end;
 end;
 
@@ -623,6 +625,7 @@ begin
 end;
 
 {$IFDEF LIVE_SERVER_AT_DESIGN_TIME}
+
 function TBerDecodeException.GetServerProperties: TBerDecodeExceptionProperties;
 begin
   Result := FProps;
@@ -630,6 +633,7 @@ end;
 {$ENDIF}
 
 {$IFDEF LIVE_SERVER_AT_DESIGN_TIME}
+
 constructor TBerDecodeExceptionProperties.Create(AServer: TBerDecodeException);
 begin
   inherited Create;
@@ -656,9 +660,9 @@ end;
 procedure TBigInteger.InitServerData;
 const
   CServerData: TServerData = (
-    ClassID:   '{36ACAA7C-595B-3D13-B0DF-D0F83D57A739}';
-    IntfIID:   '{917A1D5D-BDA0-34CD-8C4F-48885418159E}';
-    EventIID:  '';
+    ClassID: '{36ACAA7C-595B-3D13-B0DF-D0F83D57A739}';
+    IntfIID: '{917A1D5D-BDA0-34CD-8C4F-48885418159E}';
+    EventIID: '';
     LicenseKey: nil;
     Version: 500);
 begin
@@ -672,7 +676,7 @@ begin
   if FIntf = nil then
   begin
     punk := GetServer;
-    Fintf:= punk as _BigInteger;
+    Fintf := punk as _BigInteger;
   end;
 end;
 
@@ -715,6 +719,7 @@ begin
 end;
 
 {$IFDEF LIVE_SERVER_AT_DESIGN_TIME}
+
 function TBigInteger.GetServerProperties: TBigIntegerProperties;
 begin
   Result := FProps;
@@ -722,6 +727,7 @@ end;
 {$ENDIF}
 
 {$IFDEF LIVE_SERVER_AT_DESIGN_TIME}
+
 constructor TBigIntegerProperties.Create(AServer: TBigInteger);
 begin
   inherited Create;
@@ -748,9 +754,9 @@ end;
 procedure TRSAUtils.InitServerData;
 const
   CServerData: TServerData = (
-    ClassID:   '{F71DA503-32FE-3C52-B9C7-3812E530A738}';
-    IntfIID:   '{5C697514-0D26-3A53-B442-E93A76FC9CBA}';
-    EventIID:  '';
+    ClassID: '{F71DA503-32FE-3C52-B9C7-3812E530A738}';
+    IntfIID: '{5C697514-0D26-3A53-B442-E93A76FC9CBA}';
+    EventIID: '';
     LicenseKey: nil;
     Version: 500);
 begin
@@ -764,7 +770,7 @@ begin
   if FIntf = nil then
   begin
     punk := GetServer;
-    Fintf:= punk as _RSAUtils;
+    Fintf := punk as _RSAUtils;
   end;
 end;
 
@@ -807,6 +813,7 @@ begin
 end;
 
 {$IFDEF LIVE_SERVER_AT_DESIGN_TIME}
+
 function TRSAUtils.GetServerProperties: TRSAUtilsProperties;
 begin
   Result := FProps;
@@ -814,6 +821,7 @@ end;
 {$ENDIF}
 
 {$IFDEF LIVE_SERVER_AT_DESIGN_TIME}
+
 constructor TRSAUtilsProperties.Create(AServer: TRSAUtils);
 begin
   inherited Create;
