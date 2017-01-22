@@ -9,7 +9,8 @@ uses
   IdCustomHTTPServer, IdHTTPServer, XMLIntf, XMLDoc,
   IdTCPConnection, IdTCPClient, IdHTTP, OleCtrls, SHDocVw, IdTCPServer, JpushSDK,
    {IdHMACSHA1, } IdCoderMIME, HmacSha1_TLB, httpDll_TLB, SignAndVerify_TLB,
-  WanDouJiaRSAVerify_TLB, iapppaySigndll_TLB, DES3Dll_TLB, IdCustomTCPServer, activex;
+  WanDouJiaRSAVerify_TLB, iapppaySigndll_TLB, DES3Dll_TLB, IdCustomTCPServer, activex,
+  TUHttpHelper, uLkJSON;
 
 type
 
@@ -61,7 +62,7 @@ type
     Button15: TButton;
     TabSheet7: TTabSheet;
     Memo7: TMemo;
-    Memo8: TMemo;
+    Memo8: TMemo;     
     Button12: TButton;
     Button13: TButton;
     TabSheet8: TTabSheet;
@@ -253,6 +254,11 @@ type
     MZOrderEdit: TLabeledEdit;
     PayDataEdit: TLabeledEdit;
     PayVerifyBtn: TButton;
+    Button3: TButton;
+    GooglePayBtn: TButton;
+    PkgNameEdit: TLabeledEdit;
+    ProductIdEdit: TLabeledEdit;
+    PurchaseTokenEdit: TLabeledEdit;
     procedure FormCreate(Sender: TObject);
     procedure Button2Click(Sender: TObject);
     procedure Button4Click(Sender: TObject);
@@ -277,7 +283,6 @@ type
 
     procedure SendJPushMessage(MessageStr: string; DataArray: TJPushDataArray);
     procedure Button22Click(Sender: TObject);
-
     procedure MainOutMessage(const Msg: string); //输出Log
     //Xml解析（从字符串形式xml中读取信息），读取到的信息放到List中。
     procedure ReadXml(Node: IXMLNode; var List: TStringList);
@@ -363,6 +368,8 @@ type
     procedure MZLoginBtnClick(Sender: TObject);
     procedure MZOrderBtnClick(Sender: TObject);
     procedure PayVerifyBtnClick(Sender: TObject);
+    procedure Button3Click(Sender: TObject);
+    procedure GooglePayBtnClick(Sender: TObject);
 
   private
     { Private declarations }
@@ -427,126 +434,14 @@ var
   params: string;
   sigurl: string;
   TencentPayServer: TTencentPayServer;
+  HttpHelper: THttpHelper;
+  googleAccessTokenJs: TlkJSONobject;
 
 implementation
 
-uses uLkJSON, AsphyreMD5, IniFiles;
+uses AsphyreMD5, IniFiles, GoogleOAuth2Unit, TUTools;
 
 {$R *.dfm}
-
-
-function MD5(const s: string): string;
-var
-  I: integer;
-  MD5Bytes: array[1..16] of Byte;
-begin
-  Result := '';
-
-  MD5Checksum(@S[1], Length(s), @MD5Bytes[1]);
-
-  for i := 1 to 16 do
-    Result := Result + Lowercase(IntToHex(MD5Bytes[i], 2));
-end;
-
-procedure FHttpsPost(url, data: string; res: TStream; header: string = '');
-var
-  hInt, hConn, hreq: HINTERNET;
-  dwRead, dwFlags: cardinal;
-  port: Word;
-  uri: TIdURI;
-  proto, host, path: string;
-begin
-  uri := TIdURI.Create(url);
-  host := uri.Host;
-  if uri.Params <> '' then
-    path := uri.Path + uri.Document + '?' + uri.Params
-  else
-    path := uri.Path + uri.Document;
-  proto := uri.Protocol;
-  if UpperCase(proto) = 'HTTPS' then
-  begin
-    port := INTERNET_DEFAULT_HTTPS_PORT;
-    dwFlags := INTERNET_FLAG_SECURE;
-  end
-  else
-  begin
-    port := StrToIntDef(uri.Port, 80);
-    dwFlags := INTERNET_FLAG_RELOAD;
-  end;
-  uri.Free;
-  hInt := InternetOpen('Delphi', INTERNET_OPEN_TYPE_PRECONFIG, nil, nil, 0);
-  hConn := InternetConnect(hInt, PChar(host), port, nil, nil, INTERNET_SERVICE_HTTP, 0, 0);
-  hreq := HttpOpenRequest(hConn, 'POST', PChar(Path), 'HTTP/1.1', nil, nil, dwFlags, 0);
-  if header <> '' then
-    HttpAddRequestHeaders(hreq, PChar(header), length(header), HTTP_ADDREQ_FLAG_ADD and HTTP_ADDREQ_FLAG_REPLACE);
-  if HttpSendRequest(hReq, nil, 0, PChar(data), Length(data)) then
-  begin
-    dwRead := 0;
-    repeat
-      InternetReadFile(hreq, Fbuffer, 65536, dwRead);
-      if (dwRead <> 0) and (Fbuffer <> nil) then
-        res.Write(Fbuffer^, dwRead);
-    until dwRead = 0;
-  end;
-  InternetCloseHandle(hreq);
-  InternetCloseHandle(hConn);
-  InternetCloseHandle(hInt);
-end;
-
-procedure FHttpsGet(url: string; res: TStream; header: string = '');
-const
-  HTTP_VERSION = 'HTTP/1.1';
-var
-  hInt, hUrl: HINTERNET;
-  dwRead: cardinal;
-
-begin
-  if res = nil then
-    Exit;
-
-  try
-    hInt := InternetOpen('Delphi', INTERNET_OPEN_TYPE_PRECONFIG, nil, nil, 0);
-    dwRead := 0;
-    if header <> '' then
-    begin
-      HttpAddRequestHeaders(hInt, PChar(header), length(header), HTTP_ADDREQ_FLAG_ADD and HTTP_ADDREQ_FLAG_REPLACE);
-      hurl := InternetOpenUrl(hInt, PChar(url), PChar(header), length(header), INTERNET_FLAG_RELOAD, 0);
-    end
-    else
-    begin
-      hurl := InternetOpenUrl(hInt, PChar(url), nil, 0, INTERNET_FLAG_RELOAD, 0);
-    end;
-
-    if hurl = nil then
-    begin
-      InternetCloseHandle(hInt);
-      Exit;
-    end;
-
-    repeat
-      if InternetReadFile(hUrl, Fbuffer, 1000, dwRead) then
-      begin
-        if (dwRead > 0) and (Fbuffer <> nil) then
-          res.Write(Fbuffer^, dwRead)
-        else if (dwRead < 0) then
-        begin
-          form1.Memo1.Lines.Add('dwRead < 0 error:' + IntTostr(GetLastError()));
-        end;
-      end
-      else
-      begin
-        form1.Memo1.Lines.Add('InternetReadFile failed:' + IntTostr(GetLastError()));
-      end;
-    until dwRead = 0;
-    InternetCloseHandle(hUrl);
-    InternetCloseHandle(hInt);
-  except
-    on E: Exception do
-    begin
-      form1.Memo1.Lines.Add(E.Message);
-    end;
-  end;
-end;
 
 procedure TForm1.MainOutMessage(const Msg: string); //输出Log
 var
@@ -569,81 +464,15 @@ begin
   FStream := TStringStream.Create('');
   FBuffer := @(FBuffers[0]);
   TencentPayServer := TTencentPayServer.Create; //创建server
-end;
-
-
-function HttpsGet(url: string; header: string = ''): string;
-begin
-  try
-    FStream.Position := 0;
-    FHttpsGet(url, FStream, header);
-    result := FStream.DataString;
-  finally
-  end;
-end;
-
-function HttpsPost(url, data: string; header: string = ''): string;
-begin
-  try
-    FStream.Position := 0;
-    FHttpsPost(url, data, FStream, header);
-    result := FStream.DataString;
-  finally
-
-  end;
+  HttpHelper := THttpHelper.Create;
+  googleAccessTokenJs := TlkJSONobject.Create;
+  
 end;
 
 function Addurl(param, data: string): string;
 begin
   params := params + param + '=' + data + '&';
   sigurl := sigurl + param + '=' + data + '&';
-end;
-
-
-function URLEncode(const AStr: string): string;
-// The NoConversion set contains characters as specificed in RFC 1738 and
-// should not be modified unless the standard changes.
-const
-  NoConversion = ['A'..'Z', 'a'..'z', '@', '.', '_', '-',
-    '0'..'9', '$', '!', '''', '(', ')'];
-var
-  Sp, Rp: PChar;
-begin
-  SetLength(Result, Length(AStr) * 3);
-  Sp := PChar(AStr);
-  Rp := PChar(Result);
-  while Sp^ <> #0 do
-  begin
-    if Sp^ in NoConversion then
-      Rp^ := Sp^
-    else
-      if Sp^ = ' ' then
-        Rp^ := '+'
-      else
-      begin
-        FormatBuf(Rp^, 3, '%%%.2x', 6, [Ord(Sp^)]);
-        Inc(Rp, 2);
-      end;
-    Inc(Rp);
-    Inc(Sp);
-  end;
-  SetLength(Result, Rp - PChar(Result));
-end;
-
-
-
-function DateTimeToUnixDate(const ADate: TDateTime): string;
-const
-  cUnixStarDate: TDateTime = 25569.0;
-begin
-  Result := IntToStr(Round((ADate - cUnixStarDate) * 86400));
-end;
-
-function DateTimeToUnixDateInt(const ADate: TDateTime): Int64;
-const
-  cUnixStarDate: TDateTime = 25569.0;
-begin
-  Result := Round((ADate - cUnixStarDate) * 86400);
 end;
 
 procedure TForm1.Button2Click(Sender: TObject);
@@ -665,7 +494,7 @@ begin
   MainOutMessage('');
 
 
-  MainOutMessage(Utf8ToAnsi(HttpsGet(url)));
+  MainOutMessage(Utf8ToAnsi(HttpHelper.HttpsGet(url)));
 end;
 
 procedure TForm1.Button5Click(Sender: TObject);
@@ -803,7 +632,7 @@ begin
     LabeledEdit16.Text + '&ref=' + LabeledEdit17.Text;
 
 
-  MainOutMessage(Utf8ToAnsi(HttpsPost(url, PostInfo)));
+  MainOutMessage(Utf8ToAnsi(HttpHelper.HttpsPost(url, PostInfo)));
 end;
 
 procedure TForm1.Button12Click(Sender: TObject);
@@ -854,7 +683,7 @@ begin
     '&merchant_transaction_id=' + LabeledEdit18.Text;
 
 
-  MainOutMessage(Utf8ToAnsi(HttpsPost(url, PostInfo)));
+  MainOutMessage(Utf8ToAnsi(HttpHelper.HttpsPost(url, PostInfo)));
 end;
 
 procedure TForm1.Button16Click(Sender: TObject);
@@ -915,7 +744,7 @@ begin
   Header := AnsiToUtf8('Authorization: Basic ' + EncodeString(AppKey + ':' + MasterSecret));
 
   memo9.Lines.Add(JSONStr);
-  MainOutMessage(Utf8ToAnsi(HttpsPost(url, AnsiToUtf8(JSONStr), Header)));
+  MainOutMessage(Utf8ToAnsi(HttpHelper.HttpsPost(url, AnsiToUtf8(JSONStr), Header)));
 
 
 
@@ -990,7 +819,7 @@ begin
 
   MainOutMessage(info);
 
-  MainOutMessage(Utf8ToAnsi(HttpsPost(url, info)));
+  MainOutMessage(Utf8ToAnsi(HttpHelper.HttpsPost(url, info)));
 end;
 
 procedure TForm1.Button19Click(Sender: TObject);
@@ -1000,19 +829,13 @@ end;
 
 procedure TForm1.Button20Click(Sender: TObject);
 begin
-  MainOutMessage(Utf8ToAnsi(HttpsGet(Edit1.Text, '')));
+  MainOutMessage(Utf8ToAnsi(HttpHelper.HttpsGet(Edit1.Text, '')));
 end;
 
 procedure TForm1.Button21Click(Sender: TObject);
 begin
-  MainOutMessage(Utf8ToAnsi(HttpsPost(Edit2.Text, Edit3.Text, '')));
+  MainOutMessage(Utf8ToAnsi(HttpHelper.HttpsPost(Edit2.Text, Edit3.Text, 'Content-Type:application/x-www-form-urlencoded')));
 end;
-
-
-
-
-
-
 
 procedure TForm1.Button22Click(Sender: TObject);
 var
@@ -1134,7 +957,7 @@ begin
 
   DataStr := url + DataStr;
     //MainOutMessage(Utf8ToAnsi(HttpsGet(url, AnsiToUtf8(DataStr))));
-  MainOutMessage(Utf8ToAnsi(HttpsGet(DataStr)));
+  MainOutMessage(Utf8ToAnsi(HttpHelper.HttpsGet(DataStr)));
 end;
 
 function TForm1.URLencode(str: string): string;
@@ -1291,7 +1114,7 @@ begin
 
   DataStr := url + '?access_token=' + accessToken;
   MainOutMessage('获取用户信息请求：' + DataStr);
-  resultMsg := Utf8ToAnsi(HttpsGet(DataStr));
+  resultMsg := Utf8ToAnsi(HttpHelper.HttpsGet(DataStr));
   MainOutMessage('返回用户信息：' + resultMsg);
 
   //resultMsg := '{"id":"1355380850","name":"什么鬼切切切","avatar":"http://p1.qhmsg.com/dm/48_48_100/t00df551a583a87f4e9.jpg?f=65d9991329eb158854db43d4a76e4f43"}';
@@ -1364,7 +1187,7 @@ begin
   MainOutMessage(DataStr);
 
 
-  MainOutMessage(Utf8ToAnsi(HttpsPost(url, DataStr, 'Content-Type:application/x-www-form-urlencoded')));
+  MainOutMessage(Utf8ToAnsi(HttpHelper.HttpsPost(url, DataStr, 'Content-Type:application/x-www-form-urlencoded')));
 
   {code :=1;
   content := 'eyJVSUQiOjEyNzcxNzQ0NzF9';
@@ -1408,7 +1231,7 @@ begin
   MainOutMessage((DataStr));
 
 
-  MainOutMessage(Utf8ToAnsi(HttpsPost(url, (DataStr), 'Content-Type:application/x-www-form-urlencoded')));
+  MainOutMessage(Utf8ToAnsi(HttpHelper.HttpsPost(url, (DataStr), 'Content-Type:application/x-www-form-urlencoded')));
 end;
 
 procedure TForm1.Button30Click(Sender: TObject);
@@ -1569,7 +1392,7 @@ begin
   tokenStr := StringReplace(URLEncode(tokenStr), '+', '%2B', [rfReplaceAll]); //替换字符串中所有 +为%2B
   data := url + '?nsp_svc=OpenUP.User.getInfo&nsp_ts=' + IntToStr(DateTimeToUnixDateInt(now)) + '&access_token=' + tokenStr;
   MainOutMessage('data: ' + data);
-  returnStr := Utf8ToAnsi(HttpsGet(data));
+  returnStr := Utf8ToAnsi(HttpHelper.HttpsGet(data));
   MainOutMessage('returnStr: ' + returnStr);
 
   try
@@ -1647,7 +1470,7 @@ begin
   //postData := 'access_token='+token.Text;
   postData := 'authtoken=' + token.Text;
   MainOutMessage('postData: ' + postData);
-  returnStr := Utf8ToAnsi(HttpsPost(url, postData, header)); //发送验证登录的请求.
+  returnStr := Utf8ToAnsi(HttpHelper.HttpsPost(url, postData, header)); //发送验证登录的请求.
   MainOutMessage('登录请求响应: ' + returnStr);
   //{"email":"","isOverDue":"0","name":"","nickname":"","phonenum":"","uid":"a7eea091665fdce9"}
   //{"retcode":0,"data":{"success":true,"openid":"a7eea091665fdce9"}}
@@ -1726,7 +1549,7 @@ begin
   postData := signStr + '&signMethod=' + signMethod + '&signature=' + signature;
   header := 'Content-Type:application/x-www-form-urlencoded';
   MainOutMessage('postData: ' + postData + #13#10);
-  returnStr := Utf8ToAnsi(HttpsPost(requestUrl, postData, header)); //向Vivo请求订单流水号.
+  returnStr := Utf8ToAnsi(HttpHelper.HttpsPost(requestUrl, postData, header)); //向Vivo请求订单流水号.
   MainOutMessage('订单推送结果: ' + returnStr + #13#10);
 
   try
@@ -1786,7 +1609,7 @@ begin
   header := 'Content-Type:application/x-www-form-urlencoded';
   postData := 'token=' + CCToken.Text;
   MainOutMessage('postData: ' + postData);
-  returnStr := Utf8ToAnsi(HttpsPost(url, postData, header)); //发送验证登录的请求.
+  returnStr := Utf8ToAnsi(HttpHelper.HttpsPost(url, postData, header)); //发送验证登录的请求.
   MainOutMessage('登录请求响应: ' + returnStr);
 
   if returnStr = 'success' then
@@ -1815,7 +1638,7 @@ begin
   MainOutMessage('登录请求: ' + data);
   //data := 'http://api.17168.com/api/hbsdk/validateLogin/?session_id=dbb8e7161671414a903fb91513dd494f&game_id=100023&sign=0fb86de9ba0cb1adfd2c8cecc487dc05';
 
-  returnStr := Utf8ToAnsi(HttpsGet(data)); //发送验证登录的请求.
+  returnStr := Utf8ToAnsi(HttpHelper.HttpsGet(data)); //发送验证登录的请求.
   MainOutMessage('登录请求响应: ' + returnStr);
   try
     js := TlkJSON.ParseText(returnStr) as TlkJSONobject;
@@ -1877,7 +1700,7 @@ begin
     + '&time=' + IntToStr(time) + '&sign=' + sign;
   MainOutMessage('请求: ' + data);
 
-  returnStr := Utf8ToAnsi(HttpsGet(data)); //发送支付查询的请求.
+  returnStr := Utf8ToAnsi(HttpHelper.HttpsGet(data)); //发送支付查询的请求.
   MainOutMessage('响应: ' + returnStr);
 
   try
@@ -2166,7 +1989,7 @@ begin
 
   MainOutMessage('请求: ' + requestStr + #13#10);
 
-  returnStr := Utf8ToAnsi(HttpsGet(requestStr)); //发送验证登录的请求.
+  returnStr := Utf8ToAnsi(HttpHelper.HttpsGet(requestStr)); //发送验证登录的请求.
   MainOutMessage('登录请求响应: ' + returnStr + #13#10);
   try
     js := TlkJSON.ParseText(returnStr) as TlkJSONobject;
@@ -2405,7 +2228,7 @@ begin
 
   try
       //然后 发起查询用元宝余额的请求.
-    returnJs := Utf8ToAnsi(HttpsGet(TencentBalance.Request));
+    returnJs := Utf8ToAnsi(HttpHelper.HttpsGet(TencentBalance.Request));
     MainOutMessage('[Log] 查询余额请求响应 (' + IntToStr(TencentBalance.RequestTimes) + ') ' + returnJs);
 
       {"ret" : 0,"balance" : 167,"gen_balance" : 57,"first_save" : 0,"save_amt" : 110,
@@ -2728,7 +2551,7 @@ begin
   MainOutMessage('[Log] 游戏币操作请求: ' + request);
 
   //发起元宝操作的请求.
-  returnJs := Utf8ToAnsi(HttpsGet(request));
+  returnJs := Utf8ToAnsi(HttpHelper.HttpsGet(request));
   MainOutMessage('[Log] 游戏币操作请求响应: ' + returnJs);
 
   //扣除游戏币
@@ -2946,7 +2769,7 @@ begin
   postData := Utf8Encode(postData);
 
   MainOutMessage('[下单请求]: ' + postData + #13#10);
-  returnStr := Utf8ToAnsi(HttpsPost(pay_URL, postData, header)); //发送验证登录的请求.
+  returnStr := Utf8ToAnsi(HttpHelper.HttpsPost(pay_URL, postData, header)); //发送验证登录的请求.
   MainOutMessage('[返回数据]: ' + returnStr + #13#10);
 
   if (Pos('transdata=', returnStr) = 0) or (Pos('&sign=', returnStr) = 0) or (Pos('&signtype=', returnStr) = 0) then
@@ -2993,7 +2816,7 @@ begin
   //DataStr := 'AppID=5424161&AccessToken=76ad35426eba4e3989378da50b2a969e-e5c20f39de9dee046d88d29848fa8b6c-20150915191122-e0b1542231e510fd97a0bddb0147f075-390fa8b23d260ae67e53ed1b0ebb58fc-3db7733b3ff019a70bcdae0bf417eaf8&Sign=04d623b352ae2f634fe147747611c575';
   MainOutMessage('登录验证请求：' + DataStr);
 
-  returnStr := Utf8ToAnsi(HttpsPost(LOGIN_URL, DataStr, 'Content-Type:application/x-www-form-urlencoded'));
+  returnStr := Utf8ToAnsi(HttpHelper.HttpsPost(LOGIN_URL, DataStr, 'Content-Type:application/x-www-form-urlencoded'));
   MainOutMessage('返回结果：' + returnStr);
   returnStr := '{"ResultCode":1,"ResultMsg":"AccessToken鍚堟硶鏈夋晥","AppID":"6925292","Sign":"af05762bea7454cad70b55c559fbd6e4","Content":"eyJVSUQiOjEyNzcxNzQ0NzF9"}';
   try
@@ -3105,7 +2928,7 @@ begin
       end;
 
       MainOutMessage(#13#10 + 'Header: ' + #13#10 + Header.DataString);
-      resultStr := Utf8ToAnsi(HttpsGet(LOGIN_URL, Header.DataString));
+      resultStr := Utf8ToAnsi(HttpHelper.HttpsGet(LOGIN_URL, Header.DataString));
       MainOutMessage('返回结果：' + resultStr);
 
     end
@@ -3201,7 +3024,7 @@ begin
       uid := jsdata.Field['Uid'].Value;
 
       MainOutMessage('请求: ' + SLineBreak + LOGIN_URL + '?state=' + state + '&uid=' + uid + SLineBreak);
-      respData := Utf8ToAnsi(HttpsGet(LOGIN_URL + '?state=' + state + '&uid=' + uid));
+      respData := Utf8ToAnsi(HttpHelper.HttpsGet(LOGIN_URL + '?state=' + state + '&uid=' + uid));
       MainOutMessage('返回结果：' + respData + SLineBreak);
     end
     else
@@ -3287,7 +3110,7 @@ begin
       postData := 'gid=' + IntToStr(GAME_ID) + '&session_key=' + session_key + '&user_id=' + user_id + '&auth=' + auth_sign;
       MainOutMessage('POST数据: ' + postData + SLineBreak);
 
-      respData := Utf8ToAnsi(HttpsPost(LOGIN_URL, postData, header));
+      respData := Utf8ToAnsi(HttpHelper.HttpsPost(LOGIN_URL, postData, header));
       MainOutMessage('返回结果：' + respData + SLineBreak);
     end
     else
@@ -3392,7 +3215,7 @@ begin
   end;
 
   MainOutMessage(#13#10 + 'Header: ' + #13#10 + Header.DataString);
-  respData := Utf8ToAnsi(HttpsPost(LOGIN_URL, Data, Header.DataString));
+  respData := Utf8ToAnsi(HttpHelper.HttpsPost(LOGIN_URL, Data, Header.DataString));
   MainOutMessage('返回结果：' + respData + SLineBreak);
 
   //验证成功返回：
@@ -3504,7 +3327,7 @@ begin
   datajs.Free;
 
   MainOutMessage('[Log] JinLi Get Order Number. postData：' + Data + SLineBreak);
-  respData := Utf8ToAnsi(HttpsPost(PAYORDER_URL, Data, Header));
+  respData := Utf8ToAnsi(HttpHelper.HttpsPost(PAYORDER_URL, Data, Header));
   MainOutMessage('[Log] JinLi Get Order Number. 返回结果：' + respData + SLineBreak);
 
   try
@@ -3572,7 +3395,7 @@ begin
     userFrom + '&extra=' + extra + '&validate=' + validate;
 
   MainOutMessage('PostData: ' + PostData);
-  respData := Utf8ToAnsi(HttpsPost(LOGIN_URL, PostData, HEADER));
+  respData := Utf8ToAnsi(HttpHelper.HttpsPost(LOGIN_URL, PostData, HEADER));
   MainOutMessage('返回结果：' + respData);
 
   //success example ：{"status":1,”msg”:”success”,”uid”:123}
@@ -3890,7 +3713,7 @@ begin
       url := LOGIN_URL + '?lpsust=' + jsdata.Field['data'].Value + '&realm=' + OPEN_APP_ID;
       MainOutMessage('请求：' + url + SLineBreak);
 
-      respData := Utf8ToAnsi(HttpsGet(url, HEADER));
+      respData := Utf8ToAnsi(HttpHelper.HttpsGet(url, HEADER));
       MainOutMessage('返回结果：' + respData + SLineBreak);
     end
     else
@@ -4045,7 +3868,7 @@ begin
         '&appkey_id=' + WANDOUJIA_APP_KEY_ID);
       MainOutMessage('请求：' + url + SLineBreak);
 
-      respData := Utf8ToAnsi(HttpsGet(url));
+      respData := Utf8ToAnsi(HttpHelper.HttpsGet(url));
       MainOutMessage('返回结果：' + respData + SLineBreak);
     end
     else
@@ -4203,7 +4026,7 @@ begin
       postData := 'token=' + token + '&openid=' + openid + '&timestamp=' + timestamp + '&gamekey=' + KF_GAME_KEY + '&_sign=' + sign;
       MainOutMessage('Post Data：' + postData + SLineBreak);
 
-      respData := HttpsPOST(KF_LOGIN_URL, postData, header);
+      respData := HttpHelper.HttpsPost(KF_LOGIN_URL, postData, header);
       MainOutMessage('返回结果：' + respData + SLineBreak);
     end
     else
@@ -4288,7 +4111,7 @@ begin
       url := LETV_LOGIN_URL + '?client_id=' + LETV_APP_ID + '&uid=' + uid + '&access_token=' + token;
       MainOutMessage('请求：' + url + SLineBreak);
 
-      respData := Utf8ToAnsi(HttpsGet(url));
+      respData := Utf8ToAnsi(HttpHelper.HttpsGet(url));
       MainOutMessage('返回结果：' + respData + SLineBreak);
     end
     else
@@ -4483,7 +4306,7 @@ begin
       url := DANGLE_LOGIN_URL + '?appid=' + DANGLE_APP_ID + '&umid=' + memberId + '&token=' + token + '&sig=' + sign;
       MainOutMessage('请求：' + url + SLineBreak);
 
-      respData := Utf8ToAnsi(HttpsGet(url));
+      respData := Utf8ToAnsi(HttpHelper.HttpsGet(url));
       MainOutMessage('返回结果：' + respData + SLineBreak);
     end
     else
@@ -4656,7 +4479,7 @@ begin
 
       MainOutMessage('请求postData：' + postData + SLineBreak);
 
-      respData := Utf8ToAnsi(HttpsPost(ANZHI_LOGIN_URL, postData, Header));
+      respData := Utf8ToAnsi(HttpHelper.HttpsPost(ANZHI_LOGIN_URL, postData, Header));
       MainOutMessage('返回结果：' + respData + SLineBreak);
     end
     else
@@ -4840,7 +4663,7 @@ begin
         + '&client_secret=' + COOLPAD_APP_KEY + '&redirect_uri=' + COOLPAD_APP_KEY;
       MainOutMessage('请求：' + url + SLineBreak);
 
-      respData := Utf8ToAnsi(HttpsGet(url));
+      respData := Utf8ToAnsi(HttpHelper.HttpsGet(url));
       MainOutMessage('返回结果：' + respData + SLineBreak);
     end
     else
@@ -4959,7 +4782,7 @@ begin
   Data := 'transdata=' + Data + '&sign=' + sign + '&signtype=RSA';
   Data := StringReplace(Data, ' ', '+', [rfReplaceAll]); //替换字符串中所有的空格为+
 
-  respData := Utf8ToAnsi(HttpDecode(HttpsPost(PAYORDER_URL, Data, Header)));
+  respData := Utf8ToAnsi(HttpDecode(HttpHelper.HttpsPost(PAYORDER_URL, Data, Header)));
   MainOutMessage('[Log] CoolPad Get Order Number. postData：' + Data + SLineBreak);
   MainOutMessage('[Log] CoolPad Get Order Number. 返回结果：' + respData + SLineBreak);
 
@@ -5163,7 +4986,7 @@ begin
       url := YINGYONGHUI_LOGIN_URL + '?login_id=' + YINGYONGHUI_LOGIN_ID + '&login_key=' + YINGYONGHUI_LOGIN_KEY + '&ticket=' + ticket;
       MainOutMessage('请求：' + url + SLineBreak);
 
-      respData := Utf8ToAnsi(HttpsGet(url));
+      respData := Utf8ToAnsi(HttpHelper.HttpsGet(url));
       MainOutMessage('返回结果：' + respData + SLineBreak);
     end
     else
@@ -5414,7 +5237,7 @@ begin
         + '&signature=' + sign + '&version=' + AIYOUXI_VERSION;
       MainOutMessage('请求：' + url + SLineBreak);
 
-      respData := Utf8ToAnsi(HttpsGet(url, Header));
+      respData := Utf8ToAnsi(HttpHelper.HttpsGet(url, Header));
       MainOutMessage('返回结果：' + respData + SLineBreak);
     end
     else
@@ -5623,7 +5446,7 @@ begin
   post := AnsiToUtf8(TlkJSON.GenerateText(js));
   memo1.Lines.Add('postData: ' + post);
 
-  memo1.Lines.Add('请求结果：' + Utf8ToAnsi(HttpsPost(url, post)));
+  memo1.Lines.Add('请求结果：' + Utf8ToAnsi(HttpHelper.HttpsPost(url, post)));
 
   //uc
   {"id":1482485060,"state":{"code":1,"msg":"操作成功"}
@@ -5722,7 +5545,7 @@ begin
       PostData := 'app_id=' + MZ_APP_ID + '&session_id=' + Token + '&uid=' + user_id + '&ts=' + timestamp + '&sign_type=md5&sign=' + sign;
       MainOutMessage('请求PostData：' + PostData + SLineBreak);
 
-      respData := Utf8ToAnsi(HttpsPost(MZ_LOGIN_URL, PostData, Header));
+      respData := Utf8ToAnsi(HttpHelper.HttpsPost(MZ_LOGIN_URL, PostData, Header));
       MainOutMessage('返回结果：' + respData + SLineBreak);
     end
     else
@@ -5900,7 +5723,7 @@ me=2014-10-2011:35:13&order_id=14102000000298934&partner_id=5458428&pay_time=141
     signStr := signStr + ':' + MZ_APP_SECRET;
 
     locSign := LowerCase(MD5(AnsiToUtf8(signStr)));
-    MainOutMessage('[Log] MeiZu  Pay Verify signStr: ' + signStr + ', sign: ' + locSign);
+    MainOutMessage('[Log] MeiZu Pay Verify signStr: ' + signStr + ', sign: ' + locSign);
 
     sign := retList.Values['sign'];
     trade_status := retList.Values['trade_status'];
@@ -5927,11 +5750,51 @@ me=2014-10-2011:35:13&order_id=14102000000298934&partner_id=5458428&pay_time=141
 
   except on E: Exception do
     begin
-      MainOutMessage('[Error] MeiZu Pay Verify Failed: unexpect exception! error(1). respData: ' + Data);
       retList.Free;
       Exit;
     end;
   end;
+end;
+
+procedure TForm1.Button3Click(Sender: TObject);
+var
+  str: string;
+  GoogleOAuth2: TGoogleOAuth2;
+
+begin
+    GoogleOAuth2 := TGoogleOAuth2.Create;
+    GoogleOAuth2.RefreshAccessToken(googleAccessTokenJs);    //传入Js对象，其中保存了access_token和有效时间
+end;
+
+procedure TForm1.GooglePayBtnClick(Sender: TObject);
+var
+  retStr: string;
+  {package_name: string;
+  product_id: string;
+  purchase_token: string;   }
+  access_token: string;
+  GoogleOAuth2: TGoogleOAuth2;
+
+begin
+
+  GoogleOAuth2 := TGoogleOAuth2.Create;
+  {package_name := 'com.playpark.dot';
+  product_id := 'vip_30days';
+  purchase_token := 'giokddnecnchggmjgpepligd.AO-J1OwRhc7oykQkgnV8Y19FXavgdUMewxwl2KMj2kFuC8AfrYpuqqU8GkKRikLaWJ3qClqGJdACCHPWqgc8s6w31KY3E69o-leRL91aL12r2cX6L5J40hc';}
+
+  //传入googleAccessTokenJs，刷新googleAccessTokenJs
+  GoogleOAuth2.RefreshAccessToken(googleAccessTokenJs);
+  access_token := googleAccessTokenJs.getString('access_token');
+
+  retStr := UTF8Decode(GoogleOAuth2.GetVerifyJson(PkgNameEdit.Text, ProductIdEdit.Text, PurchaseTokenEdit.Text, access_token));
+  MainOutMessage('GetVerifiJson 返回结果：' + retStr + SLineBreak);
+  {"purchaseTimeMillis":1469271616589,"purchaseState":0,"developerPayload":"37294"}
+
+  {关于将OAuth2.0验证支付搬到内网：
+   1、导入GoogleOAuth2Unit单元到服务器代码
+   2、调用RefreshAccessToken刷新access_token为最新
+   3、使用GetVerifyJson替换原来的BillVerify方法（DLL方法）
+  }
 end;
 
 end.

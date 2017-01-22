@@ -1,10 +1,10 @@
 object Form1: TForm1
-  Left = -1
-  Top = 114
+  Left = 190
+  Top = 124
   BorderIcons = [biSystemMenu, biMinimize]
   BorderStyle = bsSingle
   Caption = 'Form1'
-  ClientHeight = 488
+  ClientHeight = 482
   ClientWidth = 720
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -21,7 +21,7 @@ object Form1: TForm1
     Top = 16
     Width = 289
     Height = 417
-    ActivePage = TabSheet22
+    ActivePage = TabSheet9
     TabOrder = 6
     object TabSheet2: TTabSheet
       Caption = #38463#37324
@@ -541,7 +541,7 @@ object Form1: TForm1
       end
       object Button17: TButton
         Left = 0
-        Top = 360
+        Top = 200
         Width = 75
         Height = 25
         Caption = 'http up'
@@ -561,8 +561,8 @@ object Form1: TForm1
         Text = 'http://googleapi.tnyoo.com:23333/oauth2callback'
       end
       object Button18: TButton
-        Left = 80
-        Top = 360
+        Left = 96
+        Top = 200
         Width = 75
         Height = 25
         Caption = 'oauth step1'
@@ -581,25 +581,83 @@ object Form1: TForm1
         TabOrder = 6
       end
       object Button19: TButton
-        Left = 160
-        Top = 360
+        Left = 192
+        Top = 200
         Width = 75
         Height = 25
         Caption = 'oauth step2'
         TabOrder = 7
         OnClick = Button19Click
       end
+      object Button3: TButton
+        Left = 8
+        Top = 360
+        Width = 121
+        Height = 25
+        Caption = 'RefreshAccessToken'
+        TabOrder = 8
+        OnClick = Button3Click
+      end
+      object GooglePayBtn: TButton
+        Left = 144
+        Top = 360
+        Width = 129
+        Height = 25
+        Caption = 'GetVerifyJson'
+        TabOrder = 9
+        OnClick = GooglePayBtnClick
+      end
+      object PkgNameEdit: TLabeledEdit
+        Left = 0
+        Top = 256
+        Width = 265
+        Height = 21
+        EditLabel.Width = 74
+        EditLabel.Height = 13
+        EditLabel.Caption = 'package_name'
+        ImeName = #20013#25991'('#31616#20307') - '#30334#24230#36755#20837#27861
+        TabOrder = 10
+        Text = 'com.playpark.dot'
+      end
+      object ProductIdEdit: TLabeledEdit
+        Left = 0
+        Top = 296
+        Width = 265
+        Height = 21
+        EditLabel.Width = 50
+        EditLabel.Height = 13
+        EditLabel.Caption = 'product_id'
+        ImeName = #20013#25991'('#31616#20307') - '#30334#24230#36755#20837#27861
+        TabOrder = 11
+        Text = 'vip_30days'
+      end
+      object PurchaseTokenEdit: TLabeledEdit
+        Left = 0
+        Top = 336
+        Width = 273
+        Height = 21
+        EditLabel.Width = 77
+        EditLabel.Height = 13
+        EditLabel.Caption = 'purchase_token'
+        ImeName = #20013#25991'('#31616#20307') - '#30334#24230#36755#20837#27861
+        TabOrder = 12
+        Text = 
+          'giokddnecnchggmjgpepligd.AO-J1OwRhc7oykQkgnV8Y19FXavgdUMewxwl2KM' +
+          'j2kFuC8AfrYpuqqU8GkKRikLaWJ3qClqGJdACCHPWqgc8s6w31KY3E69o-leRL91' +
+          'aL12r2cX6L5J40hc'
+      end
     end
     object TabSheet10: TTabSheet
       Caption = 'http'
       ImageIndex = 9
       object Edit1: TEdit
-        Left = 0
+        Left = 8
         Top = 0
         Width = 281
         Height = 21
         ImeName = #20013#25991' ('#31616#20307') - '#25628#29399#25340#38899#36755#20837#27861
         TabOrder = 0
+        Text = 'http://www.baidu.com'
       end
       object Button20: TButton
         Left = 0
@@ -617,6 +675,7 @@ object Form1: TForm1
         Height = 21
         ImeName = #20013#25991' ('#31616#20307') - '#25628#29399#25340#38899#36755#20837#27861
         TabOrder = 2
+        Text = 'https://usrsys.vivo.com.cn/sdk/user/auth.do'
       end
       object Edit3: TEdit
         Left = 0
@@ -625,6 +684,9 @@ object Form1: TForm1
         Height = 21
         ImeName = #20013#25991' ('#31616#20307') - '#25628#29399#25340#38899#36755#20837#27861
         TabOrder = 3
+        Text = 
+          'authtoken=NzQ5MWFmYzE0OTc0Mzc3YWFhYjkuMTA2NDIzOTE3LjE0Njg0NjAwOT' +
+          'AyMTg%3D'
       end
       object Button21: TButton
         Left = 0
@@ -2128,7 +2190,7 @@ object Form1: TForm1
   end
   object Button1: TButton
     Left = 8
-    Top = 440
+    Top = 448
     Width = 105
     Height = 25
     Caption = #33150#35759#25903#20184#19979#21333
@@ -2136,7 +2198,7 @@ object Form1: TForm1
   end
   object Button2: TButton
     Left = 120
-    Top = 440
+    Top = 448
     Width = 75
     Height = 25
     Caption = 'unix'#26102#38388#25139
@@ -2145,7 +2207,7 @@ object Form1: TForm1
   end
   object Button4: TButton
     Left = 280
-    Top = 440
+    Top = 448
     Width = 75
     Height = 25
     Caption = #26865#38236#30331#38470
@@ -2154,7 +2216,7 @@ object Form1: TForm1
   end
   object Button5: TButton
     Left = 360
-    Top = 440
+    Top = 448
     Width = 75
     Height = 25
     Caption = #26865#38236'md5'
@@ -2163,7 +2225,7 @@ object Form1: TForm1
   end
   object Button8: TButton
     Left = 616
-    Top = 440
+    Top = 448
     Width = 81
     Height = 25
     Caption = #26500#36896'js '#27979#35797
@@ -2172,7 +2234,7 @@ object Form1: TForm1
   end
   object Button29: TButton
     Left = 456
-    Top = 439
+    Top = 447
     Width = 75
     Height = 25
     Caption = 'QQlogVerity'
@@ -2180,7 +2242,7 @@ object Form1: TForm1
   end
   object Button30: TButton
     Left = 536
-    Top = 439
+    Top = 447
     Width = 75
     Height = 25
     Caption = 'QQPayVerity'

@@ -12,7 +12,10 @@ uses
   httpDll_TLB in 'httpDll_TLB.pas',
   SignAndVerify_TLB in 'SignAndVerify_TLB.pas',
   WanDouJiaRSAVerify_TLB in 'WanDouJiaRSAVerify_TLB.pas',
-  DES3Dll_TLB in 'DES3Dll_TLB.pas';
+  DES3Dll_TLB in 'DES3Dll_TLB.pas',
+  TUHttpHelper in 'Utils\TUHttpHelper.pas',
+  GoogleOAuth2Unit in 'SDKUnits\GoogleOAuth2Unit.pas',
+  TUTools in 'Utils\TUTools.pas';
 
 {$R *.res}
 
