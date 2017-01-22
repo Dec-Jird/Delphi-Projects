@@ -19,9 +19,11 @@ type
     { Public declarations }
   end;
 
+  function AddLine(line: string):string;
+  
 var
   Form1: TForm1;
-
+  
 implementation
 
 //使用Unit方式
@@ -32,6 +34,12 @@ uses
 
   
 {$R *.dfm}
+
+function AddLine(line: string):string;
+begin
+   Form1.Memo1.Lines.Add(line);
+   Result:='AddLine: '+line;
+end;
 
 procedure TForm1.Button1Click(Sender: TObject);
 begin
