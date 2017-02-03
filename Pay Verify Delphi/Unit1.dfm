@@ -5,7 +5,7 @@ object Form1: TForm1
   BorderStyle = bsSingle
   Caption = 'Form1'
   ClientHeight = 482
-  ClientWidth = 720
+  ClientWidth = 715
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -21,7 +21,7 @@ object Form1: TForm1
     Top = 16
     Width = 289
     Height = 417
-    ActivePage = TabSheet9
+    ActivePage = TabSheet21
     TabOrder = 6
     object TabSheet2: TTabSheet
       Caption = #38463#37324
@@ -2278,13 +2278,13 @@ object Form1: TForm1
   end
   object IdHTTPServer1: TIdHTTPServer
     Bindings = <>
-    Left = 696
+    Left = 680
     Top = 64
   end
   object TencentTimer: TTimer
     Enabled = False
     Interval = 15000
-    Left = 692
+    Left = 684
     Top = 96
   end
 end

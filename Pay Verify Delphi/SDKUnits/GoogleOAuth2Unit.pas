@@ -49,18 +49,11 @@ type
 
   TGoogleOAuth2 = class
   private
-{   FStream: TStringStream;
-    FBuffers: array[0..65535] of Byte;
-    Fbuffer: PChar;
-    FBuff: string;
-    url: string;
-    params: string;
-    sigurl: string; }
 
   public
     constructor Create;
 
-    procedure RefreshAccessToken(accessTokenJs: TlkJSONobject);
+    function RefreshAccessToken(accessTokenJs: TlkJSONobject): Boolean;
     function GetVerifyJson(package_name, product_id, purchase_token, access_token: string): string;
   end;
 
@@ -91,7 +84,7 @@ end;
 
 //post请求 ，刷新access_token, access_token过期后，可以使用refresh_token在任何时间，多次刷新access_token.
 
-procedure TGoogleOAuth2.RefreshAccessToken(accessTokenJs: TlkJSONobject);
+function TGoogleOAuth2.RefreshAccessToken(accessTokenJs: TlkJSONobject): Boolean;
 const
   HEADER = 'Content-Type:application/x-www-form-urlencoded';
   GOOGLE_OAUTH2_TOKEN_URL = 'https://accounts.google.com/o/oauth2/token';
@@ -103,6 +96,7 @@ var
   respData: string;
 
 begin
+  Result := False;
   //初次启动初始化access_token
   if (accessTokenJs.IndexOfName('access_token') < 0) or (accessTokenJs.IndexOfName('valid_time') < 0) then
   begin
@@ -140,6 +134,7 @@ begin
         accessTokenJs.Field['access_token'].Value := access_token;
         accessTokenJs.Field['valid_time'].Value := valid_time;
 
+        Result := True;
         Form1.MainOutMessage('[Log] GoogleOAuth2 RefreshAccessToken: ' + TlkJSON.GenerateText(accessTokenJs) + SLineBreak);
       end
       else
@@ -147,20 +142,21 @@ begin
         Form1.MainOutMessage('[Error] GoogleOAuth2 RefreshAccessToken Failed. Parameter not exist! Data: ' + respData);
       end;
       Jso.Free;
-      
+
     except on E: Exception do
       begin
         Form1.MainOutMessage(format('[Error] GoogleOAuth2 RefreshAccessToken Failed. unknown exception. error: %s, Data: %s',
-            [e.message, respData]));
+          [e.message, respData]));
         Jso.Free;
         Exit;
       end;
     end;
 
   end
-  {else
-    Form1.MainOutMessage('[Log] GoogleOAuth2 RefreshAccessToken Token还未过期！');
-  }
+  else
+    Result := True;
+  //  Form1.MainOutMessage('[Log] GoogleOAuth2 RefreshAccessToken Token还未过期！');
+
 end;
 
 //Get请求，请求验证支付的json.  带着access_token参数向GoogleApi发起查询支付情况请求
@@ -177,8 +173,8 @@ var
 
 begin
   Jso := nil;
-  Result := 'Purchase Verify Failed!';
-  
+  Result := 'Purchase GetVerifyJson Failed!';
+
   if (Trim(package_name) = '') or (Trim(product_id) = '') or (Trim(purchase_token) = '') or (Trim(access_token) = '') then
   begin
     Form1.MainOutMessage('[Error] GoogleOAuth2 GetVerifyJson 请求参数为空！access_token: ' + access_token);
@@ -213,11 +209,11 @@ begin
       Form1.MainOutMessage('[Error] GoogleOAuth2 GetAccessToken Failed. Parameter not exist! Data: ' + respData);
     end;
     Jso.Free;
-    
+
   except on E: Exception do
     begin
       Form1.MainOutMessage(format('[Error] GoogleOAuth2 GetVerifyJson Failed. unknown exception. error: %s, Data: %s',
-            [e.message, respData]));
+        [e.message, respData]));
       Jso.Free;
       Exit;
     end;

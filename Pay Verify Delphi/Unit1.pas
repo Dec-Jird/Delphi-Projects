@@ -62,7 +62,7 @@ type
     Button15: TButton;
     TabSheet7: TTabSheet;
     Memo7: TMemo;
-    Memo8: TMemo;     
+    Memo8: TMemo;
     Button12: TButton;
     Button13: TButton;
     TabSheet8: TTabSheet;
@@ -465,8 +465,8 @@ begin
   FBuffer := @(FBuffers[0]);
   TencentPayServer := TTencentPayServer.Create; //创建server
   HttpHelper := THttpHelper.Create;
-  googleAccessTokenJs := TlkJSONobject.Create;
-  
+  //googleAccessTokenJs := TlkJSONobject.Create;
+
 end;
 
 function Addurl(param, data: string): string;
@@ -5369,7 +5369,7 @@ begin
       fee := retList.Values['fee'];
       pay_type := retList.Values['pay_type'];
 
-        //MD5(cp_order_id+correlator+result_code+fee+paytype+method+appKey)
+      //MD5(cp_order_id+correlator+result_code+fee+paytype+method+appKey)
       sign := MD5(UTF8Encode(cp_order_id + correlator + result_code + fee + pay_type + method + AIYOUXI_APP_KEY));
       MainOutMessage('signStr: ' + cp_order_id + correlator + result_code + fee + pay_type + method + AIYOUXI_APP_KEY
         + ', mySign: ' + mySign);
@@ -5396,7 +5396,6 @@ begin
       MainOutMessage(format('[Error] process AiYouXi Pay Result Failed. 所请求方法不存在！ Method: %s, Data: %s',
         [method, Data]));
     end;
-
 
   except on E: Exception do
     begin
@@ -5486,7 +5485,7 @@ o":"VXNlcklEPThfNTFAMTY1Jkl0ZW1JRD0xJkJpbGxJRD0xNDgyOTI0OTAzMDAwMCZTZXJ2ZXJJRD0y
   signStr := 'accountId=' + accountId + 'amount=' + formatfloat('0.00', amount / 100) + 'callbackInfo=' + callbackInfo + 'cpOrderId=' + cpOrderId
     + ALI_API_KEY;
 
- //C#中\n = Delphi中#10, #13 - 回车, #10 - 换行
+  //C#中\n = Delphi中#10, #13 - 回车, #10 - 换行
   {signStr := 'accountId=229777554amount=6.00callbackinfo=VXNlcklEPThfNTFAMTY1Jkl0ZW1JRD0xJkJpbGxJRD0xNDgyOTMyMDY5MDAwMCZTZXJ2ZXJJRD0y'+
     #13#10+'cpOrderId=14829320690000f350c8a80c728eadc88fa36c3250e232';   }
 
@@ -5762,8 +5761,8 @@ var
   GoogleOAuth2: TGoogleOAuth2;
 
 begin
-    GoogleOAuth2 := TGoogleOAuth2.Create;
-    GoogleOAuth2.RefreshAccessToken(googleAccessTokenJs);    //传入Js对象，其中保存了access_token和有效时间
+  GoogleOAuth2 := TGoogleOAuth2.Create;
+  GoogleOAuth2.RefreshAccessToken(googleAccessTokenJs); //传入Js对象，其中保存了access_token和有效时间
 end;
 
 procedure TForm1.GooglePayBtnClick(Sender: TObject);
@@ -5782,18 +5781,29 @@ begin
   product_id := 'vip_30days';
   purchase_token := 'giokddnecnchggmjgpepligd.AO-J1OwRhc7oykQkgnV8Y19FXavgdUMewxwl2KMj2kFuC8AfrYpuqqU8GkKRikLaWJ3qClqGJdACCHPWqgc8s6w31KY3E69o-leRL91aL12r2cX6L5J40hc';}
 
-  //传入googleAccessTokenJs，刷新googleAccessTokenJs
-  GoogleOAuth2.RefreshAccessToken(googleAccessTokenJs);
-  access_token := googleAccessTokenJs.getString('access_token');
+  if googleAccessTokenJs = nil then
+    googleAccessTokenJs := TlkJSONobject.Create;
 
-  retStr := UTF8Decode(GoogleOAuth2.GetVerifyJson(PkgNameEdit.Text, ProductIdEdit.Text, PurchaseTokenEdit.Text, access_token));
-  MainOutMessage('GetVerifiJson 返回结果：' + retStr + SLineBreak);
+  //传入googleAccessTokenJs，刷新googleAccessTokenJs
+  if GoogleOAuth2.RefreshAccessToken(googleAccessTokenJs) then
+  begin
+    access_token := googleAccessTokenJs.getString('access_token');
+
+    retStr := UTF8Decode(GoogleOAuth2.GetVerifyJson(PkgNameEdit.Text, ProductIdEdit.Text, PurchaseTokenEdit.Text, access_token));
+    MainOutMessage('GetVerifiJson 返回结果：' + retStr + SLineBreak);
+  end
+  else
+  begin
+    MainOutMessage('RefreshAccessToken Failed!');
+  end;
+
   {"purchaseTimeMillis":1469271616589,"purchaseState":0,"developerPayload":"37294"}
 
   {关于将OAuth2.0验证支付搬到内网：
    1、导入GoogleOAuth2Unit单元到服务器代码
-   2、调用RefreshAccessToken刷新access_token为最新
-   3、使用GetVerifyJson替换原来的BillVerify方法（DLL方法）
+   2、创建全局变量googleAccessTokenJs来存放有效的access_token信息，包含access_token和valid_time(过期时间），不要忘记Create。
+   3、调用RefreshAccessToken刷新access_token为最新
+   4、使用GetVerifyJson替换原来的BillVerify方法（DLL方法）
   }
 end;
 
