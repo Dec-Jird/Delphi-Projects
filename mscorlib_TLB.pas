@@ -12,7 +12,7 @@ unit mscorlib_TLB;
 // ************************************************************************ //
 
 // PASTLWTR : 1.2
-// File generated on 2017/3/28 11:28:41 from Type Library described below.
+// File generated on 2017/3/22 17:16:20 from Type Library described below.
 
 // ************************************************************************  //
 // Type Lib: C:\Windows\Microsoft.NET\Framework\v4.0.30319\mscorlib.tlb (1)
@@ -23,7 +23,7 @@ unit mscorlib_TLB;
 // DepndLst: 
 //   (1) v2.0 stdole, (C:\Windows\SysWOW64\stdole2.tlb)
 // Parent TypeLibrary:
-//   (0) v1.0 UnionPayDLL, (D:\Project\Delphi-Projects\Pay Verify Delphi\UnionPayDLL.tlb)
+//   (0) v1.0 UnionPayDLL, (D:\Project\Delphi-Projects\TestUnionPay\UnionPayDLL.tlb)
 // Errors:
 //   Hint: Symbol 'Object' renamed to 'CLRObject'
 //   Hint: Symbol 'Enum' renamed to 'CLREnum'

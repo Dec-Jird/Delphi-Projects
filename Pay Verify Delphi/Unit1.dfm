@@ -1,6 +1,6 @@
 object Form1: TForm1
-  Left = 190
-  Top = 124
+  Left = 196
+  Top = 121
   BorderIcons = [biSystemMenu, biMinimize]
   BorderStyle = bsSingle
   Caption = 'Form1'
@@ -21,7 +21,7 @@ object Form1: TForm1
     Top = 16
     Width = 289
     Height = 417
-    ActivePage = TabSheet21
+    ActivePage = TabSheet10
     TabOrder = 6
     object TabSheet2: TTabSheet
       Caption = #38463#37324
@@ -139,6 +139,7 @@ object Form1: TForm1
         Width = 281
         Height = 169
         ImeName = #20013#25991' ('#31616#20307') - '#25628#29399#25340#38899#36755#20837#27861
+        ScrollBars = ssVertical
         TabOrder = 0
       end
       object Memo3: TMemo
@@ -147,6 +148,7 @@ object Form1: TForm1
         Width = 281
         Height = 169
         ImeName = #20013#25991' ('#31616#20307') - '#25628#29399#25340#38899#36755#20837#27861
+        ScrollBars = ssVertical
         TabOrder = 1
       end
       object Button6: TButton
@@ -362,6 +364,7 @@ object Form1: TForm1
         Width = 281
         Height = 169
         ImeName = #20013#25991' ('#31616#20307') - '#25628#29399#25340#38899#36755#20837#27861
+        ScrollBars = ssVertical
         TabOrder = 0
       end
       object Memo8: TMemo
@@ -370,6 +373,7 @@ object Form1: TForm1
         Width = 281
         Height = 169
         ImeName = #20013#25991' ('#31616#20307') - '#25628#29399#25340#38899#36755#20837#27861
+        ScrollBars = ssVertical
         TabOrder = 1
       end
       object Button12: TButton
@@ -675,7 +679,7 @@ object Form1: TForm1
         Height = 21
         ImeName = #20013#25991' ('#31616#20307') - '#25628#29399#25340#38899#36755#20837#27861
         TabOrder = 2
-        Text = 'https://usrsys.vivo.com.cn/sdk/user/auth.do'
+        Text = 'http://121.52.201.19:3358/mmwebpay'
       end
       object Edit3: TEdit
         Left = 0
@@ -685,8 +689,14 @@ object Form1: TForm1
         ImeName = #20013#25991' ('#31616#20307') - '#25628#29399#25340#38899#36755#20837#27861
         TabOrder = 3
         Text = 
-          'authtoken=NzQ5MWFmYzE0OTc0Mzc3YWFhYjkuMTA2NDIzOTE3LjE0Njg0NjAwOT' +
-          'AyMTg%3D'
+          'data%3D%3Ctrans_doc%3E%3Cmerchant_id%3E395%3C%2Fmerchant_id%3E%3' +
+          'Cmerchant%3EDestiny+of+Thrones+Myanmar%3C%2Fmerchant%3E%3Crefere' +
+          'nce%3EGV35108636954144%3C%2Freference%3E%3Cvoucher_code%3E9c6uDz' +
+          'xdtYYv5ZMvjpVB%3C%2Fvoucher_code%3E%3Camount+currency%3D%22VND%2' +
+          '2+nominal%3D%2227200%22%2F%3E%3Cpurpose%3E1380+Medals%3C%2Fpurpo' +
+          'se%3E%3Ccustom%3EVXNlcklEPTE1XzEyOEA0MCZJdGVtSUQ9MTM4MF9NZWRhbHN' +
+          'fUGFjayZCaWxsSUQ9MTQ5MTgyMzAxMjAwMDAmU2VydmVySUQ9MQ__%3C%2Fcusto' +
+          'm%3E%3Cstatus%3ESUCCESS%3C%2Fstatus%3E%3C%2Ftrans_doc%3E'
       end
       object Button21: TButton
         Left = 0
@@ -2178,6 +2188,135 @@ object Form1: TForm1
         OnClick = AIYOUXIPayIF2BtnClick
       end
     end
+    object TabSheet36: TTabSheet
+      Caption = 'GV'
+      ImageIndex = 37
+      object Button52: TButton
+        Left = 96
+        Top = 48
+        Width = 89
+        Height = 25
+        Caption = 'Button52'
+        TabOrder = 0
+        OnClick = Button52Click
+      end
+      object GVPayVerifyBtn: TButton
+        Left = 64
+        Top = 208
+        Width = 169
+        Height = 25
+        Caption = 'GV-PayVerify'
+        TabOrder = 1
+        OnClick = GVPayVerifyBtnClick
+      end
+    end
+    object TabSheet37: TTabSheet
+      Caption = #25903#20184#23453#25903#20184
+      ImageIndex = 38
+      object AlipayOrdeBtn: TButton
+        Left = 56
+        Top = 136
+        Width = 171
+        Height = 25
+        Caption = #21521#25903#20184#23453#35831#27714#35746#21333
+        TabOrder = 0
+        OnClick = AlipayOrdeBtnClick
+      end
+      object AlipayVerifyBtn: TButton
+        Left = 56
+        Top = 336
+        Width = 161
+        Height = 25
+        Caption = #39564#35777#25903#20184#22238#35843#35746#21333
+        TabOrder = 1
+        OnClick = AlipayVerifyBtnClick
+      end
+      object OrderpriceEdit: TLabeledEdit
+        Left = 16
+        Top = 80
+        Width = 129
+        Height = 21
+        EditLabel.Width = 99
+        EditLabel.Height = 13
+        EditLabel.Caption = #35746#21333#37329#39069#65288#20803#65289#65306' '
+        ImeName = #20013#25991'('#31616#20307') - '#30334#24230#36755#20837#27861
+        TabOrder = 2
+        Text = '0.01'
+      end
+      object AlipayEdit: TLabeledEdit
+        Left = 0
+        Top = 256
+        Width = 281
+        Height = 21
+        EditLabel.Width = 138
+        EditLabel.Height = 13
+        EditLabel.Caption = #38463#37324#25903#20184#22238#35843#35746#21333#25968#25454#65306'  '
+        ImeName = #20013#25991'('#31616#20307') - '#30334#24230#36755#20837#27861
+        TabOrder = 3
+        Text = 
+          'total_amount=99.00&buyer_id=2088102170237795&trade_no=2017022521' +
+          '001004790200085088&notify_time=2017-02-25 16:52:11&subject='#20803#23453#20803#23453'&' +
+          'sign_type=RSA2&buyer_logon_id=kut***@sandbox.com&auth_app_id=201' +
+          '6080400162673&charset=utf-8&notify_type=trade_status_sync&invoic' +
+          'e_amount=99.00&out_trade_no=20170225test233&trade_status=TRADE_S' +
+          'UCCESS&gmt_payment=2017-02-25 16:52:08&version=1.0&point_amount=' +
+          '0.00&sign=Jh78HFoe0Sja6fGiVhzdcrWnetkNtEfg+TEuVZNeZNxIC2z+yNFK9j' +
+          'OcZSYnt+37DBqzPt9CuVCt9Ynd0T9L9jke3xZwdx+4zW9jXYPEJh2IlM+UKkphOJ' +
+          'SwWnxvoh3ZdUJD+F7o+G9S1Na6t9fCxh3XBObk3XJYlH0h3GUT0f+UjBwjoSg77f' +
+          '3EYybPb9s4DFrIAWxrMk5YtG1FxOc2HP+H//oomT90w0KW4RYEWdL+nCA9gO504m' +
+          'oLI1cosdJrD517BAoslu93SHi14Lebov9AEuKUpq152isuh9oojZTXs/EU9KiZU5' +
+          'XdfFORbctEOrVB0PZWmOmcEXvMPhuxFQ==&gmt_create=2017-02-25 16:52:0' +
+          '7&buyer_pay_amount=99.00&receipt_amount=99.00&passback_params=me' +
+          'rchantBizType%3d3C%26merchantBizNo%3d2016010101111&fund_bill_lis' +
+          't=[{"amount":"99.00","fundChannel":"ALIPAYACCOUNT"}]&app_id=2016' +
+          '080400162673&seller_id=2088102169863750&notify_id=6dfa606b575973' +
+          '25bdbf8caf92e5331m3i&seller_email=wmaunk5878@sandbox.com'
+      end
+    end
+    object TabSheet38: TTabSheet
+      Caption = #24494#20449#25903#20184
+      ImageIndex = 39
+      object WXPayOrderBtn: TButton
+        Left = 88
+        Top = 136
+        Width = 169
+        Height = 25
+        Caption = #35831#27714#24494#20449#25903#20184#35746#21333
+        TabOrder = 0
+        OnClick = WXPayOrderBtnClick
+      end
+      object WXPayVerifyBtn: TButton
+        Left = 104
+        Top = 312
+        Width = 147
+        Height = 25
+        Caption = #25903#20184#22238#35843#39564#31614
+        TabOrder = 1
+        OnClick = WXPayVerifyBtnClick
+      end
+    end
+    object TabSheet39: TTabSheet
+      Caption = #38134#32852#25903#20184
+      ImageIndex = 40
+      object UnionPayOrderBtn: TButton
+        Left = 96
+        Top = 136
+        Width = 139
+        Height = 25
+        Caption = #38134#32852#35831#27714#35746#21333#21495
+        TabOrder = 0
+        OnClick = UnionPayOrderBtnClick
+      end
+      object UnionPayVerifyBtn: TButton
+        Left = 88
+        Top = 240
+        Width = 155
+        Height = 25
+        Caption = #38134#32852#25903#20184#22238#35843#39564#31614
+        TabOrder = 1
+        OnClick = UnionPayVerifyBtnClick
+      end
+    end
   end
   object Memo1: TMemo
     Left = 8
@@ -2275,6 +2414,15 @@ object Form1: TForm1
     Caption = 'clear ALL'
     TabOrder = 11
     OnClick = Button33Click
+  end
+  object test: TButton
+    Left = 208
+    Top = 448
+    Width = 75
+    Height = 25
+    Caption = 'test'
+    TabOrder = 12
+    OnClick = testClick
   end
   object IdHTTPServer1: TIdHTTPServer
     Bindings = <>

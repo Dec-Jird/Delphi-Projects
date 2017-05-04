@@ -81,6 +81,8 @@ var
   port: Word;
   uri: TIdURI;
   proto, host, path: string;
+  //SL: TStrings;
+
 begin
   uri := TIdURI.Create(url);
   host := uri.Host;
@@ -114,6 +116,11 @@ begin
         res.Write(Fbuffer^, dwRead);
     until dwRead = 0;
   end;
+
+  {SL := TStringList.Create;
+  SL.LoadFromStream(res);
+  Form1.MainOutMessage('[Log] res: ' + SL.GetText); }
+
   InternetCloseHandle(hreq);
   InternetCloseHandle(hConn);
   InternetCloseHandle(hInt);

@@ -14,8 +14,17 @@ uses
   WanDouJiaRSAVerify_TLB in 'WanDouJiaRSAVerify_TLB.pas',
   DES3Dll_TLB in 'DES3Dll_TLB.pas',
   TUHttpHelper in 'Utils\TUHttpHelper.pas',
-  GoogleOAuth2Unit in 'SDKUnits\GoogleOAuth2Unit.pas',
-  TUTools in 'Utils\TUTools.pas';
+  TUTools in 'Utils\TUTools.pas',
+  SDKConst in 'SDKUnits\SDKConst.pas',
+  AliAppPayUnit in 'SDKUnits\AliAppPay\AliAppPayUnit.pas',
+  WXAppPayUnit in 'SDKUnits\WXAppPay\WXAppPayUnit.pas',
+  HttpPostXML_TLB in 'HttpPostXML_TLB.pas',
+  UnionPayDLL_TLB in 'UnionPayDLL_TLB.pas',
+  UnionAppPayUnit in 'SDKUnits\UnionAppPay\UnionAppPayUnit.pas',
+  TencentLoginUnit in 'SDKUnits\TencentPaySDK\TencentLoginUnit.pas',
+  TencentPayUnit in 'SDKUnits\TencentPaySDK\TencentPayUnit.pas',
+  GoogleOAuth2Unit in 'SDKUnits\GoogleOAuth2SDK\GoogleOAuth2Unit.pas',
+  xDex in 'Utils\xDex.pas';
 
 {$R *.res}
 

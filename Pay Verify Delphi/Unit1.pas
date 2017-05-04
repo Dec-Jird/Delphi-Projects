@@ -7,10 +7,13 @@ uses
   Dialogs, StdCtrls, wininet, iduri, httpapp, IdGlobal, EncdDecd,
   ExtCtrls, DateUtils, ComCtrls, IdBaseComponent, IdComponent,
   IdCustomHTTPServer, IdHTTPServer, XMLIntf, XMLDoc,
-  IdTCPConnection, IdTCPClient, IdHTTP, OleCtrls, SHDocVw, IdTCPServer, JpushSDK,
-   {IdHMACSHA1, } IdCoderMIME, HmacSha1_TLB, httpDll_TLB, SignAndVerify_TLB,
-  WanDouJiaRSAVerify_TLB, iapppaySigndll_TLB, DES3Dll_TLB, IdCustomTCPServer, activex,
-  TUHttpHelper, uLkJSON;
+  IdTCPConnection, IdTCPClient, IdHTTP, OleCtrls, SHDocVw, IdTCPServer,
+  JpushSDK,
+  {IdHMACSHA1, } IdCoderMIME, HmacSha1_TLB, httpDll_TLB, SignAndVerify_TLB,
+  WanDouJiaRSAVerify_TLB, iapppaySigndll_TLB, DES3Dll_TLB, IdCustomTCPServer,
+  activex,
+  TUHttpHelper, uLkJSON, TencentPayUnit, Comobj, WXAppPayUnit,
+  UnionAppPayUnit, xDex;
 
 type
 
@@ -259,6 +262,21 @@ type
     PkgNameEdit: TLabeledEdit;
     ProductIdEdit: TLabeledEdit;
     PurchaseTokenEdit: TLabeledEdit;
+    TabSheet36: TTabSheet;
+    Button52: TButton;
+    GVPayVerifyBtn: TButton;
+    TabSheet37: TTabSheet;
+    AlipayOrdeBtn: TButton;
+    AlipayVerifyBtn: TButton;
+    OrderpriceEdit: TLabeledEdit;
+    AlipayEdit: TLabeledEdit;
+    TabSheet38: TTabSheet;
+    WXPayOrderBtn: TButton;
+    WXPayVerifyBtn: TButton;
+    test: TButton;
+    TabSheet39: TTabSheet;
+    UnionPayOrderBtn: TButton;
+    UnionPayVerifyBtn: TButton;
     procedure FormCreate(Sender: TObject);
     procedure Button2Click(Sender: TObject);
     procedure Button4Click(Sender: TObject);
@@ -286,9 +304,12 @@ type
     procedure MainOutMessage(const Msg: string); //输出Log
     //Xml解析（从字符串形式xml中读取信息），读取到的信息放到List中。
     procedure ReadXml(Node: IXMLNode; var List: TStringList);
+    function WXAPPPAYReadXml(xmlStr: string): TStringList;
 
+    function postXml(const xmlstr, url: WideString): WideString;
     //生成随机字符串
-    function GetRandStr(len: Integer; lowercase: Boolean = True; num: Boolean = True; uppercase: Boolean = True): string;
+    function GetRandStr(len: Integer; lowercase: Boolean = True; num: Boolean =
+      True; uppercase: Boolean = True): string;
 
     function Base64Encode(const Input: TIdBytes): string;
 
@@ -328,7 +349,7 @@ type
     procedure Button43Click(Sender: TObject);
     procedure QQLoginVerifyClick(Sender: TObject);
     procedure Button44Click(Sender: TObject);
- {   procedure TencentTimerTimer(Sender: TObject);            }
+    {   procedure TencentTimerTimer(Sender: TObject);            }
     procedure Button45Click(Sender: TObject);
     procedure Button46Click(Sender: TObject);
     procedure Button47Click(Sender: TObject);
@@ -370,58 +391,20 @@ type
     procedure PayVerifyBtnClick(Sender: TObject);
     procedure Button3Click(Sender: TObject);
     procedure GooglePayBtnClick(Sender: TObject);
+    procedure Button52Click(Sender: TObject);
+    procedure GVPayVerifyBtnClick(Sender: TObject);
+    procedure AlipayOrdeBtnClick(Sender: TObject);
+    procedure AlipayVerifyBtnClick(Sender: TObject);
+    procedure WXPayOrderBtnClick(Sender: TObject);
+    procedure testClick(Sender: TObject);
+    procedure WXPayVerifyBtnClick(Sender: TObject);
+    procedure UnionPayOrderBtnClick(Sender: TObject);
+    procedure UnionPayVerifyBtnClick(Sender: TObject);
 
   private
     { Private declarations }
   public
     { Public declarations }
-  end;
-
-  TTencentBalance = record
-    Request: string; //获取用户游戏币余额请求
-    RequestTimes: Integer; //请求次数
-    Balance: Integer; //腾讯 最新游戏币余额
-    SaveAmt: Integer; //腾讯 累计充值的游戏币数量
-    IsSuccess: boolean; //是否到帐
-//  Response:string;  //获取用户游戏币余额响应
-  end;
-
-  TTencentCoin = record
-    CoinAmount: Integer;
-    ZoneId: string;
-    BillNo: string;
-    Data: string;
-    OpenAPI: string;
-    Balance: Integer; //腾讯 最新游戏币余额
-    IsSuccess: boolean; //是否处理成功（扣除游戏币成功/赠送游戏币成功）
-    Request: string; //游戏币操作请求
-//  Response:string;  //游戏币操作响应
-  end;
-
-  {腾讯支付服务器，新建了类}
-  TTencentPayServer = class
-  private
-    FTencentBalanceThread: THandle; //请求余额线程句柄，用于关闭线程。
-    FTencentCoinThread: THandle; //请求余额线程句柄，用于关闭线程。
-    TencentBalance: TTencentBalance;
-    TencentCoin: TTencentCoin;
-
-    procedure SetCookies(payPlatform: Integer; requestURL, orgLoc, serverIp: string); //设置cookie
-
-    function TencentGetBalanceRequest(zoneid, Data: string): string; //查询余额请求构造
-    function processTencentGetBalance(request: string): Boolean; //执行查询余额请求
-
-    //使用游戏币支付、取消游戏币支付、赠送游戏币的请求构造
-    function TencentGameCoinRequest(CoinAmount: Integer; ZoneId, BillNo, Data, OpenAPI: string): string;
-    function processTencentCoinAction(ReqInfo: TTencentCoin; OpenAPI: string): Boolean; //执行游戏币请求
- //  function TencentGetBalanceThread(Param:Pointer):Integer;stdcall;   //请求余额线程  ; times:Integer
-
-  public
-    //同步腾讯游戏币余额和玩家的元宝余额
-    procedure TencentSynchroBalance(zoneid, Data: string; reqTimes: Integer); //同步余额
-    //使用游戏币支付、取消游戏币支付、赠送游戏币的请求构造
-    procedure TencentGameCoinAction(CoinAmount: Integer; ZoneId, BillNo, Data, OpenAPI: string);
-    procedure MainOutMessage(const Msg: string); //输出Log
   end;
 
 var
@@ -433,13 +416,14 @@ var
   url: string;
   params: string;
   sigurl: string;
-  TencentPayServer: TTencentPayServer;
+  TencentPay: TTencentPay;
   HttpHelper: THttpHelper;
   googleAccessTokenJs: TlkJSONobject;
 
 implementation
 
-uses AsphyreMD5, IniFiles, GoogleOAuth2Unit, TUTools;
+uses AsphyreMD5, IniFiles, GoogleOAuth2Unit, TUTools, TencentLoginUnit,
+  AliAppPayUnit;
 
 {$R *.dfm}
 
@@ -451,19 +435,11 @@ begin
   form1.Memo1.Lines.Add(s);
 end;
 
-procedure TTencentPayServer.MainOutMessage(const Msg: string); //输出Log
-var
-  s: string;
-begin
-  s := '[' + FormatDateTime('mmdd hh:nn:ss', Now) + '] ' + Msg;
-  form1.Memo1.Lines.Add(s);
-end;
-
 procedure TForm1.FormCreate(Sender: TObject);
 begin
   FStream := TStringStream.Create('');
   FBuffer := @(FBuffers[0]);
-  TencentPayServer := TTencentPayServer.Create; //创建server
+  TencentPay := TTencentPay.Create; //初始化
   HttpHelper := THttpHelper.Create;
   //googleAccessTokenJs := TlkJSONobject.Create;
 
@@ -480,7 +456,6 @@ begin
   Showmessage(IntToStr(DateTimeToUnix(now()) - 8 * 60 * 60));
 end;
 
-
 procedure TForm1.Button4Click(Sender: TObject);
 begin
   url := 'http://gameproxy.xinmei365.com/game_agent/checkLogin?productCode=' +
@@ -493,7 +468,6 @@ begin
   MainOutMessage(url);
   MainOutMessage('');
 
-
   MainOutMessage(Utf8ToAnsi(HttpHelper.HttpsGet(url)));
 end;
 
@@ -504,55 +478,55 @@ var
   price, callbackInfo, orderId, channelLabel: string;
   js: TlkJSONobject;
 begin
-{http://182.254.148.221:3358/ljpay?price=600&callbackInfo=eyJwcmljZSI6NjAwLCJub3RpZnl1cmwiOiJodHRwOlwvXC8xODIuMjU0LjE0OC4yMjE6MzM1OFwvbGpwYXkiLCJDYWxsQmFja0luZm8iOiJWWE5sY2tsRVBUVmZOVE15UURFeE5pWkpkR1Z0U1VROU1TWkNhV3hzU1VROU1UUTBPVGN6T0RjM05UQXdNREFtVTJWeWRtVnlTVVE5XHJcbk1RPT0iLCJpdGVtTmFtZSI6IuWFg%2BWunSIsIml0ZW1Db3VudCI6NjB9&orderId=70p10&channelCode=9d08f506c6074a21b0a42fa090890047&channelLabel=baidumobilegame&channelOrderId=64196b91799d6476_01014_2015121009_000000&sign=1913503d714c421e8524aeb1df6e2fbc}
-  //Showmessage(md5(Memo6.Text));
+  {http://182.254.148.221:3358/ljpay?price=600&callbackInfo=eyJwcmljZSI6NjAwLCJub3RpZnl1cmwiOiJodHRwOlwvXC8xODIuMjU0LjE0OC4yMjE6MzM1OFwvbGpwYXkiLCJDYWxsQmFja0luZm8iOiJWWE5sY2tsRVBUVmZOVE15UURFeE5pWkpkR1Z0U1VROU1TWkNhV3hzU1VROU1UUTBPVGN6T0RjM05UQXdNREFtVTJWeWRtVnlTVVE5XHJcbk1RPT0iLCJpdGVtTmFtZSI6IuWFg%2BWunSIsIml0ZW1Db3VudCI6NjB9&orderId=70p10&channelCode=9d08f506c6074a21b0a42fa090890047&channelLabel=baidumobilegame&channelOrderId=64196b91799d6476_01014_2015121009_000000&sign=1913503d714c421e8524aeb1df6e2fbc}
+    //Showmessage(md5(Memo6.Text));
   try
     s := TStringList.Create;
     s.Delimiter := '&';
     s.DelimitedText := memo6.Text;
     s.Sort;
 
-  {for i:=0 to s.Count - 1 do
-  begin
-    if pos
-  end;
-  }
+    {for i:=0 to s.Count - 1 do
+    begin
+      if pos
+    end;
+    }
     price := s.Values['price'];
     callbackInfo := s.Values['callbackInfo'];
     orderId := s.Values['orderId'];
     channelLabel := s.Values['channelLabel'];
 
-  //callbackInfo := 'VXNlcklEPTdfODcyM0AyMDImSXRlbUlEPTEmQmlsbElEPTE0NTQ5ODMzMDMwMDAwJlNlcnZlcklEPTE=';
+    //callbackInfo := 'VXNlcklEPTdfODcyM0AyMDImSXRlbUlEPTEmQmlsbElEPTE0NTQ5ODMzMDMwMDAwJlNlcnZlcklEPTE=';
 
     callbackInfo := DecodeString(HTTPDecode(callbackInfo));
-  //MainOutMessage('callbackInfo 0: '+callbackInfo);
-  //callbackInfo := DecodeString((callbackInfo));
-  //MainOutMessage('callbackInfo 0: '+callbackInfo);
-  {js:=nil;
+    //MainOutMessage('callbackInfo 0: '+callbackInfo);
+    //callbackInfo := DecodeString((callbackInfo));
+    //MainOutMessage('callbackInfo 0: '+callbackInfo);
+    {js:=nil;
 
-  try
-    js:= TlkJSON.ParseText(callbackInfo) as TlkJSONobject;
-    if not assigned(js) then
-    begin
-      MainOutMessage('[error] js is error');
-      exit;
-    end
-    else
-    begin
-       if js.IndexOfName('CallBackInfo')>=0 then
-       begin
-         callbackInfo:= js.Field['CallBackInfo'].Value;
-       end;
+    try
+      js:= TlkJSON.ParseText(callbackInfo) as TlkJSONobject;
+      if not assigned(js) then
+      begin
+        MainOutMessage('[error] js is error');
+        exit;
+      end
+      else
+      begin
+         if js.IndexOfName('CallBackInfo')>=0 then
+         begin
+           callbackInfo:= js.Field['CallBackInfo'].Value;
+         end;
 
+      end;
+
+    except
+      on E:Exception do
+      begin
+
+      end;
     end;
-
-  except
-    on E:Exception do
-    begin
-
-    end;
-  end;
-  }
+    }
     MainOutMessage('price: ' + price);
     MainOutMessage('orderId: ' + orderId);
     MainOutMessage('channelLabel: ' + channelLabel);
@@ -560,7 +534,7 @@ begin
     callbackInfo := DecodeString(HTTPDecode(callbackInfo));
     MainOutMessage('callbackInfo: ' + callbackInfo);
 
-  //MainOutMessage(DecodeString(HTTPDecode(memo6.Text)));
+    //MainOutMessage(DecodeString(HTTPDecode(memo6.Text)));
   except
     MainOutMessage('except');
   end;
@@ -578,7 +552,8 @@ end;
 
 procedure TForm1.Button8Click(Sender: TObject);
 const
-  ss = '012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678911111';
+  ss =
+    '012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678911111';
 var
   s: string;
   i: integer;
@@ -591,7 +566,8 @@ begin
 
   GetSystemTime(SysTime);
   testjs := TlkJSONobject.Create;
-  t := CompToDouble(TimeStampToMSecs(DateTimeToTimeStamp(SystemTimeToDateTime(SysTime)))) - TimeStampToMSecs(DateTimeToTimeStamp(StrToDateTime('1970/1/1')));
+  t :=
+    CompToDouble(TimeStampToMSecs(DateTimeToTimeStamp(SystemTimeToDateTime(SysTime)))) - TimeStampToMSecs(DateTimeToTimeStamp(StrToDateTime('1970/1/1')));
   testjs.Add('doubleT', t);
   testjs.Add('stringT', FloatToStr(t));
   MainOutMessage('timestamp：' + TlkJSON.GenerateText(testjs) + SLineBreak);
@@ -631,7 +607,6 @@ begin
     LabeledEdit15.Text + '&ip=' +
     LabeledEdit16.Text + '&ref=' + LabeledEdit17.Text;
 
-
   MainOutMessage(Utf8ToAnsi(HttpHelper.HttpsPost(url, PostInfo)));
 end;
 
@@ -654,10 +629,10 @@ begin
     url := 'http://119.46.99.241/ewallet_agent_mobile/api/'
   else
     url := 'https://sdk.playpark.net/Refill/Agent/api/';
-  PostInfo := 'merchant_code=' + AnsiToUtf8(LabeledEdit20.Text) + '&merchant_key=' +
+  PostInfo := 'merchant_code=' + AnsiToUtf8(LabeledEdit20.Text) +
+    '&merchant_key=' +
     LabeledEdit19.Text + '&command=CMD-2005' +
     '&merchant_transaction_id=' + LabeledEdit18.Text;
-
 
   //PostInfo := HttpEncode('merchant_code=DestinyOfThrones&merchant_key=5615a9eefab48aa6952d82068088c064&command=CMD-2005&merchant_transaction_id=TR201012310001');
   MainOutMessage(PostInfo);
@@ -681,7 +656,6 @@ begin
   PostInfo := 'merchant_code=' + LabeledEdit20.Text + '&merchant_key=' +
     LabeledEdit19.Text + '&command=CMD-3005' +
     '&merchant_transaction_id=' + LabeledEdit18.Text;
-
 
   MainOutMessage(Utf8ToAnsi(HttpHelper.HttpsPost(url, PostInfo)));
 end;
@@ -711,7 +685,8 @@ begin
 
 end;
 
-procedure TForm1.SendJPushMessage(MessageStr: string; DataArray: TJPushDataArray);
+procedure TForm1.SendJPushMessage(MessageStr: string; DataArray:
+  TJPushDataArray);
 var
 
   Header, AppKey, MasterSecret: string;
@@ -739,15 +714,17 @@ begin
       ArrayJsonStr := TempStr;
   end;
 
-  JSONStr := '{"platform": "' + PlatStr + '","audience" : "' + Audience + '","notification" : {"alert" : "' + MessageStr + '","android" :{"extras" : {' + ArrayJsonStr + '}},"ios" : {"extras" : {' + ArrayJsonStr + '}}},"options" : {"apns_production":' + IOSFlag + '}} ';
+  JSONStr := '{"platform": "' + PlatStr + '","audience" : "' + Audience +
+    '","notification" : {"alert" : "' + MessageStr + '","android" :{"extras" : {'
+    + ArrayJsonStr + '}},"ios" : {"extras" : {' + ArrayJsonStr +
+    '}}},"options" : {"apns_production":' + IOSFlag + '}} ';
 
-  Header := AnsiToUtf8('Authorization: Basic ' + EncodeString(AppKey + ':' + MasterSecret));
+  Header := AnsiToUtf8('Authorization: Basic ' + EncodeString(AppKey + ':' +
+    MasterSecret));
 
   memo9.Lines.Add(JSONStr);
-  MainOutMessage(Utf8ToAnsi(HttpHelper.HttpsPost(url, AnsiToUtf8(JSONStr), Header)));
-
-
-
+  MainOutMessage(Utf8ToAnsi(HttpHelper.HttpsPost(url, AnsiToUtf8(JSONStr),
+    Header)));
 
 end;
 
@@ -765,8 +742,6 @@ begin
     MainOutMessage('http server is off!');
   }
 end;
-
-
 
 procedure TForm1.Button18Click(Sender: TObject);
 var
@@ -800,7 +775,8 @@ begin
     + '0c\nHARCJv0A5w7yUwy3LyrOy0+CjzqNR04mq7uFX1psh3AwiOTqtCd+t9yyd42l8rOp\nHva'
     + 'TuD6Fgt4v8n0\u003d');
 
-  b3 := EncodeString('MIICdwIBADANBgkqhkiG9w0BAQEFAASCAmEwggJdAgEAAoGBAMXBcF+FaN7BsKfg1wgK2K4MZgUX'
+  b3 :=
+    EncodeString('MIICdwIBADANBgkqhkiG9w0BAQEFAASCAmEwggJdAgEAAoGBAMXBcF+FaN7BsKfg1wgK2K4MZgUX'
     + 'oMlyQeBEUmgC9ALfJJT3bAq0x8LVrKAD5vzPMMmKyPa7jm66MJb+w/mruH/OXzfpyMt5XmaO0gil'
     + 'EZRE8bLTLQ2dDCbGZHw0WQXvXlP+9jP+ehMVHBA9hJwrmPyZeyZyOFfDIO4b+2RDpR+7AgMBAAEC'
     + 'gYEAprxvnApnHpJe+V0o0N4cTbukdRyz88XDZ20TsiDzTkyIkpV+4hQE7fCtKQnBQ10KPJQo12fS'
@@ -812,7 +788,8 @@ begin
     + 'SuDYAi42+nM97ktvUtdUjTeHqksax9KxCwT0RxuAuqsbAjH4Iv+XGmI7u6WlOun9zWzJXPEBfaEC'
     + 'QDCXz+cJt/1PTAx1C+j5kRAxnqAnl6Bigko166+WzamL8v/KQLgo+1z3m20xMeG8x1iReugUDLTD'
     + 'k2feUn+WmfQ=');
-  info := ('grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer&assertion=') +
+  info := ('grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer&assertion=')
+    +
     b1 + '.' +
     b2 + '.' +
     b3;
@@ -833,8 +810,13 @@ begin
 end;
 
 procedure TForm1.Button21Click(Sender: TObject);
+var
+  ret: string;
 begin
-  MainOutMessage(Utf8ToAnsi(HttpHelper.HttpsPost(Edit2.Text, Edit3.Text, 'Content-Type:application/x-www-form-urlencoded')));
+  ret := Utf8ToAnsi(HttpHelper.HttpsPost(Edit2.Text, Edit3.Text,
+    'Content-Type:application/x-www-form-urlencoded'));
+  MainOutMessage('应答: ' + ret);
+  ret := '';
 end;
 
 procedure TForm1.Button22Click(Sender: TObject);
@@ -858,14 +840,12 @@ begin
     appkey := '72929146d340'; //IOS.
 
   url := 'https://api.sms.mob.com/sms/verify';
-  DataStr := 'appkey=' + appkey + '&phone=' + phone + '&zone=' + zone + '&code=' + code;
-
-
+  DataStr := 'appkey=' + appkey + '&phone=' + phone + '&zone=' + zone + '&code='
+    + code;
 
   MainOutMessage(DataStr);
-      //MainOutMessage(Utf8ToAnsi(HttpsPost(url, AnsiToUtf8(DataStr))));
+  //MainOutMessage(Utf8ToAnsi(HttpsPost(url, AnsiToUtf8(DataStr))));
   MainOutMessage(Utf8ToAnsi(httpDll.HttpPost(url, AnsiToUtf8(DataStr))));
-
 
 end;
 
@@ -894,7 +874,6 @@ end;
    // finally
     //  Free;
    // end;
-
 
 //end;
 
@@ -952,11 +931,12 @@ begin
   sign := LowerCase(sign);
   MainOutMessage(sign);
 
-  DataStr := '?appId=' + appid + '&session=' + session + '&uid=' + uid + '&signature=' + sign;
+  DataStr := '?appId=' + appid + '&session=' + session + '&uid=' + uid +
+    '&signature=' + sign;
   MainOutMessage(DataStr);
 
   DataStr := url + DataStr;
-    //MainOutMessage(Utf8ToAnsi(HttpsGet(url, AnsiToUtf8(DataStr))));
+  //MainOutMessage(Utf8ToAnsi(HttpsGet(url, AnsiToUtf8(DataStr))));
   MainOutMessage(Utf8ToAnsi(HttpHelper.HttpsGet(DataStr)));
 end;
 
@@ -1022,7 +1002,8 @@ var
   orderConsumeType: string; //订单类型：10：普通订单11：直充直消订单(可选)
   orderId: string; // 游戏平台订单ID
   orderStatus: string; // 订单状态，TRADE_SUCCESS 代表成功
-  partnerGiftConsume: string; //使用游戏券金额 （如果订单使用游戏券则有,long型），如果有则参与签名
+  partnerGiftConsume: string;
+  //使用游戏券金额 （如果订单使用游戏券则有,long型），如果有则参与签名
   payFee: string; // 支付金额,单位为分,即0.01 米币。
   payTime: string; //支付时间,格式 yyyy-MM-dd HH:mm:ss
   productCode: string; //商品代码
@@ -1033,7 +1014,8 @@ var
 
   signStr, sign, secret: string;
 begin
-  Data := 'appId=2882303761517239138&cpOrderId=9786bffc-996d-4553-aa33-f7e92c0b29d5' +
+  Data := 'appId=2882303761517239138&cpOrderId=9786bffc-996d-4553-aa33-f7e92c0b29d5'
+    +
     '&orderConsumeType=10&orderId=21140990160359583390&orderStatus=TRADE_SUCCES' +
     'S&payFee=1&payTime=2014-09-05%2015:20:27&productCode=com.demo_1&productCount=' +
     '1&productName=%E9%93%B6%E5%AD%901%E4%B8%A4&uid=100010&signature=1388720d978021c20aa885d9b3e1b70cec751496';
@@ -1133,7 +1115,8 @@ begin
         MainOutMessage('360 Login Verify Success! userID: ' + userID);
       end
       else
-        MainOutMessage('360 Login Verify Failed! Data Error Data: ' + resultMsg);
+        MainOutMessage('360 Login Verify Failed! Data Error Data: ' +
+          resultMsg);
     end;
 
   except
@@ -1151,7 +1134,6 @@ var
 begin
 
 end;
-
 
 procedure TForm1.Button27Click(Sender: TObject);
 var
@@ -1174,20 +1156,23 @@ begin
   appId := 5424161;
   appKey := 'OYCIRzKcMNVIRkmuldrGW2nO';
   secret := 'necaGyPbkAVBomGFtxiSa5j42CUndlG8';
-  token := '45b405eeee4f404e9829bdea115f86c6-e5c20f39de9dee046d88d29848fa8b6c-20150922184743-f8b51164e3e1af2d138ac4c0969148ff-e0b6a6c60476f45692465268c9d2e17a-c6ab250826ec8fbafafbcaffd2b3d604';
+  token :=
+    '45b405eeee4f404e9829bdea115f86c6-e5c20f39de9dee046d88d29848fa8b6c-20150922184743-f8b51164e3e1af2d138ac4c0969148ff-e0b6a6c60476f45692465268c9d2e17a-c6ab250826ec8fbafafbcaffd2b3d604';
 
   signStr := inttostr(appId) + token + secret;
 
   signStr := MD5(UTF8Encode(signStr));
   MainOutMessage(signStr);
 
-  DataStr := 'AppID=' + inttostr(appId) + '&AccessToken=' + token + '&Sign=' + signStr;
+  DataStr := 'AppID=' + inttostr(appId) + '&AccessToken=' + token + '&Sign=' +
+    signStr;
 
-  DataStr := 'AppID=5424161&AccessToken=76ad35426eba4e3989378da50b2a969e-e5c20f39de9dee046d88d29848fa8b6c-20150915191122-e0b1542231e510fd97a0bddb0147f075-390fa8b23d260ae67e53ed1b0ebb58fc-3db7733b3ff019a70bcdae0bf417eaf8&Sign=04d623b352ae2f634fe147747611c575';
+  DataStr :=
+    'AppID=5424161&AccessToken=76ad35426eba4e3989378da50b2a969e-e5c20f39de9dee046d88d29848fa8b6c-20150915191122-e0b1542231e510fd97a0bddb0147f075-390fa8b23d260ae67e53ed1b0ebb58fc-3db7733b3ff019a70bcdae0bf417eaf8&Sign=04d623b352ae2f634fe147747611c575';
   MainOutMessage(DataStr);
 
-
-  MainOutMessage(Utf8ToAnsi(HttpHelper.HttpsPost(url, DataStr, 'Content-Type:application/x-www-form-urlencoded')));
+  MainOutMessage(Utf8ToAnsi(HttpHelper.HttpsPost(url, DataStr,
+    'Content-Type:application/x-www-form-urlencoded')));
 
   {code :=1;
   content := 'eyJVSUQiOjEyNzcxNzQ0NzF9';
@@ -1209,7 +1194,6 @@ var
   f: single;
 begin
 
-
   key := '3f54c5376541018bfbca446f57709c5a';
   securityKey := 'RWkqTyh39K6tAQq0nkeXd53Nc7LObWzo';
 
@@ -1218,20 +1202,23 @@ begin
   timeStr := inttostr(DateTimeToUnixDateInt(now) - 8 * 60 * 60);
 
   url := 'http://kfz.cmge.com/foreign/oauth/verification2.php';
-   //url:= 'http://127.0.0.1';
-  signStr := 'gamekey=' + key + '&openid=' + openId + '&timestamp=' + timeStr + '&token=' + token;
+  //url:= 'http://127.0.0.1';
+  signStr := 'gamekey=' + key + '&openid=' + openId + '&timestamp=' + timeStr +
+    '&token=' + token;
   //MainOutMessage(DateTimeToUnixDate(now));
   MainOutMessage(signStr);
   sign := MD5(signStr);
   MainOutMessage(sign + securityKey);
   sign := MD5(sign + securityKey);
 
-  DataStr := 'gamekey=' + key + '&openid=' + openId + '&timestamp=' + timeStr + '&token=' + token + '&_sign=' + sign;
-  DataStr := 'gamekey=3f54c5376541018bfbca446f57709c5a&openid=3e780212b222c06915a353201963c2f1&timestamp=1442912601&token=5727a493ace19867958050ad3423b063&_sign=bb6ab72e9784f6b43dd9b1caafdbb855';
+  DataStr := 'gamekey=' + key + '&openid=' + openId + '&timestamp=' + timeStr +
+    '&token=' + token + '&_sign=' + sign;
+  DataStr :=
+    'gamekey=3f54c5376541018bfbca446f57709c5a&openid=3e780212b222c06915a353201963c2f1&timestamp=1442912601&token=5727a493ace19867958050ad3423b063&_sign=bb6ab72e9784f6b43dd9b1caafdbb855';
   MainOutMessage((DataStr));
 
-
-  MainOutMessage(Utf8ToAnsi(HttpHelper.HttpsPost(url, (DataStr), 'Content-Type:application/x-www-form-urlencoded')));
+  MainOutMessage(Utf8ToAnsi(HttpHelper.HttpsPost(url, (DataStr),
+    'Content-Type:application/x-www-form-urlencoded')));
 end;
 
 procedure TForm1.Button30Click(Sender: TObject);
@@ -1243,7 +1230,8 @@ var
 begin
   HmacSha1 := CoHmacSha1Class.Create;
 
-  info := 'openid=test001&appid=33758&ts=1328855301&payitem=323003*8*1&token=53227955F80B805B50FFB511E5AD51E025360&billno=-APPDJT18700-20120210-1428215572&vers' +
+  info := 'openid=test001&appid=33758&ts=1328855301&payitem=323003*8*1&token=53227955F80B805B50FFB511E5AD51E025360&billno=-APPDJT18700-20120210-1428215572&vers'
+    +
     'ion=v3&zoneid=1&providetype=0&amt=80&payamt_coins=20&pubacct_payamt_coins=10&sig=VvKwcaMqUNpKhx0XfCvOqPRiAnU%3D';
 
   key := '12345f9a47df4d1eaeb3bad9a7e54321&';
@@ -1279,12 +1267,13 @@ begin
     end;
     MainOutMessage(SignStr);
 
-   // MainOutMessage(URLencode(SignStr));
+    // MainOutMessage(URLencode(SignStr));
 
     methodStr := 'GET';
     uriStr := '/cgi-bin/temp.py';
 
-    SignStr := methodStr + '&' + StrToAscii(uriStr, 'QQ_URL') + '&' + StrToAscii(SignStr, 'QQ_URL');
+    SignStr := methodStr + '&' + StrToAscii(uriStr, 'QQ_URL') + '&' +
+      StrToAscii(SignStr, 'QQ_URL');
     MainOutMessage(SignStr);
   except
 
@@ -1304,13 +1293,13 @@ var
 begin
   s := '';
 
-   //str[0]为空.
+  //str[0]为空.
   for i := 1 to Length(str) do
   begin
     if typeStr = 'QQ_Value' then
     begin
-       //除了 0~9 a~z A~Z !*() 之外其他字符按其ASCII码的十六进制加%进行表示，例如“-”编码为“%2D”。
-       //payitem中，单价如果有小数点“.”，请编码为“%2E”。
+      //除了 0~9 a~z A~Z !*() 之外其他字符按其ASCII码的十六进制加%进行表示，例如“-”编码为“%2D”。
+      //payitem中，单价如果有小数点“.”，请编码为“%2E”。
 
       if (str[i] in ['0'..'9', 'a'..'z', 'A'..'Z', '!', '(', ')', '*']) then
       begin
@@ -1324,8 +1313,8 @@ begin
     end
     else if typeStr = 'QQ_URL' then
     begin
-       //要求对字符串中除了“-”、“_”、“.”之外的所有非字母数字字符都替换成百分号(%)后跟两位十六进制数。
-       //十六进制数中字母必须为大写。
+      //要求对字符串中除了“-”、“_”、“.”之外的所有非字母数字字符都替换成百分号(%)后跟两位十六进制数。
+      //十六进制数中字母必须为大写。
 
       if (str[i] in ['0'..'9', 'a'..'z', 'A'..'Z', '.', '-', '_']) then
       begin
@@ -1359,7 +1348,7 @@ end;
 
 procedure TForm1.Button34Click(Sender: TObject);
 begin
-   //memo3.Text := DecodeString(memo2.Text);
+  //memo3.Text := DecodeString(memo2.Text);
   memo3.Text := httpDecode(memo2.Text);
 end;
 
@@ -1375,9 +1364,11 @@ end;
 
 procedure TForm1.Button37Click(Sender: TObject);
 const
-  PAY_RSA_PUBLIC = 'MFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBAI3XiRc0OXxWQ6SCsn+Z+FKYlfmqJpmdwdOkgF19FPj8LEOvPlp2aRZe2DztWMyaBROUriGDjOlMdSHdL1Wdt88CAwEAAQ==';
+  PAY_RSA_PUBLIC =
+    'MFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBAI3XiRc0OXxWQ6SCsn+Z+FKYlfmqJpmdwdOkgF19FPj8LEOvPlp2aRZe2DztWMyaBROUriGDjOlMdSHdL1Wdt88CAwEAAQ==';
 var
-  tokenStr, url, data, returnStr, userID, signStr, sign, priKey, verifySign: string;
+  tokenStr, url, data, returnStr, userID, signStr, sign, priKey, verifySign:
+  string;
   js: TlkJSONobject;
   RsaSign: SignAndVerifyClass;
   verifyResult: Boolean;
@@ -1385,12 +1376,14 @@ var
 begin
   js := nil;
   RsaSign := CoSignAndVerifyClass.Create;
- //{
+  //{
   url := 'https://api.vmall.com/rest.php';
   tokenStr := LabeledEdit48.Text;
   //URLEncode将字符串以URL编码（空格变+号），也称为百分号编码.
-  tokenStr := StringReplace(URLEncode(tokenStr), '+', '%2B', [rfReplaceAll]); //替换字符串中所有 +为%2B
-  data := url + '?nsp_svc=OpenUP.User.getInfo&nsp_ts=' + IntToStr(DateTimeToUnixDateInt(now)) + '&access_token=' + tokenStr;
+  tokenStr := StringReplace(URLEncode(tokenStr), '+', '%2B', [rfReplaceAll]);
+  //替换字符串中所有 +为%2B
+  data := url + '?nsp_svc=OpenUP.User.getInfo&nsp_ts=' +
+    IntToStr(DateTimeToUnixDateInt(now)) + '&access_token=' + tokenStr;
   MainOutMessage('data: ' + data);
   returnStr := Utf8ToAnsi(HttpHelper.HttpsGet(data));
   MainOutMessage('returnStr: ' + returnStr);
@@ -1419,8 +1412,10 @@ begin
   end;
   //}
 
-  signStr := 'amount=0.01&applicationID=10383643&productDesc=元宝&productName=元宝&requestId=201606211410&userID=900086000022031102';
-  priKey := 'MIIEvwIBADANBgkqhkiG9w0BAQEFAASCBKkwggSlAgEAAoIBAQCwbioS4JYcC/yt2X9KG+6vXRQfBrRXqSDsZzyIw6Yik8ymWiPMUprsXMc6jFV2dNi6NNjs8QA5mvRMuD6qkPIuQrJ2hBdS9nwzbyWOCMj7kQ+xtl37WnpF1Q' +
+  signStr :=
+    'amount=0.01&applicationID=10383643&productDesc=元宝&productName=元宝&requestId=201606211410&userID=900086000022031102';
+  priKey := 'MIIEvwIBADANBgkqhkiG9w0BAQEFAASCBKkwggSlAgEAAoIBAQCwbioS4JYcC/yt2X9KG+6vXRQfBrRXqSDsZzyIw6Yik8ymWiPMUprsXMc6jFV2dNi6NNjs8QA5mvRMuD6qkPIuQrJ2hBdS9nwzbyWOCMj7kQ+xtl37WnpF1Q'
+    +
     '+Dn4sTSmT87Z4BDFK8oY4owa15JRYV7vGLizR4svddff8pB86uMaqziRq8Uj6Uv61iuQu2oBRXLqP8C2UgLcrp3GV1kP77VcL42/ky19AjtfSAMbUFf3FXgz/rn3F9q9srNqzYBRzWou+6lyfO2i7Eg3Psnmb' +
 
   '+ENAAAiYeoFZ5VJmEGhBSrihPjAquxvUR/iODbWaPhPn6urr3UINox1Bfg7+F2JtlAgMBAAECggEBAI9SDo+jLY2/FxZK1qJnKm/+VrgVhC6pz3r7KiuXc8Am/FouY2I5wGw9ugIPueUualhpUca4yAwDmm0wRofckz' +
@@ -1437,7 +1432,8 @@ begin
 
   '+wGEgLOQetlO6cPk/gy7N9GMaqUS6ZHvF0Tr/hkpBf8cPHrBuw1Lwchy4Nr7cBIxjUOC40tz45SxpHyzVbZvp6qcHl' +
 
-  '+58UVjMhypIZZdHEbcCgYAucfXJA3bLsfqHjRJ6q7YaJvDj/fND05sufw7+YTxSlPujPH7sJ81c4eBDkSxJoTW02uB6yzohEN5cR19KzLjwF1DgFgHCDpseGuHsfhqyo72GrVynw69uaGirv0JIuZrfenjA3vF/gXYlrdw' + 'dvcTM678m8F' +
+  '+58UVjMhypIZZdHEbcCgYAucfXJA3bLsfqHjRJ6q7YaJvDj/fND05sufw7+YTxSlPujPH7sJ81c4eBDkSxJoTW02uB6yzohEN5cR19KzLjwF1DgFgHCDpseGuHsfhqyo72GrVynw69uaGirv0JIuZrfenjA3vF/gXYlrdw' + 'dvcTM678m8F'
+    +
 
   'IUgPwhPiN4PnnbMwKBgQC1kV' +
 
@@ -1464,13 +1460,14 @@ var
   url, postData, header, returnStr, userId: string;
   js, datajs: TlkJSONobject;
 begin
-   //url := 'https://usrsys.inner.bbk.com/auth/user/info';
+  //url := 'https://usrsys.inner.bbk.com/auth/user/info';
   url := 'https://usrsys.vivo.com.cn/sdk/user/auth.do';
   header := 'Content-Type:application/x-www-form-urlencoded';
   //postData := 'access_token='+token.Text;
   postData := 'authtoken=' + token.Text;
   MainOutMessage('postData: ' + postData);
-  returnStr := Utf8ToAnsi(HttpHelper.HttpsPost(url, postData, header)); //发送验证登录的请求.
+  returnStr := Utf8ToAnsi(HttpHelper.HttpsPost(url, postData, header));
+  //发送验证登录的请求.
   MainOutMessage('登录请求响应: ' + returnStr);
   //{"email":"","isOverDue":"0","name":"","nickname":"","phonenum":"","uid":"a7eea091665fdce9"}
   //{"retcode":0,"data":{"success":true,"openid":"a7eea091665fdce9"}}
@@ -1486,22 +1483,25 @@ begin
       if (js.Field['retcode'].Value = 0) and (js.IndexOfName('data') >= 0) then
       begin
         datajs := js.Field['data'] as TlkJSONobject;
-        if (datajs.IndexOfName('success') >= 0) and (datajs.IndexOfName('openid') >= 0) then
+        if (datajs.IndexOfName('success') >= 0) and (datajs.IndexOfName('openid')
+          >= 0) then
         begin
           userID := datajs.Field['openid'].Value;
 
-          MainOutMessage('登录成功!    openid: ' + userID + ',  success: ' + BoolToStr(datajs.Field['success'].Value));
+          MainOutMessage('登录成功!    openid: ' + userID + ',  success: ' +
+            BoolToStr(datajs.Field['success'].Value));
         end;
-       { //先判断http状态码为200且json消息中包含uid和email则说明该账号校验是有效的
-       if (js.IndexOfName('uid')>=0) AND (js.IndexOfName('email')>=0) then
-       begin
-         userID:= js.Field['uid'].Value;
-         MainOutMessage('登录成功！   userID: ' + userID);
-       end;
-       }
+        { //先判断http状态码为200且json消息中包含uid和email则说明该账号校验是有效的
+        if (js.IndexOfName('uid')>=0) AND (js.IndexOfName('email')>=0) then
+        begin
+          userID:= js.Field['uid'].Value;
+          MainOutMessage('登录成功！   userID: ' + userID);
+        end;
+        }
       end
       else
-        MainOutMessage('[error] 帐号登录校验无效！ retcode: ' + js.Field['retcode'].Value);
+        MainOutMessage('[error] 帐号登录校验无效！ retcode: ' +
+          js.Field['retcode'].Value);
     end;
   except on E: Exception do
     begin
@@ -1535,9 +1535,12 @@ begin
   orderDesc := '元宝';
   extInfo := vivoCallbackEdit.Text;
 
-  signStr := 'appId=' + appId + '&cpId=' + cpId + '&cpOrderNumber=' + cpOrderNumber + '&extInfo=' + extInfo +
-    '&notifyUrl=' + notifyUrl + '&orderAmount=' + orderAmount + '&orderDesc=' + orderDesc +
-    '&orderTime=' + orderTime + '&orderTitle=' + orderTitle + '&version=' + version;
+  signStr := 'appId=' + appId + '&cpId=' + cpId + '&cpOrderNumber=' +
+    cpOrderNumber + '&extInfo=' + extInfo +
+    '&notifyUrl=' + notifyUrl + '&orderAmount=' + orderAmount + '&orderDesc=' +
+    orderDesc +
+    '&orderTime=' + orderTime + '&orderTitle=' + orderTitle + '&version=' +
+    version;
 
   //MainOutMessage('待签名串: ' + signStr);
   signStr := AnsiToUtf8(signStr);
@@ -1549,7 +1552,8 @@ begin
   postData := signStr + '&signMethod=' + signMethod + '&signature=' + signature;
   header := 'Content-Type:application/x-www-form-urlencoded';
   MainOutMessage('postData: ' + postData + #13#10);
-  returnStr := Utf8ToAnsi(HttpHelper.HttpsPost(requestUrl, postData, header)); //向Vivo请求订单流水号.
+  returnStr := Utf8ToAnsi(HttpHelper.HttpsPost(requestUrl, postData, header));
+  //向Vivo请求订单流水号.
   MainOutMessage('订单推送结果: ' + returnStr + #13#10);
 
   try
@@ -1561,34 +1565,41 @@ begin
     end
     else
     begin
-       //先判断http状态码为200且json消息中包含accessKey和orderNumber则说明该账号校验是有效的
+      //先判断http状态码为200且json消息中包含accessKey和orderNumber则说明该账号校验是有效的
       if (js.Field['respCode'].Value = 200) then
       begin
-        if (js.IndexOfName('accessKey') >= 0) and (js.IndexOfName('orderNumber') >= 0) and (js.IndexOfName('signature') >= 0) and (js.IndexOfName('orderAmount') >= 0) then
+        if (js.IndexOfName('accessKey') >= 0) and (js.IndexOfName('orderNumber')
+          >= 0) and (js.IndexOfName('signature') >= 0) and
+          (js.IndexOfName('orderAmount') >= 0) then
         begin
-            //解析返回的交易流水号和accesskey
+          //解析返回的交易流水号和accesskey
           respAccessKey := js.Field['accessKey'].Value;
           respOrderNumber := js.Field['orderNumber'].Value;
           respOrderAmount := js.Field['orderAmount'].Value;
           respSign := js.Field['signature'].Value;
 
-            //验证返回的签名signature（确保是vivo返回的数据）
-          signStr := 'accessKey=' + respAccessKey + '&orderAmount=' + respOrderAmount
+          //验证返回的签名signature（确保是vivo返回的数据）
+          signStr := 'accessKey=' + respAccessKey + '&orderAmount=' +
+            respOrderAmount
             + '&orderNumber=' + respOrderNumber //;
-            + '&respCode=' + '200'
+          + '&respCode=' + '200'
             + '&respMsg=' + js.Field['respMsg'].Value;
           signStr := AnsiToUtf8(signStr);
           MainOutMessage('待签名串: ' + signStr + #13#10);
 
-          signature := LowerCase(Md5(signStr + '&' + LowerCase(Md5(cpKey)))); //md5签名]
-          MainOutMessage('Vivo签名: ' + respSign + #13#10 + '本地签名: ' + signature);
+          signature := LowerCase(Md5(signStr + '&' + LowerCase(Md5(cpKey))));
+          //md5签名]
+          MainOutMessage('Vivo签名: ' + respSign + #13#10 + '本地签名: ' +
+            signature);
           if signature = respSign then
             MainOutMessage('验证签名成功！' + #13#10);
         end;
       end
       else
       begin
-        MainOutMessage('[error] wrong respCode: ' + IntToStr(js.Field['respCode'].Value) + ', respMsg: ' + js.Field['respMsg'].Value);
+        MainOutMessage('[error] wrong respCode: ' +
+          IntToStr(js.Field['respCode'].Value) + ', respMsg: ' +
+          js.Field['respMsg'].Value);
         js.Free;
         exit;
       end;
@@ -1609,7 +1620,8 @@ begin
   header := 'Content-Type:application/x-www-form-urlencoded';
   postData := 'token=' + CCToken.Text;
   MainOutMessage('postData: ' + postData);
-  returnStr := Utf8ToAnsi(HttpHelper.HttpsPost(url, postData, header)); //发送验证登录的请求.
+  returnStr := Utf8ToAnsi(HttpHelper.HttpsPost(url, postData, header));
+  //发送验证登录的请求.
   MainOutMessage('登录请求响应: ' + returnStr);
 
   if returnStr = 'success' then
@@ -1617,7 +1629,6 @@ begin
     MainOutMessage('登录验证成功！');
   end;
 end;
-
 
 procedure TForm1.QMYXLoginBtnClick(Sender: TObject);
 var
@@ -1629,12 +1640,12 @@ begin
   gameId := '100023';
   secretKey := 'sifyxjabhqucw2x9';
 
-
-//http://dev.api.17168.com/api/hbsdk/validat eLogin?session_id=f4c88051518049b6b50a8445870889ed
-//&game_id=100023&sign=85125fa9d7112acf5833a82d5cdc20a5
+  //http://dev.api.17168.com/api/hbsdk/validat eLogin?session_id=f4c88051518049b6b50a8445870889ed
+  //&game_id=100023&sign=85125fa9d7112acf5833a82d5cdc20a5
 
   sign := LowerCase(Md5(AnsiToUtf8(SessionId.Text + gameId + secretKey)));
-  data := url + '?session_id=' + SessionId.Text + '&game_id=' + gameId + '&sign=' + sign;
+  data := url + '?session_id=' + SessionId.Text + '&game_id=' + gameId + '&sign='
+    + sign;
   MainOutMessage('登录请求: ' + data);
   //data := 'http://api.17168.com/api/hbsdk/validateLogin/?session_id=dbb8e7161671414a903fb91513dd494f&game_id=100023&sign=0fb86de9ba0cb1adfd2c8cecc487dc05';
 
@@ -1666,7 +1677,8 @@ begin
       begin
         nickName := retdata.Field['nick_name'].Value;
         userKey := retdata.Field['user_key'].Value;
-        MainOutMessage('登录成功: ' + #13#10 + 'nick_name: ' + nickName + ', user_key: ' + userKey);
+        MainOutMessage('登录成功: ' + #13#10 + 'nick_name: ' + nickName +
+          ', user_key: ' + userKey);
       end;
 
     end;
@@ -1695,8 +1707,10 @@ begin
   // time := DateTimeToUnix(now());
   MainOutMessage('time: ' + IntToStr(time));
 
-  sign := LowerCase(Md5(UTF8Encode(user_key + game_id + order_id + IntToStr(time) + secret_key)));
-  data := url + '?user_key=' + user_key + '&game_id=' + game_id + '&order_id=' + order_id
+  sign := LowerCase(Md5(UTF8Encode(user_key + game_id + order_id + IntToStr(time)
+    + secret_key)));
+  data := url + '?user_key=' + user_key + '&game_id=' + game_id + '&order_id=' +
+    order_id
     + '&time=' + IntToStr(time) + '&sign=' + sign;
   MainOutMessage('请求: ' + data);
 
@@ -1757,7 +1771,8 @@ begin
     '1000001' + SLineBreak +
     '------------------------------8b10cf36d830' + SLineBreak +
     'Content-Disposition: form-data; name="data"' + SLineBreak +
-    '{"orderId":"k20160912163821254830148","gameId":"1000001","serverId":"2","uid":"169431","money":"6.00","gold":"60","callbackInfo":"VXNlcklEPTEzXzUyQDEwMSZJdGVtSUQ9MSZCaWxsSUQ9MTQ3MzY5ODMwMzAwMDAmU2VydmVySUQ9%0D%0AMg=="}' + SLineBreak +
+    '{"orderId":"k20160912163821254830148","gameId":"1000001","serverId":"2","uid":"169431","money":"6.00","gold":"60","callbackInfo":"VXNlcklEPTEzXzUyQDEwMSZJdGVtSUQ9MSZCaWxsSUQ9MTQ3MzY5ODMwMzAwMDAmU2VydmVySUQ9%0D%0AMg=="}' + SLineBreak
+    +
     '------------------------------8b10cf36d830' + SLineBreak +
     'Content-Disposition: form-data; name="sign"' + SLineBreak +
     '2015fccaecc4e0e53191a67e975641c2' + SLineBreak +
@@ -1800,8 +1815,10 @@ begin
   //签名验证
   {"orderId":"k20160603160249250719868","gameId":"1000001","serverId":"0","uid":"0","money":"30.00","gold":"300","callb
                          ackInfo":"VXNlcklEPTVfNDdAMTAxJkl0ZW1JRD0yJkJpbGxJRD0xNDY0OTY5NzY0MDAwMCZTZXJ2ZXJJRD0x\r\n"}
-  signStr := appid + 'callbackInfo=VXNlcklEPTEzXzUyQDEwMSZJdGVtSUQ9MSZCaWxsSUQ9MTQ3MzY5ODMwMzAwMDAmU2VydmVySUQ9%0D%0AMg==' //%0D%0A
-    + '&gameId=1000001&gold=60&money=6.00&orderId=k20160912163821254830148&serverId=2&uid=169431' + 'ca5762fa9d9b6f966b795cae4a8c96d2';
+  signStr := appid +
+    'callbackInfo=VXNlcklEPTEzXzUyQDEwMSZJdGVtSUQ9MSZCaWxsSUQ9MTQ3MzY5ODMwMzAwMDAmU2VydmVySUQ9%0D%0AMg==' //%0D%0A
+  + '&gameId=1000001&gold=60&money=6.00&orderId=k20160912163821254830148&serverId=2&uid=169431' +
+    'ca5762fa9d9b6f966b795cae4a8c96d2';
   //signStr := '1000000callbackInfo=exam-test&gameId=1000000&gold=60&money=6&orderId=k20160101111122334455678&serverId=1&uid=255248f7ef36b5fba1751a07db133a2aecbb3b';
   {
   signStr:=StringReplace (signStr, '\r',  '%0D', [rfReplaceAll]);
@@ -1826,9 +1843,10 @@ var
 begin
   UserID := '29302';
   ItemID := '1';
-  BillID := '20160615092209320';
+  BillID := '20170615092209320';
   ServerID := 1;
-  callbackInfo := EncodeString('UserID=' + UserID + '&ItemID=' + ItemID + '&BillID=' + BillID + '&ServerID=' + IntToStr(ServerID));
+  callbackInfo := EncodeString('UserID=' + UserID + '&ItemID=' + ItemID +
+    '&BillID=' + BillID + '&ServerID=' + IntToStr(ServerID));
   MainOutMessage('callbackInfo: ' + callbackInfo);
 
   js := TlkJSONobject.Create;
@@ -1841,14 +1859,14 @@ begin
   jsonInfo := StringReplace(jsonInfo, '\n', '', [rfReplaceAll]);
   MainOutMessage('替换后jsonInfo: ' + jsonInfo);
 
-
 end;
 
 procedure TForm1.VivoPayVerifyClick(Sender: TObject);
 var
   retList: TStringList;
   i: Integer;
-  appId, cpId, cpOrderNumber, extInfo, orderAmount, orderNumber, payTime: string;
+  appId, cpId, cpOrderNumber, extInfo, orderAmount, orderNumber, payTime:
+  string;
   respCode, respMsg, tradeStatus, tradeType, uid, signStr, sign, cpKey: string;
 begin
   cpKey := 'fa4a5c348e37d2eaf56a0001e30243de';
@@ -1858,7 +1876,8 @@ begin
 
   for i := 0 to retList.Count - 1 do
   begin
-    MainOutMessage(retList.Names[i] + '  -->  ' + retList.Values[retList.Names[i]]);
+    MainOutMessage(retList.Names[i] + '  -->  ' +
+      retList.Values[retList.Names[i]]);
   end;
 
   appId := retList.Values['appId'];
@@ -1874,8 +1893,11 @@ begin
   tradeType := retList.Values['tradeType'];
   uid := retList.Values['uid'];
 
-  signStr := 'appId=' + appId + '&cpId=' + cpId + '&cpOrderNumber=' + cpOrderNumber + '&extInfo=' + extInfo + '&orderAmount=' + orderAmount + '&orderNumber=' + orderNumber
-    + '&payTime=' + payTime + '&respCode=' + respCode + '&respMsg=' + respMsg + '&tradeStatus=' + tradeStatus + '&tradeType=' + tradeType + '&uid=' + uid;
+  signStr := 'appId=' + appId + '&cpId=' + cpId + '&cpOrderNumber=' +
+    cpOrderNumber + '&extInfo=' + extInfo + '&orderAmount=' + orderAmount +
+    '&orderNumber=' + orderNumber
+    + '&payTime=' + payTime + '&respCode=' + respCode + '&respMsg=' + respMsg +
+    '&tradeStatus=' + tradeStatus + '&tradeType=' + tradeType + '&uid=' + uid;
 
   MainOutMessage('待签名串: ' + signStr + #13#10);
 
@@ -1894,10 +1916,12 @@ var
   callbackInfo, s: string;
   codeStr: string;
 begin
-  s := 'VXNlcklEPTE1XzYyQDE2NCZJdGVtSUQ9MSZCaWxsSUQ9MTQ2ODUwNjU0MjAwMDAmU2VydmVySUQ9MQ==';
+  s :=
+    'VXNlcklEPTE1XzYyQDE2NCZJdGVtSUQ9MSZCaWxsSUQ9MTQ2ODUwNjU0MjAwMDAmU2VydmVySUQ9MQ==';
   MainOutMessage('callbackInfo长度:' + IntToStr(length(s)));
 
-  callbackInfo := 'UserID=15_62@164&ItemID=10&BillID=14685065420000&ServerID=10';
+  callbackInfo :=
+    'UserID=15_62@164&ItemID=10&BillID=14685065420000&ServerID=10';
 
   callbackInfo := 'U=15_62@164&I=10&B=14685065420000&S=10';
   callbackInfo := '15_62@164&10&14685065420000&10';
@@ -1912,8 +1936,8 @@ procedure TForm1.Button43Click(Sender: TObject);
 var
   src, targ: string;
 begin
-{Copy(源字符串: string，起始位置: Integer，目标长度: Integer);
-Pos(子串:string，源字符串:string）; //获得子串在源字符串的位置 }
+  {Copy(源字符串: string，起始位置: Integer，目标长度: Integer);
+  Pos(子串:string，源字符串:string）; //获得子串在源字符串的位置 }
   src := ccpayEdit4.Text;
   MainOutMessage('position: ' + IntToStr(Pos('=', src)));
   targ := Copy(src, Pos('=', src) + 1, Length(src) - Pos('=', src));
@@ -1921,27 +1945,11 @@ Pos(子串:string，源字符串:string）; //获得子串在源字符串的位置 }
 end;
 
 procedure TForm1.QQLoginVerifyClick(Sender: TObject);
-const
-  TENCENT_QQ_APPID = '1104936787';
-  TENCENT_QQ_APPKEY = 'BZMsqGV02ZxTZBLu';
-  TENCENT_WX_APPID = 'wx352b03a01f2253c1';
-  TENCENT_WX_APPKEY = 'f206cef86c174b72d887f23094e9ce88';
-
-  TENCENT_LOGIN_URL = 'http://ysdktest.qq.com/auth';
-
- { QQLoginURL = 'http://ysdk.qq.com/auth/qq_check_token';//测试URL http://ysdktest.qq.com/auth/qq_check_token
-  WXLoginURL = 'http://ysdk.qq.com/auth/wx_check_token';//测试URL http://ysdktest.qq.com/auth/wx_check_token    }
-
 var
-  openid, openkey, sign, Data: string;
-  timestamp, loginPlatform: Integer;
-  requestStr, returnStr: string;
-  js, jsdata: TlkJSONobject;
+  requestStr, returnStr, Data: string;
+  TencentLogin: TTencentLogin;
 
 begin
-  jsdata := nil;
-  js := nil;
-
   //微信登录成功返回Msg
   {"platform":2,"pf":"desktop_m_wx-2002-android-00000000-867822025692483","flag":0,"token":"o1fEfHM2shPCMQhJrhDQgc-EjL3id5bYNLW3oThJOFPlIpAAMJvI5jF83rFSg0KGHnoiDnMEJVM6PBRTaIBQAruEl3q70DNCo8zP8EAGkXA","open_id":"oYlgWt1F62jNdx7ic-yMlmrawYgg","pf_key":"7607e9d5b541684f2236a0b863afeabb","RefreshToken":"o1fEfHM2shPCMQhJrhDQgXyNzcSB2oHHfakJRyVv6C1gl-k64csOgLWAM-41g-5MVjOqEJbZk26JpZYLvzOYD5HD6_SzeRQG0_NVtoiu7Go"}
   //QQ登录成功返回Msg New
@@ -1952,79 +1960,16 @@ begin
   else
     Data := WXLoginEdit.Text;
 
-  timestamp := DateTimeToUnix(Now) - 8 * 60 * 60;
-  jsdata := TlkJSON.ParseText(Data) as TlkJSONobject;
-  if not assigned(jsdata) then
-  begin
-    MainOutMessage('[Error] Tencent Login Request Failed. Client Data error. Data: ' + Data);
-    exit;
-  end;
-
-  if (jsdata.IndexOfName('platform') >= 0) and (jsdata.IndexOfName('token') >= 0) and (jsdata.IndexOfName('open_id') >= 0) then
-  begin
-    loginPlatform := jsdata.Field['platform'].Value;
-    openkey := jsdata.Field['token'].Value;
-    openid := jsdata.Field['open_id'].Value;
-  end
-  else
-  begin
-    MainOutMessage('[Error] Tencent Login Request Failed. Parameter not exist! Data: ' + Data);
-    jsdata.Free;
-    exit;
-  end;
-
-  //针对不同平台进行签名.
-  if loginPlatform = 1 then //QQ 请求时使用QQ的App_Id和App_Key
-  begin
-    sign := LowerCase(Md5(TENCENT_QQ_APPKEY + IntToStr(timestamp)));
-    requestStr := TENCENT_LOGIN_URL + '/qq_check_token?' + 'timestamp=' + IntToStr(timestamp) + '&appid=' + TENCENT_QQ_APPID +
-      '&sig=' + sign + '&openid=' + openid + '&openkey=' + openkey
-  end
-  else //微信 请求时使用微信的App_Id和App_Key
-  begin
-    sign := LowerCase(Md5(TENCENT_WX_APPKEY + IntToStr(timestamp)));
-    requestStr := TENCENT_LOGIN_URL + '/wx_check_token?' + 'timestamp=' + IntToStr(timestamp) + '&appid=' + TENCENT_WX_APPID +
-      '&sig=' + sign + '&openid=' + openid + '&openkey=' + openkey;
-  end;
-
-  MainOutMessage('请求: ' + requestStr + #13#10);
+  requestStr := TencentLogin.TencentLoginRequest(Data);
+  MainOutMessage('登录请求: ' + requestStr + #13#10);
 
   returnStr := Utf8ToAnsi(HttpHelper.HttpsGet(requestStr)); //发送验证登录的请求.
   MainOutMessage('登录请求响应: ' + returnStr + #13#10);
-  try
-    js := TlkJSON.ParseText(returnStr) as TlkJSONobject;
-    if not assigned(js) then
-    begin
-      MainOutMessage('[Error] Tencent Login Verify Failed. Response Data error. Data: ' + returnStr);
-      jsdata.Free;
-      exit;
-    end;
 
-    if (js.IndexOfName('ret') >= 0) and (js.IndexOfName('msg') >= 0) then
-    begin
-      if js.Field['ret'].Value = 0 then
-      begin
-
-        MainOutMessage('[Log] 登录验证成功！UID: ' + openid);
-      end
-      else
-      begin
-        MainOutMessage('[Error] Tencent Login Verify Failed. 登录失败. Data: ' + returnStr);
-      end;
-
-    end
-    else
-    begin
-      MainOutMessage('[Error] Tencent Login Verify Failed. Parameter not exist! Data: ' + returnStr);
-    end;
-
-  except on E: Exception do
-    begin
-      MainOutMessage('[Error] Tencent Login Verify Failed. unknown exception! Data: ' + returnStr);
-    end;
-  end;
-  jsdata.Free;
-  js.Free;
+  if TencentLogin.TencentLoginVerify(returnStr) then
+    MainOutMessage('登录成功！')
+  else
+    MainOutMessage('登录失败！');
 
 end;
 
@@ -2039,244 +1984,7 @@ begin
     Data := WXLoginEdit.Text;
   zoneid := '1'; //账户分区ID
 
-  TencentPayServer.TencentSynchroBalance(zoneid, Data, 8); //最多请求8次
-end;
-
-function TencentGetBalanceThread(Param: Pointer): Integer; stdcall; //请求余额线程 ; times:Integer
-var
-  Server: TTencentPayServer;
-  reqResult: boolean;
-
-  times: Integer;
-  CurrentTick, StartTick: Cardinal;
-
-begin
-  Server := TTencentPayServer(Param);
-  Server.TencentBalance.IsSuccess := False;
-
-  while Server.TencentBalance.RequestTimes > 0 do
-  begin
-
-    CurrentTick := GetTickCount; //获取当前时间
-    if (CurrentTick - StartTick) > 1500 then //每15s请求一次(15000)，计算距离上次请求的时间间隔。
-    begin
-      StartTick := CurrentTick; //记录当前请求时间
-
-      Server.TencentBalance.IsSuccess := Server.processTencentGetBalance(Server.TencentBalance.Request);
-      if Server.TencentBalance.IsSuccess then //IsSuccess表示腾讯游戏币充值是否到帐
-      begin
-        Server.MainOutMessage('[Log] 支付已到帐！用户余额：' + IntToStr(Server.TencentBalance.Balance));
-        Break;
-      end;
-
-      Dec(Server.TencentBalance.RequestTimes); //请求次数减一
-    end
-
-  end;
-  Server.MainOutMessage('[Log] 查询余额完成！用户余额：' + IntToStr(Server.TencentBalance.Balance));
-
-  //通过Server.TencentBalance中数据，对比同步元宝余额 TencentBalance.Balance
-
-end;
-
-//查询余额需要返回元宝最新余额
-{查询余额接口-客户端支付成功回调到服务器，服务器查询余额，如果余额增加，则发放相应数目元宝。}
-
-function TTencentPayServer.TencentGetBalanceRequest(zoneid, Data: string): string;
-const
-  { 注意:微信登录态和手Q登录态使用的支付接口相同，支付ID相同；服务端使用的appid和appkey都
-  使用支付的offerid和appkey。offerid对应QQ的APPID，appkey对应支付的appkey(区分沙箱和现网)}
-  TENCENT_MIDAS_OFFERID = '1104936787'; //米大师appid(QQ_APP_ID)
-{  TENCENT_MIDAS_APPKEY = 'P4d26OxLKq45pk2ATTbZ5C7ESNCy2aFT';//米大师现网appKey:P4d26OxLKq45pk2ATTbZ5C7ESNCy2aFT 沙箱BZMsqGV02ZxTZBLu
-  TENCENT_GET_BALANCE_URL = 'https://ysdk.qq.com/mpay/get_balance_m';        }
-
-  TENCENT_MIDAS_APPKEY = 'BZMsqGV02ZxTZBLu'; //米大师现网appKey:P4d26OxLKq45pk2ATTbZ5C7ESNCy2aFT 沙箱BZMsqGV02ZxTZBLu
-  TENCENT_GET_BALANCE_URL = 'https://ysdktest.qq.com/mpay/get_balance_m';
-  SERVER_IP = '192.168.21.116';
-
-var
-  openid, openkey, pf, pf_key, signStr0, signStr, sign: string;
-  timestamp, payPlatform: Integer;
-
-  OpenAPI, requestStr: string;
-  jsdata: TlkJSONobject;
-  HmacSha1: HmacSha1Class;
-begin
-  jsdata := nil;
-  CoInitialize(nil);
-  HmacSha1 := CoHmacSha1Class.Create;
-  timestamp := DateTimeToUnix(Now) - 8 * 60 * 60;
-
-  try
-    if Trim(zoneid) = '' then
-    begin
-      MainOutMessage('[error] Tencent Pay Get Balance Failed. 账户分区id有误! zoneid: ' + zoneid + ', Data: ' + Data);
-      exit;
-    end;
-
-    jsdata := TlkJSON.ParseText(Data) as TlkJSONobject;
-    if not assigned(jsdata) then
-    begin
-      MainOutMessage('[error] Tencent Pay Get Balance Failed. 登录回调参数有误! Data: ' + Data);
-      exit;
-    end;
-
-    if (jsdata.IndexOfName('platform') >= 0) and (jsdata.IndexOfName('open_id') >= 0)
-      and (jsdata.IndexOfName('pf') >= 0) and (jsdata.IndexOfName('pf_key') >= 0) then
-    begin
-      payPlatform := jsdata.Field['platform'].Value;
-      openid := jsdata.Field['open_id'].Value;
-      pf := jsdata.Field['pf'].Value;
-      pf_key := jsdata.Field['pf_key'].Value;
-
-      //openkey：手Q登陆时传手Q登陆回调里获取的paytoken值，微信登陆时传微信登陆回调里获取的传access_token值。
-      if (payPlatform = 1) and (jsdata.IndexOfName('PayToken') >= 0) then //QQ
-      begin
-        openkey := jsdata.Field['PayToken'].Value;
-      end
-      else if (payPlatform = 2) and (jsdata.IndexOfName('token') >= 0) then //微信
-      begin
-        openkey := jsdata.Field['token'].Value;
-      end
-      else
-      begin
-        MainOutMessage('[error] Tencent Pay Get Balance Failed. Parameter not exist(1)! Data: ' + Data);
-        jsdata.Free;
-        exit;
-      end;
-
-    end
-    else
-    begin
-      MainOutMessage('[error] Tencent Pay Get Balance Failed. Parameter not exist(2)! Data: ' + Data);
-      jsdata.Free;
-      exit;
-    end;
-
-  except on E: Exception do
-    begin
-      MainOutMessage('[error] Tencent Pay Get Balance Failed. unknown exception! Data: ' + Data);
-      jsdata.Free;
-      Exit;
-    end;
-  end;
-  jsdata.Free;
-
-  //构造请求数据
-  OpenAPI := '/v3/r/mpay/get_balance_m';
-  signStr0 := 'appid=' + TENCENT_MIDAS_OFFERID + '&openid=' + openid + '&openkey=' + openkey +
-    '&pf=' + pf + '&pfkey=' + pf_key + '&ts=' + IntToStr(timestamp) + '&zoneid=' + zoneid;
- { signStr0:=StringReplace (signStr0, '@', '%40', [rfReplaceAll]);//如果参数里包含@，那@需要手动编码为%40   }
-  //MainOutMessage('signStr0: '+signStr0+#13#10);
-
-  //如果参数里面包含@，那@也会被编码为%N格式，需要改回@，否则签名错误。
-  signStr := 'GET&' + HttpEncode(OpenAPI) + '&' + HttpEncode(signStr0);
-  //MainOutMessage('signStr: '+signStr+#13#10);
-
-  //'hex'小米渠道使用，返回bytesToHexStr(hmac.Hash).ToLower(); 'base64'腾讯渠道使用，返回Convert.ToBase64String(hmac.Hash).
-  sign := HmacSha1.HmacSha1Sign(signStr, TENCENT_MIDAS_APPKEY + '&', 'base64'); //注意这里的appkey指的是米大师的appkey, 测试环境用沙箱appkey, 正式环境用正式环境的appkey
-  sign := HttpEncode(sign);
-
-  requestStr := TENCENT_GET_BALANCE_URL + '?' + signStr0 + '&sig=' + sign;
-  Result := requestStr;
-  MainOutMessage('[Log] 查询余额请求: ' + requestStr);
-
-  SetCookies(payPlatform, TENCENT_GET_BALANCE_URL, '/mpay/get_balance_m', SERVER_IP);
-  CounInitialize;
-  //使用计时器进行多次请求
- { TencentTimer.Enabled := True;
-  TencentTimer.Interval := 15000;//每隔15秒请求一次
-  TencentRequestTimes := 0;               }
-end;
-
-procedure TTencentPayServer.TencentSynchroBalance(zoneid, Data: string; reqTimes: Integer); //同步余额
-var
-  ThreadID: DWORD;
-begin
-  //初始化
-  //TencentBalance := TTencentBalance.Create;
-  TencentBalance.RequestTimes := reqTimes;
-  TencentBalance.Balance := -1;
-  TencentBalance.SaveAmt := -1;
-  TencentBalance.Request := TencentGetBalanceRequest(zoneid, Data); //构造请求
-
-  if Trim(TencentBalance.Request) = '' then
-  begin
-    MainOutMessage('[error] TencentSynchroBalance Failed. Request can not be null! Request: ' + TencentBalance.Request);
-    Exit;
-  end;
-
-  //开一个线程，请求余额，逻辑判断只请求一次，还是请求多次。
-  FTencentBalanceThread := CreateThread(nil, 0, @TencentGetBalanceThread, Pointer(Self), 0, ThreadID);
-  if FTencentBalanceThread = 0 then
-  begin
-    MainOutMessage(Format('[Error]Create TencentGetBalanceThread Failed: %d', [GetLastError]));
-  end;
-
-end;
-
-function TTencentPayServer.processTencentGetBalance(request: string): Boolean; //发送查询余额请求
-var
-  returnJs: string;
-  jsdata: TlkJSONobject;
-  save_amt: Integer;
-  //StartTick:Cardinal;
-
-begin
-  jsdata := nil;
-  Result := False;
-
-  try
-      //然后 发起查询用元宝余额的请求.
-    returnJs := Utf8ToAnsi(HttpHelper.HttpsGet(TencentBalance.Request));
-    MainOutMessage('[Log] 查询余额请求响应 (' + IntToStr(TencentBalance.RequestTimes) + ') ' + returnJs);
-
-      {"ret" : 0,"balance" : 167,"gen_balance" : 57,"first_save" : 0,"save_amt" : 110,
-      "gen_expire" : 0,"tss_list" : [],"save_sum" : 237,"cost_sum" : 70,"present_sum" : 127}
-    jsdata := TlkJSON.ParseText(returnJs) as TlkJSONobject;
-    if not assigned(jsdata) then
-    begin
-      MainOutMessage('[Error] Tencent Timer Get Balance Failed. returnData error(1). returnJs: ' + returnJs);
-      exit;
-    end;
-
-    if (jsdata.IndexOfName('ret') >= 0) and (jsdata.Field['ret'].Value = 0) then
-    begin
-      if (jsdata.IndexOfName('save_amt') >= 0) and (jsdata.IndexOfName('balance') >= 0) then //save_amt: 累计充值金额的游戏币数量
-      begin
-        save_amt := jsdata.Field['save_amt'].Value;
-        TencentBalance.Balance := jsdata.Field['balance'].Value;
-
-        if TencentBalance.SaveAmt = -1 then //第一次请求的时候
-        begin
-          TencentBalance.SaveAmt := save_amt;
-        end
-        else if save_amt > TencentBalance.SaveAmt then
-        begin
-          TencentBalance.SaveAmt := save_amt;
-          Result := True;
-        end;
-
-      end
-      else
-        MainOutMessage('[Error] Tencent Timer Get Balance Failed. Return Data Error！returnJs：' + returnJs);
-
-    end
-    else
-    begin
-      MainOutMessage('[Error] Tencent Timer Get Balance Failed. 返回码错误！returnJs：' + returnJs);
-      jsdata.Free;
-      Exit;
-    end;
-
-  except on E: Exception do
-    begin
-      MainOutMessage('[Error] Tencent Timer Get Balance Failed. unknown exception!. returnJs: ' + returnJs);
-      jsdata.Free;
-      Exit;
-    end;
-  end;
-
+  TencentPay.TencentSynchroBalance(zoneid, Data, 8); //最多请求8次
 end;
 
 {使用计时器在2分钟之内间隔15秒多次调用，查询余额是否有变化
@@ -2337,347 +2045,6 @@ begin
 
 end;      }
 
-{根据平台类型设置cookie}
-
-procedure TTencentPayServer.SetCookies(payPlatform: Integer; requestURL, orgLoc, serverIp: string);
-begin
-  if payPlatform = 1 then //设置QQ cookie
-  begin
-    if not InternetSetCookie(PAnsiChar(requestURL), 'session_id', PAnsiChar(httpEncode('openid'))) then
-    begin
-      MainOutMessage('[ERROR] Tencent SetCookies qq session_id: ' + SysErrorMessage(GetLastError));
-    end;
-
-    if not InternetSetCookie(PAnsiChar(requestURL), 'session_type', PAnsiChar(httpEncode('kp_actoken'))) then
-    begin
-      MainOutMessage('[ERROR] Tencent SetCookies qq session_type: ' + SysErrorMessage(GetLastError));
-    end
-  end
-  else //设置微信cookie
-  begin
-    if not InternetSetCookie(PAnsiChar(requestURL), 'session_id', PAnsiChar(httpEncode('hy_gameid'))) then
-    begin
-      MainOutMessage('[ERROR] Tencent SetCookies wx session_id: ' + SysErrorMessage(GetLastError));
-    end;
-
-    if not InternetSetCookie(PAnsiChar(requestURL), 'session_type', PAnsiChar(httpEncode('wc_actoken'))) then
-    begin
-      MainOutMessage('[ERROR] Tencent SetCookies wx session_id: ' + SysErrorMessage(GetLastError));
-    end;
-  end;
-  //设置剩下的cookie
-  if not InternetSetCookie(PAnsiChar(requestURL), 'org_loc', PAnsiChar(httpEncode(orgLoc))) then
-  begin
-    MainOutMessage('[ERROR] Tencent SetCookies org_loc: ' + SysErrorMessage(GetLastError));
-  end;
-
-  if not InternetSetCookie(PAnsiChar(requestURL), 'appip', PAnsiChar(httpEncode(serverIp))) then
-  begin
-    MainOutMessage('[ERROR] Tencent SetCookies appip: ' + SysErrorMessage(GetLastError));
-  end;
-end;
-
-function TTencentPayServer.TencentGameCoinRequest(coinAmount: Integer; zoneId, billNo, data, openAPI: string): string;
-const
-{  TENCENT_MIDAS_OFFERID = '1104936787'; //米大师appid(QQ_APP_ID)
-  TENCENT_MIDAS_APPKEY = 'P4d26OxLKq45pk2ATTbZ5C7ESNCy2aFT';//米大师现网appKey:P4d26OxLKq45pk2ATTbZ5C7ESNCy2aFT
-  TENCENT_SDK_URL = 'https://ysdk.qq.com';       }
-  TENCENT_MIDAS_OFFERID = '1104936787'; //米大师appid(QQ_APP_ID)
-  TENCENT_MIDAS_APPKEY = 'BZMsqGV02ZxTZBLu'; //米大师现网appKey:P4d26OxLKq45pk2ATTbZ5C7ESNCy2aFT 沙箱BZMsqGV02ZxTZBLu
-  TENCENT_SDK_URL = 'https://ysdktest.qq.com';
-  SERVER_IP = '192.168.21.116';
-
-var
-  openid, openkey, pf, pf_key, signStr0, signStr, sign: string;
-  timestamp, payPlatform: Integer;
-
-  ConsumeCoinURL, EncodeURL, requestStr, returnStr: string;
-  jsdata: TlkJSONobject;
-
-  HmacSha1: HmacSha1Class;
-begin
-  CoInitialize(nil); //初始化COM对象，在主方法加入该句子有时候不能解决问题，因为默认是初始化主线程的，只有在子线程或方法加入才行。
-  jsdata := nil;
-  HmacSha1 := CoHmacSha1Class.Create;
-
-  { 注意:微信登录态和手Q登录态使用的支付接口相同，支付ID相同；服务端使用的appid和appkey都
-  使用支付的offerid和appkey。offerid对应QQ的APPID，appkey对应支付的appkey(区分沙箱和现网)}
-
-  ConsumeCoinURL := TENCENT_SDK_URL + OpenAPI;
-  timestamp := DateTimeToUnix(Now) - 8 * 60 * 60;
-
-  if Trim(zoneId) = '' then
-  begin
-    MainOutMessage('[error] Tencent Pay Get Balance Failed. 账户分区id有误! zoneId: ' + zoneId + ', Data: ' + data);
-    exit;
-  end;
-
-  if coinAmount <= 0 then
-  begin
-    MainOutMessage('[error] Tencent GameCoinAction Data error(3): coinAmount必须大于0. coinAmount: ' + IntToStr(coinAmount) +
-      ', Data: ' + data);
-    jsdata.Free;
-    exit;
-  end;
-
-  try
-    jsdata := TlkJSON.ParseText(data) as TlkJSONobject;
-    if not assigned(jsdata) then
-    begin
-      MainOutMessage('[error] Tencent GameCoinAction Data error(0). Data: ' + data);
-      exit;
-    end;
-
-    if (jsdata.IndexOfName('platform') >= 0) and (jsdata.IndexOfName('open_id') >= 0)
-      and (jsdata.IndexOfName('pf') >= 0) and (jsdata.IndexOfName('pf_key') >= 0) then
-    begin
-      payPlatform := jsdata.Field['platform'].Value;
-      openid := jsdata.Field['open_id'].Value;
-      pf := jsdata.Field['pf'].Value;
-      pf_key := jsdata.Field['pf_key'].Value;
-
-      //openkey：手Q登陆时传手Q登陆回调里获取的paytoken值，微信登陆时传微信登陆回调里获取的传access_token值。
-      if (payPlatform = 1) and (jsdata.IndexOfName('PayToken') >= 0) then //QQ
-      begin
-        openkey := jsdata.Field['PayToken'].Value;
-      end
-      else if (payPlatform = 2) and (jsdata.IndexOfName('token') >= 0) then //微信
-      begin
-        openkey := jsdata.Field['token'].Value;
-      end
-      else
-      begin
-        MainOutMessage('[error] Tencent Pay Get Balance Failed. Parameter not exist(1)! Data: ' + data);
-        jsdata.Free;
-        exit;
-      end;
-
-    end
-    else
-    begin
-      MainOutMessage('[error] Tencent GameCoinAction Data error(1). Data: ' + data);
-      jsdata.Free;
-      exit;
-    end;
-
-  except on E: Exception do
-    begin
-      MainOutMessage('[error] Tencent GameCoinAction Data error(2). returnStr: ' + returnStr);
-      jsdata.Free;
-      Exit;
-    end;
-  end;
-
-  //构造请求数据
-  EncodeURL := '/v3/r' + OpenAPI;
-  if OpenAPI = '/mpay/present_m' then //赠送游戏币
-    signStr0 := 'appid=' + TENCENT_MIDAS_OFFERID + '&billno=' + billno + '&openid=' + openid + '&openkey=' + openkey + '&pf=' + pf +
-      '&pfkey=' + pf_key + '&presenttimes=' + IntToStr(coinAmount) + '&ts=' + IntToStr(timestamp) + '&zoneid=' + zoneId
-
-  else //游戏币支付或取消支付
-    signStr0 := 'amt=' + IntToStr(coinAmount) + '&appid=' + TENCENT_MIDAS_OFFERID + '&billno=' + billno + '&openid=' + openid + '&openkey=' + openkey +
-      '&pf=' + pf + '&pfkey=' + pf_key + '&ts=' + IntToStr(timestamp) + '&zoneid=' + zoneId;
-  //MainOutMessage('[Log] signStr0: '+signStr0+#13#10);
-
-  signStr := 'GET&' + HttpEncode(EncodeURL) + '&' + HttpEncode(signStr0);
-  //MainOutMessage('[Log] signStr: '+signStr+#13#10);
-
-  //'hex'小米渠道使用，返回bytesToHexStr(hmac.Hash).ToLower(); 'base64'腾讯渠道使用，返回Convert.ToBase64String(hmac.Hash).
-  sign := HmacSha1.HmacSha1Sign(signStr, TENCENT_MIDAS_APPKEY + '&', 'base64'); //注意这里的appkey指的是米大师的appkey, 测试环境用沙箱appkey, 正式环境用正式环境的appkey
-  sign := HttpEncode(sign);
-  //MainOutMessage('[Log] sign: '+sign+#13#10);
-
-  requestStr := ConsumeCoinURL + '?' + signStr0 + '&sig=' + sign;
-  SetCookies(payPlatform, ConsumeCoinURL, OpenAPI, SERVER_IP);
-  Result := requestStr;
-  //然后 发起查询用元宝余额的请求.
-  //Result := Utf8ToAnsi(HttpsGet(requestStr));
-  CoUninitialize(); //解除初始化COM对象
-end;
-
-function TencentCoinActionThread(Param: Pointer): Integer; stdcall; //请求游戏币操作线程 ; times:Integer
-var
-  Server: TTencentPayServer;
-  //ReqInfo:TTencentCoin;
-  times: Integer;
-  executeTimeTick, StartTick: Cardinal;
-begin
-  Server := TTencentPayServer(Param);
-  //ReqInfo:= Server.TencentCoin;
-  times := 3;
-
-  //操作失败要再试几遍，否则腾讯和我们游戏的游戏币数量会不统一，最好在腾讯这边操作成功后再同步
-  while times > 0 do
-  begin
-
-    StartTick := GetTickCount; //获取当前时间
-    if (StartTick - executeTimeTick) > 1500 then //每15s请求一次(15000)，计算距离上次请求的时间间隔。
-    begin
-      executeTimeTick := StartTick; //记录当前请求时间
-
-      Server.TencentCoin.isSuccess := Server.processTencentCoinAction(Server.TencentCoin, Server.TencentCoin.OpenAPI);
-      if Server.TencentCoin.isSuccess then
-        break;
-
-      Dec(times); //请求次数减一
-    end;
-
-  end;
-  Server.MainOutMessage('[Log] 游戏币操作完成！用户余额：' + IntToStr(Server.TencentCoin.Balance));
-  //Server.TencentCoin.isSuccess := Server.TencentCoinActionExecute(Server.TencentCoin, Server.TencentCoin.OpenAPI);
-
-end;
-
-function TTencentPayServer.processTencentCoinAction(ReqInfo: TTencentCoin; OpenAPI: string): Boolean; //执行请求
-var
-  request, returnJs: string;
-  jsdata: TlkJSONobject;
-  success: Boolean; //是否发货成功
-
-  ret: Integer; //返回码。0：成功；1001：参数错误；1018：登陆校验失败。
-  balance: Integer; //操作之后的游戏币余额（包含了赠送游戏币）
-  billno: string; //操作流水号
-begin
-  ret := -1;
-  Result := False;
-
-  //构造请求
-  request := TencentGameCoinRequest(ReqInfo.CoinAmount, ReqInfo.ZoneId, ReqInfo.BillNo, ReqInfo.Data, OpenAPI);
-  if Trim(request) = '' then
-  begin
-    MainOutMessage('[error] Tencent CoinActionThread Failed. Request can not be null! Request: ' + request);
-    Exit;
-  end;
-  MainOutMessage('[Log] 游戏币操作请求: ' + request);
-
-  //发起元宝操作的请求.
-  returnJs := Utf8ToAnsi(HttpHelper.HttpsGet(request));
-  MainOutMessage('[Log] 游戏币操作请求响应: ' + returnJs);
-
-  //扣除游戏币
-  {"ret":0,"balance":142,"gen_balance":32,"billno":"86756","used_gen_amt":10}
-  //取消支付
-  {"ret":0,"balance":152,"gen_balance":42,"billno":"86756"}
-  //直接赠送游戏币
-  {"ret":0,"balance":157,"gen_balance":47,"billno":"86756"}
-  //解析返回json，保存参数
-  try
-    jsdata := TlkJSON.ParseText(returnJs) as TlkJSONobject;
-    if not assigned(jsdata) then
-    begin
-      MainOutMessage('[Error] Tencent CoinActionThread Request Failed. Data: ' + returnJs);
-      exit;
-    end;
-
-    if (jsdata.IndexOfName('ret') >= 0) then
-      ret := jsdata.Field['ret'].Value;
-
-    if (jsdata.IndexOfName('balance') >= 0) then
-      TencentCoin.Balance := jsdata.Field['balance'].Value;
-
-    if (jsdata.IndexOfName('billno') >= 0) then
-      billno := jsdata.Field['billno'].Value;
-
-  except on E: Exception do
-    begin
-      MainOutMessage('[Error] Tencent CoinActionThread Return Data error: unknown exception. Data: ' + returnJs);
-      jsdata.Free;
-      Exit;
-    end;
-  end;
-  jsdata.Free;
-
-  {判断操作是否成功}
-  if OpenAPI = '/mpay/present_m' then //赠送游戏币
-  begin
-
-    if ret = 0 then //赠送成功，同步客户端游戏币余额 （发元宝）
-    begin
-      MainOutMessage('[Log] Tencent CoinActionThread 赠送游戏币成功，余额：' + IntToStr(balance));
-      Result := True;
-    end
-    else //赠送游戏币失败，不发元宝
-    begin
-      MainOutMessage('[Log] Tencent CoinActionThread 赠送游戏币失败. Data: ' + returnJs);
-
-    end;
-
-  end
-  else if OpenAPI = '/mpay/pay_m' then //游戏币支付
-  begin
-
-    if ret = 0 then //扣除游戏币成功，发道具   1018
-    begin
-      MainOutMessage('[Log] Tencent CoinActionThread 扣除元宝成功，进行发货. Data: ' + returnJs);
-
-      //发货
-      success := False;
-
-      //发货成功，同步元宝余额
-      if success then
-      begin
-        Result := True;
-      end
-      else
-      begin
-        //发货失败，调用取消支付接口，退还已扣除游戏币
-        processTencentCoinAction(ReqInfo, '/mpay/cancel_pay_m');
-      end;
-
-    end
-    {扣除游戏币失败（失败要再试几遍，否则腾讯和我们游戏的游戏币数量会不统一【出现把已经买了道具的元宝返还玩家情况】，
-    最好在腾讯这边操作成功后再同步） }
-    else //游戏币支付失败，不发放道具
-    begin
-      MainOutMessage('[Log] Tencent CoinActionThread 扣除游戏币失败. Data: ' + returnJs);
-    end;
-
-  end
-  else if OpenAPI = '/mpay/cancel_pay_m' then //取消支付
-  begin
-
-    if ret = 0 then //退款成功
-    begin
-      MainOutMessage('[Log] Tencent CoinActionThread 退还已扣除游戏币成功. Data: ' + returnJs);
-      //发货失败，调用取消支付接口，退还已扣除游戏币
-      Result := True;
-    end
-    else //退款失败
-    begin
-      MainOutMessage('[Log] Tencent CoinActionThread 退还已扣除游戏币失败. Data: ' + returnJs);
-
-    end;
-
-  end
-  else
-  begin
-    MainOutMessage('[Error] Tencent CoinActionThread Request error: 未知请求类型: ' + OpenAPI + '. Data: ' + returnJs);
-  end;
-
-end;
-
-procedure TTencentPayServer.TencentGameCoinAction(CoinAmount: Integer; ZoneId, BillNo, Data, OpenAPI: string); //同步余额
-var
-  ThreadID: DWORD;
-begin
-  //初始化
-  TencentCoin.Balance := -1;
-  TencentCoin.CoinAmount := CoinAmount;
-  TencentCoin.ZoneId := ZoneId;
-  TencentCoin.BillNo := BillNo;
-  TencentCoin.Data := Data; //请求数据
-  TencentCoin.OpenAPI := OpenAPI; //请求类型
-  TencentCoin.IsSuccess := False;
-
-  //开一个线程，请求余额，逻辑判断只请求一次，还是请求多次。
-  FTencentCoinThread := CreateThread(nil, 0, @TencentCoinActionThread, Pointer(Self), 0, ThreadID);
-  if FTencentCoinThread = 0 then
-  begin
-    MainOutMessage(Format('[Error]Create TencentCoinActionThread Failed: %d', [GetLastError]));
-  end;
-
-end;
-
 procedure TForm1.Button45Click(Sender: TObject);
 var
   Data, returnData, billno, zoneid: string;
@@ -2693,7 +2060,8 @@ begin
   zoneid := '1'; //账户分区ID
   coinAmount := 10;
 
-  TencentPayServer.TencentGameCoinAction(coinAmount, zoneid, billno, Data, '/mpay/pay_m'); //支付游戏币购买道具
+  TencentPay.TencentGameCoinAction(coinAmount, zoneid, billno, Data,
+    '/mpay/pay_m'); //支付游戏币购买道具
 end;
 
 procedure TForm1.Button46Click(Sender: TObject);
@@ -2711,7 +2079,8 @@ begin
   zoneid := '1'; //账户分区ID
   coinAmount := 10;
 
-  TencentPayServer.TencentGameCoinAction(coinAmount, zoneid, billno, Data, '/mpay/cancel_pay_m'); //取消支付游戏币
+  TencentPay.TencentGameCoinAction(coinAmount, zoneid, billno, Data,
+    '/mpay/cancel_pay_m'); //取消支付游戏币
 end;
 
 procedure TForm1.Button47Click(Sender: TObject);
@@ -2728,16 +2097,20 @@ begin
   zoneid := '1'; //账户分区ID
   coinAmount := 5;
 
-  TencentPayServer.TencentGameCoinAction(coinAmount, zoneid, billno, Data, '/mpay/present_m'); //直接赠送游戏币
+  TencentPay.TencentGameCoinAction(coinAmount, zoneid, billno, Data,
+    '/mpay/present_m'); //直接赠送游戏币
 end;
 
 procedure TForm1.Button48Click(Sender: TObject);
 const
-  pay_URL = 'http://ipay.iapppay.com:9999/payapi/order'; //'http://ipay.iapppay.com:9999/payapi/order';
- //pay_URL = 'http://182.254.148.221:3358/iapppay';
-  pubKey = 'MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCrRfnQicAAq9gpBiCGsSi43rHop4h+/KvPYZnDif2WuuZpqR/YlGy' +
+  pay_URL = 'http://ipay.iapppay.com:9999/payapi/order';
+  //'http://ipay.iapppay.com:9999/payapi/order';
+//pay_URL = 'http://182.254.148.221:3358/iapppay';
+  pubKey = 'MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCrRfnQicAAq9gpBiCGsSi43rHop4h+/KvPYZnDif2WuuZpqR/YlGy'
+    +
     'Ls9iG2RKhG5c3uvneCezThKy6MoDlofFYndbLu/5TpLPKSVFy7uFrB6O2HOG9VAXqCRnwRV6q0aJM+lHT9xnMftXtDwTDNV/dy8Q8oTEf1mHVueis82KpXQIDAQAB';
-  priKey = 'MIICdgIBADANBgkqhkiG9w0BAQEFAASCAmAwggJcAgEAAoGBAIvxEcxf1IFHz20LEtYoOwcFOr0+cFycWM0NaZbSi8Z' +
+  priKey = 'MIICdgIBADANBgkqhkiG9w0BAQEFAASCAmAwggJcAgEAAoGBAIvxEcxf1IFHz20LEtYoOwcFOr0+cFycWM0NaZbSi8Z'
+    +
     'XrIM6HPYVEEUo9iSaAV38D/yNK4IgnTqJa3GgpEtwF/bfInO2CJm+QypeskVRrHha4sBtrkqwvlYwE6C0OijHgMpUsRK/BV+hpjp7j' +
     'O+nGcq/EklJQVZqc4tedV78JclXAgMBAAECgYEAil2manwKInV9O2TqkAMhMfTSulDlSjxwdPahAzZUa50+flXUUuBKwQcaMOBxH5t' +
     'dtylh7n0O2NUM/kGGkOxZVAG6zjCDbLnGpWGvswKYKVEPk6HczXyzccV3XdPZckY21X5r9mm+Dvt4KmQSaq0QSE6EkjzYV51kbs+n/' +
@@ -2758,7 +2131,8 @@ begin
   //UID:='8787546214';//8787546214
   header := 'Content-Type:application/x-www-form-urlencoded';
   //构建爱贝支付服务器端下单请求
-  BillData := '{"appid":"3001819184","waresid":1,"cporderid":"' + UID + '","price":0.01,"currency":"RMB", "appuserid":"dota148423658"}';
+  BillData := '{"appid":"3001819184","waresid":1,"cporderid":"' + UID +
+    '","price":0.01,"currency":"RMB", "appuserid":"dota148423658"}';
   //签名
   sign := IappaySign.SignBill(BillData, priKey);
   MainOutMessage('[UserID]: ' + UID + #13#10 + '[Sign]: ' + sign + #13#10);
@@ -2769,24 +2143,31 @@ begin
   postData := Utf8Encode(postData);
 
   MainOutMessage('[下单请求]: ' + postData + #13#10);
-  returnStr := Utf8ToAnsi(HttpHelper.HttpsPost(pay_URL, postData, header)); //发送验证登录的请求.
+  returnStr := Utf8ToAnsi(HttpHelper.HttpsPost(pay_URL, postData, header));
+  //发送验证登录的请求.
   MainOutMessage('[返回数据]: ' + returnStr + #13#10);
 
-  if (Pos('transdata=', returnStr) = 0) or (Pos('&sign=', returnStr) = 0) or (Pos('&signtype=', returnStr) = 0) then
+  if (Pos('transdata=', returnStr) = 0) or (Pos('&sign=', returnStr) = 0) or
+    (Pos('&signtype=', returnStr) = 0) then
   begin
     MainOutMessage('[返回数据解析出错！ exit...]');
     exit;
   end;
 
   //验证签名
-  signStr := Copy(returnStr, Pos('transdata=', returnStr) + Length('transdata='), Pos('&sign=', returnStr) - Pos('transdata=', returnStr) - Length('transdata='));
-  respSign := Copy(returnStr, Pos('&sign=', returnStr) + Length('&sign='), Pos('&signtype=', returnStr) - Pos('&sign=', returnStr) - Length('&sign='));
-  MainOutMessage('[解析数据]：' + #13#10 + 'transdata=' + signStr + #13#10 + 'sign=' + respSign + #13#10);
+  signStr := Copy(returnStr, Pos('transdata=', returnStr) +
+    Length('transdata='), Pos('&sign=', returnStr) - Pos('transdata=', returnStr)
+    - Length('transdata='));
+  respSign := Copy(returnStr, Pos('&sign=', returnStr) + Length('&sign='),
+    Pos('&signtype=', returnStr) - Pos('&sign=', returnStr) - Length('&sign='));
+  MainOutMessage('[解析数据]：' + #13#10 + 'transdata=' + signStr + #13#10 +
+    'sign=' + respSign + #13#10);
 
   //签名
   verify := IappaySign.verifyBill(signStr, pubKey, respSign);
   if (verify) then
-    MainOutMessage('验证签名成功！ 订单号：' + Copy(signStr, Pos('":"', signStr) + Length('":"'), Pos('"}', signStr) - Pos('":"', signStr) - Length('":"')))
+    MainOutMessage('验证签名成功！ 订单号：' + Copy(signStr, Pos('":"', signStr)
+      + Length('":"'), Pos('"}', signStr) - Pos('":"', signStr) - Length('":"')))
   else
     MainOutMessage('验证签名失败！');
 end;
@@ -2811,30 +2192,36 @@ begin
   sign := Md5(UTF8Encode(signStr));
   MainOutMessage('待签名串：' + signStr + #13#10 + '签名：' + sign);
 
-  DataStr := 'AppID=' + inttostr(APP_ID) + '&AccessToken=' + accessToken + '&Sign=' + sign;
+  DataStr := 'AppID=' + inttostr(APP_ID) + '&AccessToken=' + accessToken +
+    '&Sign=' + sign;
 
   //DataStr := 'AppID=5424161&AccessToken=76ad35426eba4e3989378da50b2a969e-e5c20f39de9dee046d88d29848fa8b6c-20150915191122-e0b1542231e510fd97a0bddb0147f075-390fa8b23d260ae67e53ed1b0ebb58fc-3db7733b3ff019a70bcdae0bf417eaf8&Sign=04d623b352ae2f634fe147747611c575';
   MainOutMessage('登录验证请求：' + DataStr);
 
-  returnStr := Utf8ToAnsi(HttpHelper.HttpsPost(LOGIN_URL, DataStr, 'Content-Type:application/x-www-form-urlencoded'));
+  returnStr := Utf8ToAnsi(HttpHelper.HttpsPost(LOGIN_URL, DataStr,
+    'Content-Type:application/x-www-form-urlencoded'));
   MainOutMessage('返回结果：' + returnStr);
-  returnStr := '{"ResultCode":1,"ResultMsg":"AccessToken鍚堟硶鏈夋晥","AppID":"6925292","Sign":"af05762bea7454cad70b55c559fbd6e4","Content":"eyJVSUQiOjEyNzcxNzQ0NzF9"}';
+  returnStr :=
+    '{"ResultCode":1,"ResultMsg":"AccessToken鍚堟硶鏈夋晥","AppID":"6925292","Sign":"af05762bea7454cad70b55c559fbd6e4","Content":"eyJVSUQiOjEyNzcxNzQ0NzF9"}';
   try
     jsdata := TlkJSON.ParseText(returnStr) as TlkJSONobject;
     if not assigned(jsdata) then
     begin
-      MainOutMessage('[error] Baidu Login Verify 返回数据有误(0). Data: ' + returnStr);
+      MainOutMessage('[error] Baidu Login Verify 返回数据有误(0). Data: ' +
+        returnStr);
       exit;
     end;
 
-    if (jsdata.IndexOfName('AppID') >= 0) and (jsdata.IndexOfName('ResultCode') >= 0) and (jsdata.IndexOfName('Sign') >= 0)
+    if (jsdata.IndexOfName('AppID') >= 0) and (jsdata.IndexOfName('ResultCode')
+      >= 0) and (jsdata.IndexOfName('Sign') >= 0)
       and (jsdata.IndexOfName('Content') >= 0) then
     begin
       ResultCode := jsdata.Field['ResultCode'].Value;
       respSign := jsdata.Field['Sign'].Value;
       Content := jsdata.Field['Content'].Value;
 
-      locSign := MD5(UTF8Encode(inttostr(APP_ID) + inttostr(ResultCode) + Content + SecretKey));
+      locSign := MD5(UTF8Encode(inttostr(APP_ID) + inttostr(ResultCode) + Content
+        + SecretKey));
       if locSign = respSign then
       begin
         //解析Content,解析出UID，应先UrlDecode，再Base64解码（DecodeString即为Base64解码）.
@@ -2844,7 +2231,8 @@ begin
         js := TlkJSON.ParseText(UID) as TlkJSONobject;
         if not assigned(js) then
         begin
-          MainOutMessage('[error] Baidu Login Verify Content有误. Content: ' + UID);
+          MainOutMessage('[error] Baidu Login Verify Content有误. Content: ' +
+            UID);
           exit;
         end;
         if (js.IndexOfName('UID') >= 0) then
@@ -2854,23 +2242,27 @@ begin
           MainOutMessage('[Log] Baidu Login Verify Success! UID: ' + UID);
         end
         else
-          MainOutMessage('[error] Baidu Login Verify Content有误. Content: ' + UID);
+          MainOutMessage('[error] Baidu Login Verify Content有误. Content: ' +
+            UID);
 
       end
       else
-        MainOutMessage('[Error] Baidu Login Verify Failed! LocalSign: ' + locSign + ', respSign: ' + respSign);
+        MainOutMessage('[Error] Baidu Login Verify Failed! LocalSign: ' + locSign
+          + ', respSign: ' + respSign);
 
     end
     else
     begin
-      MainOutMessage('[error] Baidu Login Verify 返回数据有误(1). Data: ' + returnStr);
+      MainOutMessage('[error] Baidu Login Verify 返回数据有误(1). Data: ' +
+        returnStr);
       jsdata.Free;
       exit;
     end;
 
   except on E: Exception do
     begin
-      MainOutMessage('[error] Baidu Login Verify 返回数据有误(2). Data: ' + returnStr);
+      MainOutMessage('[error] Baidu Login Verify 返回数据有误(2). Data: ' +
+        returnStr);
       jsdata.Free;
       Exit;
     end;
@@ -2899,11 +2291,13 @@ begin
     jsdata := TlkJSON.ParseText(Data) as TlkJSONobject;
     if not assigned(jsdata) then
     begin
-      MainOutMessage('[error] Oppo Login Verify 客户端请求数据有误(0). Data: ' + Data);
+      MainOutMessage('[error] Oppo Login Verify 客户端请求数据有误(0). Data: ' +
+        Data);
       exit;
     end;
 
-    if (jsdata.IndexOfName('token') >= 0) and (jsdata.IndexOfName('ssoid') >= 0) then
+    if (jsdata.IndexOfName('token') >= 0) and (jsdata.IndexOfName('ssoid') >= 0)
+      then
     begin
       token := jsdata.Field['token'].Value;
       token := StringReplace(HttpEncode(token), '+', '%2B', [rfReplaceAll]);
@@ -2913,9 +2307,12 @@ begin
       LOGIN_URL := LOGIN_URL + 'fileId=' + ssoid + '&token=' + token;
       MainOutMessage('请求：' + LOGIN_URL);
 
-      baseStr := 'oauthConsumerKey=' + APP_KEY + '&oauthToken=' + token + '&oauthSignatureMethod=HMAC-SHA1&oauthTimestamp='
-        + IntToStr(DateTimeToUnix(now()) - 8 * 60 * 60) + '&oauthNonce=930229349&oauthVersion=1.0&';
-      sign := HmacSha1.HmacSha1Sign(baseStr, APP_SECRET + '&', 'base64'); //加密后进行base64编码
+      baseStr := 'oauthConsumerKey=' + APP_KEY + '&oauthToken=' + token +
+        '&oauthSignatureMethod=HMAC-SHA1&oauthTimestamp='
+        + IntToStr(DateTimeToUnix(now()) - 8 * 60 * 60) +
+        '&oauthNonce=930229349&oauthVersion=1.0&';
+      sign := HmacSha1.HmacSha1Sign(baseStr, APP_SECRET + '&', 'base64');
+      //加密后进行base64编码
       sign := HttpEncode(sign); // 相当于url编码，百分比编码（只编码特定字符）
       MainOutMessage('签名：' + sign);
 
@@ -2928,20 +2325,23 @@ begin
       end;
 
       MainOutMessage(#13#10 + 'Header: ' + #13#10 + Header.DataString);
-      resultStr := Utf8ToAnsi(HttpHelper.HttpsGet(LOGIN_URL, Header.DataString));
+      resultStr := Utf8ToAnsi(HttpHelper.HttpsGet(LOGIN_URL,
+        Header.DataString));
       MainOutMessage('返回结果：' + resultStr);
 
     end
     else
     begin
-      MainOutMessage('[error] Oppo Login Verify 客户端请求数据有误(1). Data: ' + Data);
+      MainOutMessage('[error] Oppo Login Verify 客户端请求数据有误(1). Data: ' +
+        Data);
       jsdata.Free;
       exit;
     end;
 
   except on E: Exception do
     begin
-      MainOutMessage('[error] Oppo Login Verify 客户端请求数据有误(2). Data: ' + Data);
+      MainOutMessage('[error] Oppo Login Verify 客户端请求数据有误(2). Data: ' +
+        Data);
       jsdata.Free;
       Exit;
     end;
@@ -2965,27 +2365,33 @@ begin
     retjs := TlkJSON.ParseText(resultStr) as TlkJSONobject;
     if not assigned(retjs) then
     begin
-      MainOutMessage('[error] OPPO Login ReturnData error(0). Data: ' + resultStr);
+      MainOutMessage('[error] OPPO Login ReturnData error(0). Data: ' +
+        resultStr);
       jsdata.Free;
       exit;
     end;
 
-    if (retjs.IndexOfName('resultCode') >= 0) and (retjs.IndexOfName('ssoid') >= 0) then
+    if (retjs.IndexOfName('resultCode') >= 0) and (retjs.IndexOfName('ssoid') >=
+      0) then
     begin
-      if (retjs.Field['resultCode'].Value = 200) and (retjs.Field['ssoid'].Value = ssoid) then
+      if (retjs.Field['resultCode'].Value = 200) and (retjs.Field['ssoid'].Value
+        = ssoid) then
       begin
         UID := ssoid;
         MainOutMessage('[log] OPPO Login Success ! UID: ' + UID);
       end
       else
-        MainOutMessage('[log] OPPO Login Failed resultCode error! Data: ' + Data);
+        MainOutMessage('[log] OPPO Login Failed resultCode error! Data: ' +
+          Data);
     end
     else
-      MainOutMessage('[log] OPPO Login Failed Parameter is not Exists! Data: ' + Data);
+      MainOutMessage('[log] OPPO Login Failed Parameter is not Exists! Data: ' +
+        Data);
 
   except on E: Exception do
     begin
-      MainOutMessage('[error] OPPO Login ReturnData error(1). Data: ' + resultStr);
+      MainOutMessage('[error] OPPO Login ReturnData error(1). Data: ' +
+        resultStr);
       retjs.Free;
       jsdata.Free;
       Exit;
@@ -3014,58 +2420,69 @@ begin
     jsdata := TlkJSON.ParseText(Data) as TlkJSONobject;
     if not assigned(jsdata) then
     begin
-      MainOutMessage('[error] 4399 Login Verify Client Data error. Data: ' + Data);
+      MainOutMessage('[error] 4399 Login Verify Client Data error. Data: ' +
+        Data);
       exit;
     end;
 
-    if (jsdata.IndexOfName('State') >= 0) and (jsdata.IndexOfName('Uid') >= 0) then
+    if (jsdata.IndexOfName('State') >= 0) and (jsdata.IndexOfName('Uid') >= 0)
+      then
     begin
       state := jsdata.Field['State'].Value;
       uid := jsdata.Field['Uid'].Value;
 
-      MainOutMessage('请求: ' + SLineBreak + LOGIN_URL + '?state=' + state + '&uid=' + uid + SLineBreak);
-      respData := Utf8ToAnsi(HttpHelper.HttpsGet(LOGIN_URL + '?state=' + state + '&uid=' + uid));
+      MainOutMessage('请求: ' + SLineBreak + LOGIN_URL + '?state=' + state +
+        '&uid=' + uid + SLineBreak);
+      respData := Utf8ToAnsi(HttpHelper.HttpsGet(LOGIN_URL + '?state=' + state +
+        '&uid=' + uid));
       MainOutMessage('返回结果：' + respData + SLineBreak);
     end
     else
-      MainOutMessage('[log] 4399 Login Verify Client Data error: Parameter is not Exists! Data: ' + Data);
+      MainOutMessage('[log] 4399 Login Verify Client Data error: Parameter is not Exists! Data: '
+        + Data);
 
   except on E: Exception do
     begin
-      MainOutMessage('[error] 4399 Login Verify Client Data error: unknown exception. Data: ' + Data);
+      MainOutMessage('[error] 4399 Login Verify Client Data error: unknown exception. Data: '
+        + Data);
       jsdata.Free;
       Exit;
     end;
   end;
   jsdata.Free;
 
-
   //登录验证{"code":"100","result":{"uid":"2141362029"},"message":"验证成功"}
   try
     retjs := TlkJSON.ParseText(respData) as TlkJSONobject;
     if not assigned(retjs) then
     begin
-      MainOutMessage('[error] 4399 Login Verify Response Data error. respData: ' + respData);
+      MainOutMessage('[error] 4399 Login Verify Response Data error. respData: '
+        + respData);
       exit;
     end;
 
-    if (retjs.IndexOfName('code') >= 0) and (retjs.IndexOfName('result') >= 0) then
+    if (retjs.IndexOfName('code') >= 0) and (retjs.IndexOfName('result') >= 0)
+      then
     begin
 
-      if (retjs.Field['code'].Value = 100) and ((retjs.Field['result'] as TlkJSONObject).IndexOfName('uid') >= 0) then
+      if (retjs.Field['code'].Value = 100) and ((retjs.Field['result'] as
+        TlkJSONObject).IndexOfName('uid') >= 0) then
       begin
         uid := retjs.Field['result'].Field['uid'].Value;
         MainOutMessage('[log] 4399 Login Verify Success ! UID: ' + uid);
       end
       else
-        MainOutMessage('[log] 4399 Login Verify Failed: resultCode error! respData: ' + respData);
+        MainOutMessage('[log] 4399 Login Verify Failed: resultCode error! respData: '
+          + respData);
     end
     else
-      MainOutMessage('[log] 4399 Login Verify Failed: Parameter is not Exists! respData: ' + respData);
+      MainOutMessage('[log] 4399 Login Verify Failed: Parameter is not Exists! respData: '
+        + respData);
 
   except on E: Exception do
     begin
-      MainOutMessage('[error] 4399 Login Verify Failed: unexpect exception! error(1). respData: ' + respData);
+      MainOutMessage('[error] 4399 Login Verify Failed: unexpect exception! error(1). respData: '
+        + respData);
       retjs.Free;
       Exit;
     end;
@@ -3078,7 +2495,8 @@ procedure TForm1.Button50Click(Sender: TObject);
 const
   LOGIN_URL = 'http://dev.app.wan.sogou.com/api/v1/login/verify';
   GAME_ID = 839;
-  SECREAT_KEY = '0b206768c67ecdb7926f30458572df0b999872043acf33ea5f6137df2dcf4629';
+  SECREAT_KEY =
+    '0b206768c67ecdb7926f30458572df0b999872043acf33ea5f6137df2dcf4629';
 var
   Data, user_id, session_key, auth_sign, postData, respData, header: string;
   jsdata, retjs: TlkJSONobject;
@@ -3093,45 +2511,51 @@ begin
     jsdata := TlkJSON.ParseText(Data) as TlkJSONobject;
     if not assigned(jsdata) then
     begin
-      MainOutMessage('[error] SOUGOU Login Verify Client Data error. Data: ' + Data);
+      MainOutMessage('[error] SOUGOU Login Verify Client Data error. Data: ' +
+        Data);
       exit;
     end;
 
-    if (jsdata.IndexOfName('UserId') >= 0) and (jsdata.IndexOfName('SessionKey') >= 0) then
+    if (jsdata.IndexOfName('UserId') >= 0) and (jsdata.IndexOfName('SessionKey')
+      >= 0) then
     begin
       user_id := jsdata.Field['UserId'].Value;
       session_key := jsdata.Field['SessionKey'].Value;
 
-      auth_sign := 'gid=' + IntToStr(GAME_ID) + '&sessi on_key=' + session_key + '&user_id=' + user_id + '&' + SECREAT_KEY;
+      auth_sign := 'gid=' + IntToStr(GAME_ID) + '&sessi on_key=' + session_key +
+        '&user_id=' + user_id + '&' + SECREAT_KEY;
       MainOutMessage('待签名串: ' + auth_sign + SLineBreak);
       auth_sign := MD5(UTF8Encode(auth_sign));
       MainOutMessage('签名: ' + auth_sign + SLineBreak);
 
-      postData := 'gid=' + IntToStr(GAME_ID) + '&session_key=' + session_key + '&user_id=' + user_id + '&auth=' + auth_sign;
+      postData := 'gid=' + IntToStr(GAME_ID) + '&session_key=' + session_key +
+        '&user_id=' + user_id + '&auth=' + auth_sign;
       MainOutMessage('POST数据: ' + postData + SLineBreak);
 
       respData := Utf8ToAnsi(HttpHelper.HttpsPost(LOGIN_URL, postData, header));
       MainOutMessage('返回结果：' + respData + SLineBreak);
     end
     else
-      MainOutMessage('[log] SOUGOU Login Verify Client Data error: Parameter is not Exists! Data: ' + Data);
+      MainOutMessage('[log] SOUGOU Login Verify Client Data error: Parameter is not Exists! Data: '
+        + Data);
 
   except on E: Exception do
     begin
-      MainOutMessage('[error] SOUGOU Login Verify Client Data error: unknown exception. Data: ' + Data);
+      MainOutMessage('[error] SOUGOU Login Verify Client Data error: unknown exception. Data: '
+        + Data);
       jsdata.Free;
       Exit;
     end;
   end;
   jsdata.Free;
 
-
   //登录验证{"code":"100","result":{"uid":"2141362029"},"message":"验证成功"}
   try
     retjs := TlkJSON.ParseText(respData) as TlkJSONobject;
     if not assigned(retjs) then
     begin
-      MainOutMessage('[error] SOGOU Verify Response Data error. respData: ' + respData);
+      MainOutMessage('[error] SOGOU Verify Response Data error. respData: ' +
+        respData);
       exit;
     end;
 
@@ -3140,18 +2564,22 @@ begin
 
       if retjs.Field['result'].Value = true then
       begin
-        MainOutMessage('[log] SOUGOU Login Verify Success! UID: ' + user_id + SLineBreak);
+        MainOutMessage('[log] SOUGOU Login Verify Success! UID: ' + user_id +
+          SLineBreak);
       end
       else
-        MainOutMessage('[log] SOUGOU Login Verify Failed: invalid session key! respData: ' + respData);
+        MainOutMessage('[log] SOUGOU Login Verify Failed: invalid session key! respData: '
+          + respData);
 
     end
     else //{error: {code: -1,msg: "Internal server error"}}
-      MainOutMessage('[log] SOUGOU Login Verify Failed: ! respData: ' + respData);
+      MainOutMessage('[log] SOUGOU Login Verify Failed: ! respData: ' +
+        respData);
 
   except on E: Exception do
     begin
-      MainOutMessage('[error] SOUGOU Login Verify Failed: unexpect exception! error(1). respData: ' + respData);
+      MainOutMessage('[error] SOUGOU Login Verify Failed: unexpect exception! error(1). respData: '
+        + respData);
       retjs.Free;
       Exit;
     end;
@@ -3182,7 +2610,8 @@ const
 
 var
   Data, signStr, auth, respData: string;
-  timestamp, nonce, mac: string; //时间戳, 随机字符串, 采取HmacSHA1方式进行mac签名。
+  timestamp, nonce, mac: string;
+  //时间戳, 随机字符串, 采取HmacSHA1方式进行mac签名。
   HmacSha1: HmacSha1Class;
   Header: TStringStream;
   retjs: TlkJSONobject;
@@ -3199,13 +2628,17 @@ begin
   nonce := 'RandomStr2546573';
 
   //C#中\n = Delphi中#10, #13 - 回车, #10 - 换行
-  signStr := timestamp + #10 + nonce + #10 + method + #10 + uri + #10 + host + #10 + port + #10 + #10;
+  signStr := timestamp + #10 + nonce + #10 + method + #10 + uri + #10 + host +
+    #10 + port + #10 + #10;
 
   //金立采取HmacSHA1方式进行mac签名.
-  mac := HmacSha1.HmacSha1Sign(signStr, SecretKey, 'mac'); //这里要用MAC签名，但是我们的DLL中没有，要重新加进去
-  MainOutMessage('[Log] JinLi Login Verify' + SlineBreak + 'signStr: ' + signStr + SLineBreak + 'sign: ' + mac);
+  mac := HmacSha1.HmacSha1Sign(signStr, SecretKey, 'mac');
+  //这里要用MAC签名，但是我们的DLL中没有，要重新加进去
+  MainOutMessage('[Log] JinLi Login Verify' + SlineBreak + 'signStr: ' + signStr
+    + SLineBreak + 'sign: ' + mac);
 
-  auth := 'MAC id="' + apiKey + '",ts="' + timestamp + '",nonce="' + nonce + '",mac="' + mac + '"';
+  auth := 'MAC id="' + apiKey + '",ts="' + timestamp + '",nonce="' + nonce +
+    '",mac="' + mac + '"';
   Header := TStringStream.Create('');
   with Header do
   begin
@@ -3215,7 +2648,8 @@ begin
   end;
 
   MainOutMessage(#13#10 + 'Header: ' + #13#10 + Header.DataString);
-  respData := Utf8ToAnsi(HttpHelper.HttpsPost(LOGIN_URL, Data, Header.DataString));
+  respData := Utf8ToAnsi(HttpHelper.HttpsPost(LOGIN_URL, Data,
+    Header.DataString));
   MainOutMessage('返回结果：' + respData + SLineBreak);
 
   //验证成功返回：
@@ -3232,11 +2666,12 @@ begin
     retjs := TlkJSON.ParseText(respData) as TlkJSONobject;
     if not assigned(retjs) then
     begin
-      MainOutMessage('[error] JinLi Verify Response Data error. respData: ' + respData);
+      MainOutMessage('[error] JinLi Verify Response Data error. respData: ' +
+        respData);
       exit;
     end;
 
-      //不包含"r"参数 或 "r"值为0，则认为验证成功，否则验证失败。
+    //不包含"r"参数 或 "r"值为0，则认为验证成功，否则验证失败。
     if retjs.IndexOfName('r') >= 0 then //验证失败
     begin
       if retjs.Field['r'].Value = '0' then
@@ -3249,25 +2684,29 @@ begin
       verifyState := true;
     end;
 
-      //集中处理
+    //集中处理
     if verifyState = true then
     begin
 
       if retjs.IndexOfName('u') >= 0 then
       begin
         UID := retjs.Field['u'].Value; //”u”:”user-id”
-        MainOutMessage('[log] JinLi Login Verify Success! UID: ' + UID + SLineBreak);
+        MainOutMessage('[log] JinLi Login Verify Success! UID: ' + UID +
+          SLineBreak);
       end
       else
-        MainOutMessage('[Error] JinLi Login Verify Failed: Data errror! respData: ' + respData);
+        MainOutMessage('[Error] JinLi Login Verify Failed: Data errror! respData: '
+          + respData);
 
     end
     else
-      MainOutMessage('[Error] JinLi Login Verify Failed: Data errror! respData: ' + respData);
+      MainOutMessage('[Error] JinLi Login Verify Failed: Data errror! respData: '
+        + respData);
 
   except on E: Exception do
     begin
-      MainOutMessage('[Error] JinLi Login Verify Failed: unexpect exception! error(1). respData: ' + respData);
+      MainOutMessage('[Error] JinLi Login Verify Failed: unexpect exception! error(1). respData: '
+        + respData);
       retjs.Free;
       Exit;
     end;
@@ -3277,7 +2716,8 @@ end;
 
 procedure TForm1.JinLiGetOrdBtnClick(Sender: TObject);
 const
-  PAYORDER_URL = 'https://pay.gionee.com/amigo/create/order'; //'https://pay.gionee.com/order/create';
+  PAYORDER_URL = 'https://pay.gionee.com/amigo/create/order';
+  //'https://pay.gionee.com/order/create';
   APIKey = '7E801F947F5745DE934C3AEADC8DBB7D';
   SecretKey = '9FF5F4CAA92A41499574055DE3B980B8';
   method = 'POST';
@@ -3294,7 +2734,8 @@ begin
   RsaSign := CoSignAndVerifyClass.Create;
   datajs := TlkJSONobject.Create;
 
-  priKey := 'MIICdQIBADANBgkqhkiG9w0BAQEFAASCAl8wggJbAgEAAoGBAJkQGbUCecNAqSpprntg+z1p9zNJYbet7AKgPdqY9rhUmzsAQHprU6HaLX4lNqSD76JuHmlEDFFK0S+YXTE59CWwgmn1X/IxopuAmB2YZd2W0AH3ZxdlHLGUCgaMC22vxIi' +
+  priKey := 'MIICdQIBADANBgkqhkiG9w0BAQEFAASCAl8wggJbAgEAAoGBAJkQGbUCecNAqSpprntg+z1p9zNJYbet7AKgPdqY9rhUmzsAQHprU6HaLX4lNqSD76JuHmlEDFFK0S+YXTE59CWwgmn1X/IxopuAmB2YZd2W0AH3ZxdlHLGUCgaMC22vxIi'
+    +
     'vYobjCDTynyhKcX1Jk+ibwVDdtLdC7CCIOHlU0VS7AgMBAAECgYA//HgSsH9AfZZ6cYWMdGVzLgo2OXYNODrSejSBXrK9Kjled+N8icODhNbBxkLKkZErAQfbj6Pqk/FRCUvkGUsTksiD0gxyG/i+oglw4xoQy6EB+ARUP+U9to+Dwaq68EJ13x/r9T' +
     'tED4aSPkx1xkwjh1iGTDcmDMDqEftnahNAIQJBAOiDrErp1tkIyVCOxdAypq2ErvdJp486Jumet   DNo8rYZHmc2lFm4VIfIC0YiTNXiFhh5JCXzqD+hZxHFO8cjvpECQQCohftI7N5kBUzqOeLauHGHlb6KlQ6xNtHVBrE0qiybQzVqvMVKdip9aRH2y' +
     'Cg7PQqg/uIK0aRVElpsyLA9ARyLAkAwfP0aJkfCvP1Wil+gOl/eAbSHJ1oFGWhyAcGsku9CoFxhw9UOHM2r/0CyoIaLd/mJowGx1G06z8rxvsLnlYGxAkBluRIYT9phl4146N4VVjY5OFtefWDz+XopUzPN7Vallaj9t9qC+tblAnI0e1dFgrASxCef' +
@@ -3307,8 +2748,10 @@ begin
   submit_time := FormatDateTime('yyyymmddhhnnss', now()); //格式化时间
   deal_price := '0.01';
 
-  signStr := APIKey + deal_price + deliver_type + out_order_no + subject + submit_time + total_fee + player_id;
-  MainOutMessage('[Log] JinLi Get Order Number. signStr: ' + signStr + SLineBreak);
+  signStr := APIKey + deal_price + deliver_type + out_order_no + subject +
+    submit_time + total_fee + player_id;
+  MainOutMessage('[Log] JinLi Get Order Number. signStr: ' + signStr +
+    SLineBreak);
   //订单signStr签名
   sign := RsaSign.RsaSha1Sign(signStr, priKey);
   MainOutMessage('[Log] JinLi Get Order Number. sign: ' + sign + SLineBreak);
@@ -3326,30 +2769,36 @@ begin
   Data := TlkJSON.GenerateText(datajs);
   datajs.Free;
 
-  MainOutMessage('[Log] JinLi Get Order Number. postData：' + Data + SLineBreak);
+  MainOutMessage('[Log] JinLi Get Order Number. postData：' + Data +
+    SLineBreak);
   respData := Utf8ToAnsi(HttpHelper.HttpsPost(PAYORDER_URL, Data, Header));
-  MainOutMessage('[Log] JinLi Get Order Number. 返回结果：' + respData + SLineBreak);
+  MainOutMessage('[Log] JinLi Get Order Number. 返回结果：' + respData +
+    SLineBreak);
 
   try
     retjs := TlkJSON.ParseText(respData) as TlkJSONobject;
     if not assigned(retjs) then
     begin
-      MainOutMessage('[Error] JinLi Get Order Number. Response Data error. respData: ' + respData);
+      MainOutMessage('[Error] JinLi Get Order Number. Response Data error. respData: '
+        + respData);
       exit;
     end;
 
     if retjs.IndexOfName('order_no') >= 0 then
     begin
       order_no := retjs['order_no'].value;
-      MainOutMessage('[Log] JinLi Get Order Number. 获取到定单号：' + order_no + SLineBreak);
-        //将order_no, submit_time, product_id发给客户端
+      MainOutMessage('[Log] JinLi Get Order Number. 获取到定单号：' + order_no +
+        SLineBreak);
+      //将order_no, submit_time, product_id发给客户端
     end
     else
-      MainOutMessage('[Error] JinLi Get Order Number Failed: ! respData: ' + respData);
+      MainOutMessage('[Error] JinLi Get Order Number Failed: ! respData: ' +
+        respData);
 
   except on E: Exception do
     begin
-      MainOutMessage('[Error] JinLi Get Order Number Failed: unexpect exception! error(1). respData: ' + respData);
+      MainOutMessage('[Error] JinLi Get Order Number Failed: unexpect exception! error(1). respData: '
+        + respData);
       retjs.Free;
       Exit;
     end;
@@ -3365,7 +2814,8 @@ const
   HEADER = 'Content-Type:application/x-www-form-urlencoded';
   INTERFACE_TYPE = 'verifyToken';
   GAME_ID = 'dtsy';
-  TOKEN_KEY = 'pOx!cKHc&xzVCzaAxd32e#XF3hoPJak!a2'; //'Lzm89cm(z!mzlp,^zLpvasnj76z&lzn2';
+  TOKEN_KEY = 'pOx!cKHc&xzVCzaAxd32e#XF3hoPJak!a2';
+  //'Lzm89cm(z!mzlp,^zLpvasnj76z&lzn2';
   PLATFORM_TYPE = 2;
 var
   token, timestamp, userFrom, extra, validate: string;
@@ -3381,17 +2831,21 @@ begin
     userFrom := 'android';
   extra := '{"gameId":"' + GAME_ID + '"}';
 
-  MainOutMessage('signStr：' + INTERFACE_TYPE + token + timestamp + userFrom + extra + TOKEN_KEY);
+  MainOutMessage('signStr：' + INTERFACE_TYPE + token + timestamp + userFrom +
+    extra + TOKEN_KEY);
 
-  validate := md5(AnsiToUtf8(INTERFACE_TYPE + token + timestamp + userFrom + extra + TOKEN_KEY));
+  validate := md5(AnsiToUtf8(INTERFACE_TYPE + token + timestamp + userFrom +
+    extra + TOKEN_KEY));
   MainOutMessage('validate：' + validate);
-  validate := Copy(LowerCase(validate), 11, 16); //从字符串第11位开始，截取16个字符.
+  validate := Copy(LowerCase(validate), 11, 16);
+  //从字符串第11位开始，截取16个字符.
 {sign = substring(md5(interface + token +appDate + userFrom + extra+ Key), 10, 16)
 1. 所有值都是utf8 编码
 2. MD5加密结果为小写
 3. 只取MD5加密值的第11-26位}
 
-  PostData := 'interface=' + INTERFACE_TYPE + '&token=' + token + '&appDate=' + timestamp + '&userFrom=' +
+  PostData := 'interface=' + INTERFACE_TYPE + '&token=' + token + '&appDate=' +
+    timestamp + '&userFrom=' +
     userFrom + '&extra=' + extra + '&validate=' + validate;
 
   MainOutMessage('PostData: ' + PostData);
@@ -3403,27 +2857,33 @@ begin
     retjs := TlkJSON.ParseText(respData) as TlkJSONobject;
     if not assigned(retjs) then
     begin
-      MainOutMessage('[error] GameOne Verify Response Data error. respData: ' + respData);
+      MainOutMessage('[error] GameOne Verify Response Data error. respData: ' +
+        respData);
       exit;
     end;
 
     if retjs.IndexOfName('status') >= 0 then
     begin
 
-      if (retjs.Field['status'].Value = 1) and (retjs.IndexOfName('uid') >= 0) then
+      if (retjs.Field['status'].Value = 1) and (retjs.IndexOfName('uid') >= 0)
+        then
       begin
-        MainOutMessage('[log] GameOne Login Verify Success! 用户唯一标识: ' + retjs.Field['uid'].Value);
+        MainOutMessage('[log] GameOne Login Verify Success! 用户唯一标识: ' +
+          retjs.Field['uid'].Value);
       end
       else
-        MainOutMessage('[Error] GameOne Login Verify Failed: invalid status code! respData: ' + respData);
+        MainOutMessage('[Error] GameOne Login Verify Failed: invalid status code! respData: '
+          + respData);
 
     end
     else
-      MainOutMessage('[Error] GameOne Login Verify Failed: ! respData: ' + respData);
+      MainOutMessage('[Error] GameOne Login Verify Failed: ! respData: ' +
+        respData);
 
   except on E: Exception do
     begin
-      MainOutMessage('[Error] GameOne Login Verify Failed: unexpect exception! error(1). respData: ' + respData);
+      MainOutMessage('[Error] GameOne Login Verify Failed: unexpect exception! error(1). respData: '
+        + respData);
       retjs.Free;
       Exit;
     end;
@@ -3452,7 +2912,8 @@ begin
 
     for i := 0 to retList.Count - 1 do
     begin
-      MainOutMessage(retList.Names[i] + '  -->  ' + retList.Values[retList.Names[i]]);
+      MainOutMessage(retList.Names[i] + '  -->  ' +
+        retList.Values[retList.Names[i]]);
     end;
 
     interfaceType := retList.Values['interface'];
@@ -3469,7 +2930,8 @@ begin
     //MD5
     locSign := MD5(AnsiToUtf8(signStr + SERVER_API_KEY));
     locSign := Copy(LowerCase(locSign), 11, 16);
-    MainOutMessage(SLineBreak + '待签名串: ' + signStr + #13#10 + '签名: ' + sign + #13#10);
+    MainOutMessage(SLineBreak + '待签名串: ' + signStr + #13#10 + '签名: ' + sign
+      + #13#10);
 
     if locSign = sign then
     begin
@@ -3478,12 +2940,14 @@ begin
     end
     else
     begin
-      MainOutMessage('验证签名失败！' + SLineBreak + 'sign: ' + sign + SLineBreak + 'locSign: ' + locSign + SLineBreak);
+      MainOutMessage('验证签名失败！' + SLineBreak + 'sign: ' + sign + SLineBreak
+        + 'locSign: ' + locSign + SLineBreak);
     end;
 
   except on E: Exception do
     begin
-      MainOutMessage('[error] GameOne Pay Verify Failed: unexpect exception! error(1). respData: ' + Data);
+      MainOutMessage('[error] GameOne Pay Verify Failed: unexpect exception! error(1). respData: '
+        + Data);
       retList.Free;
       Exit;
     end;
@@ -3498,7 +2962,8 @@ var
   Data: string;
   retList: TStringList;
   i: Integer;
-  gameuid, billno, referenceId, productId, currency, amount, channelId, serverid, timestamp: string;
+  gameuid, billno, referenceId, productId, currency, amount, channelId,
+    serverid, timestamp: string;
   ext, signStr, sign, locSign: string;
   pointjs: TlkJSONobject;
   gamepoint: Integer;
@@ -3517,7 +2982,8 @@ begin
 
     for i := 0 to retList.Count - 1 do
     begin
-      MainOutMessage(retList.Names[i] + '  -->  ' + retList.Values[retList.Names[i]]);
+      MainOutMessage(retList.Names[i] + '  -->  ' +
+        retList.Values[retList.Names[i]]);
     end;
 
     gameuid := retList.Values['gameuid'];
@@ -3533,11 +2999,13 @@ begin
     sign := retList.Values['sign'];
 
     //EncodeString即为base64编码,这里解析出的ext是已经base64编码的，直接使用
-    signStr := gameuid + billno + referenceId + productId + currency + amount + channelId + serverid + ext + timestamp;
+    signStr := gameuid + billno + referenceId + productId + currency + amount +
+      channelId + serverid + ext + timestamp;
     //MD5
     locSign := MD5(AnsiToUtf8(signStr + SERVER_API_KEY));
     locSign := Copy(LowerCase(locSign), 11, 16);
-    MainOutMessage(SLineBreak + '待签名串: ' + signStr + #13#10 + '签名: ' + locSign + #13#10);
+    MainOutMessage(SLineBreak + '待签名串: ' + signStr + #13#10 + '签名: ' +
+      locSign + #13#10);
 
     if locSign = sign then
     begin
@@ -3563,7 +3031,8 @@ begin
         pointjs := TlkJSON.ParseText(ext) as TlkJSONobject;
         if not assigned(pointjs) then
         begin
-          MainOutMessage('[error] 解析json串出错！json: ' + ext + ',  Data: ' + Data);
+          MainOutMessage('[error] 解析json串出错！json: ' + ext + ',  Data: ' +
+            Data);
           exit;
         end;
 
@@ -3576,16 +3045,17 @@ begin
 
       end;
 
-
     end
     else
     begin
-      MainOutMessage('验证签名失败！' + SLineBreak + 'sign: ' + sign + SLineBreak + 'locSign: ' + locSign + SLineBreak);
+      MainOutMessage('验证签名失败！' + SLineBreak + 'sign: ' + sign + SLineBreak
+        + 'locSign: ' + locSign + SLineBreak);
     end;
 
   except on E: Exception do
     begin
-      MainOutMessage('[error] GameOne Pay Verify Failed: unexpect exception! error(1). respData: ' + Data);
+      MainOutMessage('[error] GameOne Pay Verify Failed: unexpect exception! error(1). respData: '
+        + Data);
       retList.Free;
       Exit;
     end;
@@ -3615,7 +3085,8 @@ begin
 
     for i := 0 to retList.Count - 1 do
     begin
-      MainOutMessage(retList.Names[i] + '  -->  ' + retList.Values[retList.Names[i]]);
+      MainOutMessage(retList.Names[i] + '  -->  ' +
+        retList.Values[retList.Names[i]]);
     end;
 
     interfaceType := retList.Values['interface'];
@@ -3628,11 +3099,13 @@ begin
     sign := retList.Values['sign'];
 
     //EncodeString即为base64编码
-    signStr := interfaceType + gameacc + billno + serverid + itemid + quantity + ext;
+    signStr := interfaceType + gameacc + billno + serverid + itemid + quantity +
+      ext;
     //MD5
     locSign := MD5(AnsiToUtf8(signStr + SERVER_API_KEY));
     locSign := Copy(LowerCase(locSign), 11, 16);
-    MainOutMessage(SLineBreak + '待签名串: ' + signStr + #13#10 + '签名: ' + sign + #13#10);
+    MainOutMessage(SLineBreak + '待签名串: ' + signStr + #13#10 + '签名: ' + sign
+      + #13#10);
 
     if locSign = sign then
     begin
@@ -3641,43 +3114,20 @@ begin
     end
     else
     begin
-      MainOutMessage('验证签名失败！' + SLineBreak + 'sign: ' + sign + SLineBreak + 'locSign: ' + locSign + SLineBreak);
+      MainOutMessage('验证签名失败！' + SLineBreak + 'sign: ' + sign + SLineBreak
+        + 'locSign: ' + locSign + SLineBreak);
     end;
 
   except on E: Exception do
     begin
-      MainOutMessage('[error] GameOne Pay Verify Failed: unexpect exception! error(1). respData: ' + Data);
+      MainOutMessage('[error] GameOne Pay Verify Failed: unexpect exception! error(1). respData: '
+        + Data);
       retList.Free;
       Exit;
     end;
   end;
   retList.Free;
 
-end;
-
-procedure TForm1.ReadXml(Node: IXMLNode; var List: TStringList);
-var
-  NodeList: IXMLNodeList;
-  strName: string;
-  i: Integer;
-
-begin
-  if not Node.HasChildNodes then
-    Exit;
-  nodeList := node.ChildNodes;
-
-  for i := 0 to nodeList.Count - 1 do
-  begin
-    strName := nodeList[i].NodeName;
-    if nodeList[i].IsTextElement then //如果是元素
-    begin
-      List.Add(strName + '=' + NodeList[i].NodeValue); //解析出来的数据放入List
-    end
-    else if nodeList[i].HasChildNodes then //如果有子节点
-    begin
-      ReadXml(NodeList[i], List);
-    end;
-  end;
 end;
 
 procedure TForm1.LenovoLoginBtnClick(Sender: TObject);
@@ -3704,24 +3154,28 @@ begin
     jsdata := TlkJSON.ParseText(Data) as TlkJSONobject;
     if not assigned(jsdata) then
     begin
-      MainOutMessage('[Error] Lenovo Login Verify Client Data error. Data: ' + Data);
+      MainOutMessage('[Error] Lenovo Login Verify Client Data error. Data: ' +
+        Data);
       exit;
     end;
 
     if jsdata.IndexOfName('data') >= 0 then
     begin
-      url := LOGIN_URL + '?lpsust=' + jsdata.Field['data'].Value + '&realm=' + OPEN_APP_ID;
+      url := LOGIN_URL + '?lpsust=' + jsdata.Field['data'].Value + '&realm=' +
+        OPEN_APP_ID;
       MainOutMessage('请求：' + url + SLineBreak);
 
       respData := Utf8ToAnsi(HttpHelper.HttpsGet(url, HEADER));
       MainOutMessage('返回结果：' + respData + SLineBreak);
     end
     else
-      MainOutMessage('[Error] Lenovo Login Verify Client Data error: Parameter is not Exists! Data: ' + Data);
+      MainOutMessage('[Error] Lenovo Login Verify Client Data error: Parameter is not Exists! Data: '
+        + Data);
 
   except on E: Exception do
     begin
-      MainOutMessage('[Error] Lenovo Login Verify Client Data error: unknown exception. Data: ' + Data);
+      MainOutMessage('[Error] Lenovo Login Verify Client Data error: unknown exception. Data: '
+        + Data);
       jsdata.Free;
       Exit;
     end;
@@ -3730,7 +3184,8 @@ begin
 
   //从返回的Xml中获取帐号标识：AccountID
   retList := TStringList.Create;
-  respData := StringReplace(respData, 'UTF-8', 'gbk', []); //只替换<?xml version="1.0" encoding="UTF-8"?>里面的字符编码方式，因为往往这个是在最前面出现的，所以StringReplace的第四个参数是[]
+  respData := StringReplace(respData, 'UTF-8', 'gbk', []);
+  //只替换<?xml version="1.0" encoding="UTF-8"?>里面的字符编码方式，因为往往这个是在最前面出现的，所以StringReplace的第四个参数是[]
   try //异常处理，保证程序的稳定性，能够正常处理异常而不至于在发生异常的时候导致程序崩溃
     xmlDocument := LoadXMLData(respData);
     mainNode := xmlDocument.DocumentElement;
@@ -3738,7 +3193,8 @@ begin
 
     if retList.values['AccountID'] <> '' then
     begin
-      MainOutMessage('[Log] Login Verify Success. 用户唯一标识AccountID；' + retList.values['AccountID']);
+      MainOutMessage('[Log] Login Verify Success. 用户唯一标识AccountID；' +
+        retList.values['AccountID']);
     end
     else
       MainOutMessage('[Error] Lenovo Login Verify Failed. Data: ' + Data);
@@ -3746,7 +3202,8 @@ begin
   except
     on E: Exception do
     begin
-      MainOutMessage('[Error] Lenovo Login Verify Failed. Response Data error: unknown exception: ' + E.Message + ' Data: ' + Data);
+      MainOutMessage('[Error] Lenovo Login Verify Failed. Response Data error: unknown exception: '
+        + E.Message + ' Data: ' + Data);
     end;
   end;
 end;
@@ -3761,12 +3218,14 @@ begin
   for i := 1 to 16 do
     str := str + sourcestr[Random(62) + 1];
 
-  MainOutMessage('生成16位, 范围为"A-Z" "a-z" "0-9"的随机数: ' + SLineBreak + str);
+  MainOutMessage('生成16位, 范围为"A-Z" "a-z" "0-9"的随机数: ' + SLineBreak +
+    str);
 
   MainOutMessage('生成16位随机数: ' + SLineBreak + GetRandStr(16));
 end;
 
-function TForm1.GetRandStr(len: Integer; lowercase: Boolean = True; num: Boolean = True; uppercase: Boolean = True): string;
+function TForm1.GetRandStr(len: Integer; lowercase: Boolean = True; num: Boolean
+  = True; uppercase: Boolean = True): string;
 const
   upperStr = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
   lowerStr = 'abcdefghijklmnopqrstuvwxyz';
@@ -3813,7 +3272,8 @@ begin
 
     for i := 0 to retList.Count - 1 do
     begin
-      MainOutMessage(retList.Names[i] + '  -->  ' + retList.Values[retList.Names[i]]);
+      MainOutMessage(retList.Names[i] + '  -->  ' +
+        retList.Values[retList.Names[i]]);
     end;
 
     transdata := retList.Values['transdata'];
@@ -3826,11 +3286,13 @@ begin
 
     end
     else
-      MainOutMessage('[Error] Lenovo Pay Verify Failed: return data error. retData: ' + Data);
+      MainOutMessage('[Error] Lenovo Pay Verify Failed: return data error. retData: '
+        + Data);
 
   except on E: Exception do
     begin
-      MainOutMessage('[Error] Lenovo Pay Verify Failed: unexpect exception! error(1). retData: ' + Data);
+      MainOutMessage('[Error] Lenovo Pay Verify Failed: unexpect exception! error(1). retData: '
+        + Data);
       retList.Free;
       Exit;
     end;
@@ -3857,14 +3319,17 @@ begin
     jsdata := TlkJSON.ParseText(Data) as TlkJSONobject;
     if not assigned(jsdata) then
     begin
-      MainOutMessage('[Error] WanDouJia Login Verify Failed. Client Data error. Data: ' + Data);
+      MainOutMessage('[Error] WanDouJia Login Verify Failed. Client Data error. Data: '
+        + Data);
       exit;
     end;
 
-    if (jsdata.IndexOfName('uid') >= 0) and (jsdata.IndexOfName('token') >= 0) then
+    if (jsdata.IndexOfName('uid') >= 0) and (jsdata.IndexOfName('token') >= 0)
+      then
     begin
       uid := jsdata.Field['uid'].Value;
-      url := AnsiToUtf8(WANDOUJIA_LOGIN_URL + '?uid=' + jsdata.Field['uid'].Value + '&token=' + jsdata.Field['token'].Value +
+      url := AnsiToUtf8(WANDOUJIA_LOGIN_URL + '?uid=' + jsdata.Field['uid'].Value
+        + '&token=' + jsdata.Field['token'].Value +
         '&appkey_id=' + WANDOUJIA_APP_KEY_ID);
       MainOutMessage('请求：' + url + SLineBreak);
 
@@ -3872,11 +3337,13 @@ begin
       MainOutMessage('返回结果：' + respData + SLineBreak);
     end
     else
-      MainOutMessage('[Error] WanDouJia Login Verify Failed. Client Data error: Parameter is not Exists! Data: ' + Data);
+      MainOutMessage('[Error] WanDouJia Login Verify Failed. Client Data error: Parameter is not Exists! Data: '
+        + Data);
 
   except on E: Exception do
     begin
-      MainOutMessage('[Error] WanDouJia Login Verify Failed. Client Data error: unknown exception. Data: ' + Data);
+      MainOutMessage('[Error] WanDouJia Login Verify Failed. Client Data error: unknown exception. Data: '
+        + Data);
       jsdata.Free;
       Exit;
     end;
@@ -3885,7 +3352,8 @@ begin
 
   if respData = 'true' then
   begin
-    MainOutMessage('[Log] WanDouJia Login Verify Success. 用户唯一标识uid：' + uid);
+    MainOutMessage('[Log] WanDouJia Login Verify Success. 用户唯一标识uid：' +
+      uid);
   end
   else
   begin
@@ -3896,7 +3364,8 @@ end;
 
 procedure TForm1.WDJPayVerifyBtnClick(Sender: TObject);
 const
-  WANDOU_PUBLIC_KEY = 'MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCd95FnJFhPinpNiE/h4VA6bU1rzRa5+a25BxsnFX8TzquWxqDCoe4xG6QKXMXuKvV57tTRpzRo2jeto40eHKClzEgjx9lTYVb2RFHHFWio/YGTfnqIPTVpi7d7uHY+0FZ0lYL5LlW4E2+CQMxFOPRwfqGzMjs1SDlH7lVrLEVy6QIDAQAB';
+  WANDOU_PUBLIC_KEY =
+    'MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCd95FnJFhPinpNiE/h4VA6bU1rzRa5+a25BxsnFX8TzquWxqDCoe4xG6QKXMXuKvV57tTRpzRo2jeto40eHKClzEgjx9lTYVb2RFHHFWio/YGTfnqIPTVpi7d7uHY+0FZ0lYL5LlW4E2+CQMxFOPRwfqGzMjs1SDlH7lVrLEVy6QIDAQAB';
 
 var
   Data: string;
@@ -3909,7 +3378,8 @@ var
   WanDouRsa: WanDouRSAVerifyClass;
 
 begin
-  Data := 'content={"timeStamp":1363848203377,"orderId":100001472,"money":4000,"chargeType":"BALANCEPAY","appKeyId":100000000,"buyerId":1,"cardNo":null}' +
+  Data := 'content={"timeStamp":1363848203377,"orderId":100001472,"money":4000,"chargeType":"BALANCEPAY","appKeyId":100000000,"buyerId":1,"cardNo":null}'
+    +
     '&signType=RSA&sign=VwnhaP9gAbDD2Msl3bFnvsJfgz3NOAqM/JVexl1myHfsrHX3cRrFXz86cNO+oNYWBBM7m/5ZdtHRpSArZWFuZHysKfirO3BynUaIYSAiD2J1Xio5q9+Yr83cI/ESyemVAt7lK4lMW3ReSwmAcOs0kDZLAxVIb++EPy0y2NpH4kI=';
   MainOutMessage('[Log] WanDouJia Pay Verify. Data：' + Data + SLineBreak);
 
@@ -3934,16 +3404,20 @@ begin
     begin
 
       //在原始content中添加天游订单号（模拟支付时没有，为保证数据完整，在验证签名后添加啊）
-      content := '{"timeStamp":1363848203377,"orderId":100001472,"money":4000,"chargeType":"BALANCEPAY","appKeyId":100000000,"buyerId":1,"out_trade_no":"@ty-29js092","cardNo":null}';
+      content :=
+        '{"timeStamp":1363848203377,"orderId":100001472,"money":4000,"chargeType":"BALANCEPAY","appKeyId":100000000,"buyerId":1,"out_trade_no":"@ty-29js092","cardNo":null}';
       jsdata := TlkJSON.ParseText(content) as TlkJSONobject;
       if not assigned(jsdata) then
       begin
-        MainOutMessage('[Error] WanDouJia Pay Verify Failed. Return Data error. Data: ' + Data);
+        MainOutMessage('[Error] WanDouJia Pay Verify Failed. Return Data error. Data: '
+          + Data);
         exit;
       end;
 
-      if (jsdata.IndexOfName('buyerId') >= 0) and (jsdata.IndexOfName('money') >= 0)
-        and (jsdata.IndexOfName('orderId') >= 0) and (jsdata.IndexOfName('out_trade_no') >= 0) then
+      if (jsdata.IndexOfName('buyerId') >= 0) and (jsdata.IndexOfName('money')
+        >= 0)
+        and (jsdata.IndexOfName('orderId') >= 0) and
+        (jsdata.IndexOfName('out_trade_no') >= 0) then
       begin
         buyerId := jsdata.Field['buyerId'].Value;
         money := jsdata.Field['money'].Value;
@@ -3952,22 +3426,27 @@ begin
 
         //验证订单信息，无callbackInfo
         //[重要]在接收到服务器返回通知的时候，必须同时校验buyerid、money 字段。
-        MainOutMessage('[Log] WanDouJia Pay Verify Success. buyerId:' + buyerId + ',money:' + money);
+        MainOutMessage('[Log] WanDouJia Pay Verify Success. buyerId:' + buyerId
+          +
+          ',money:' + money);
 
       end
       else
-        MainOutMessage('[Error] WanDouJia Pay Verify Failed. Return Data error: Parameter is not Exists! Data: ' + Data);
+        MainOutMessage('[Error] WanDouJia Pay Verify Failed. Return Data error: Parameter is not Exists! Data: '
+          + Data);
     end
 
     else
     begin
-      MainOutMessage('[Error] WanDouJia Pay Verify Failed. 签名验证失败! Data: ' + Data);
+      MainOutMessage('[Error] WanDouJia Pay Verify Failed. 签名验证失败! Data: '
+        + Data);
     end;
     jsdata.Free;
 
   except on E: Exception do
     begin
-      MainOutMessage('[Error] WanDouJia Pay Verify Failed. unexpect exception! error. respData: ' + Data);
+      MainOutMessage('[Error] WanDouJia Pay Verify Failed. unexpect exception! error. respData: '
+        + Data);
       retList.Free;
       jsdata.Free;
       Exit;
@@ -3975,7 +3454,6 @@ begin
   end;
 
 end;
-
 
 procedure TForm1.KFLoginVerifyBtnClick(Sender: TObject);
 const
@@ -3995,19 +3473,21 @@ begin
 
   Data := KFLoginEdit.Text;
 
-   //发送登录请求
+  //发送登录请求
   try
     jsdata := TlkJSON.ParseText(Data) as TlkJSONobject;
     if not assigned(jsdata) then
     begin
-      MainOutMessage('[Error] KF Login Verify Failed. Client Data error. Data: ' + Data);
+      MainOutMessage('[Error] KF Login Verify Failed. Client Data error. Data: '
+        + Data);
       exit;
     end;
 
-   {"loginUserId":"32475607@MINIGAME","loginAuthToken":"9a2df88e9b408f7292e5b08a1ae7ddb5","loginUserName":"KFmaster",
-   "loginOpenId":"4baccb88a3e14b40ebb5b32fcad7a8f6","switchUserFlag":false,"cp":"matrix","message":"账号一","status":1}
+    {"loginUserId":"32475607@MINIGAME","loginAuthToken":"9a2df88e9b408f7292e5b08a1ae7ddb5","loginUserName":"KFmaster",
+    "loginOpenId":"4baccb88a3e14b40ebb5b32fcad7a8f6","switchUserFlag":false,"cp":"matrix","message":"账号一","status":1}
 
-    if (jsdata.IndexOfName('loginOpenId') >= 0) and (jsdata.IndexOfName('loginAuthToken') >= 0) then
+    if (jsdata.IndexOfName('loginOpenId') >= 0) and
+      (jsdata.IndexOfName('loginAuthToken') >= 0) then
     begin
       token := jsdata.Field['loginAuthToken'].Value;
       openid := jsdata.Field['loginOpenId'].Value; //用户唯一标识.
@@ -4015,7 +3495,8 @@ begin
       TempUID := openid;
 
       //HttpEncode相当于url编码，百分比编码（只编码特定字符） URLEncode
-      sign := 'gamekey=' + HttpEncode(KF_GAME_KEY) + '&openid=' + HttpEncode(openid) +
+      sign := 'gamekey=' + HttpEncode(KF_GAME_KEY) + '&openid=' +
+        HttpEncode(openid) +
         '& =' + HttpEncode(timestamp) + '&token=' + HttpEncode(token);
       sign := UTF8Encode(sign);
       MainOutMessage('signStr：' + sign + SLineBreak);
@@ -4023,24 +3504,26 @@ begin
       sign := MD5(MD5(sign) + KF_SECURITY_KEY);
       MainOutMessage('sign：' + sign + SLineBreak);
 
-      postData := 'token=' + token + '&openid=' + openid + '&timestamp=' + timestamp + '&gamekey=' + KF_GAME_KEY + '&_sign=' + sign;
+      postData := 'token=' + token + '&openid=' + openid + '&timestamp=' +
+        timestamp + '&gamekey=' + KF_GAME_KEY + '&_sign=' + sign;
       MainOutMessage('Post Data：' + postData + SLineBreak);
 
       respData := HttpHelper.HttpsPost(KF_LOGIN_URL, postData, header);
       MainOutMessage('返回结果：' + respData + SLineBreak);
     end
     else
-      MainOutMessage('[Error] KF Login Verify Failed. Client Data error: Parameter is not Exists! Data: ' + Data);
+      MainOutMessage('[Error] KF Login Verify Failed. Client Data error: Parameter is not Exists! Data: '
+        + Data);
     jsdata.Free;
 
   except on E: Exception do
     begin
-      MainOutMessage('[Error] KF Login Verify Failed. Client Data error: unknown exception. Data: ' + Data);
+      MainOutMessage('[Error] KF Login Verify Failed. Client Data error: unknown exception. Data: '
+        + Data);
       jsdata.Free;
       Exit;
     end;
   end;
-
 
   //验证：{"result":"0","result_desc":"ok"} {"result":"1005","result_desc":"失败原因"}
   //登陆验证
@@ -4048,32 +3531,37 @@ begin
     retjs := TlkJSON.ParseText(respData) as TlkJSONobject;
     if not assigned(retjs) then
     begin
-      MainOutMessage('[Error] KF Login Verify Failed. Response Data error. respData: ' + respData);
+      MainOutMessage('[Error] KF Login Verify Failed. Response Data error. respData: '
+        + respData);
       exit;
     end;
 
-      //当result=0时验证成功，否则验证失败。
+    //当result=0时验证成功，否则验证失败。
     if retjs.IndexOfName('result') >= 0 then
     begin
       if retjs.Field['result'].Value = '0' then
       begin
-        MainOutMessage('[log] KF Login Verify Success! 用户唯一标识: ' + TempUID + SLineBreak);
+        MainOutMessage('[log] KF Login Verify Success! 用户唯一标识: ' + TempUID
+          + SLineBreak);
       end
       else
       begin
-        MainOutMessage(format('[Error] KF Login Verify Failed: %s, respData: %s', [retjs.Field['result_desc'].Value, respData]));
+        MainOutMessage(format('[Error] KF Login Verify Failed: %s, respData: %s',
+          [retjs.Field['result_desc'].Value, respData]));
       end;
 
     end
     else
     begin
-      MainOutMessage('[Error] KF Login Verify Failed: Parameter is not Exists! respData: ' + respData);
+      MainOutMessage('[Error] KF Login Verify Failed: Parameter is not Exists! respData: '
+        + respData);
     end;
     retjs.Free;
 
   except on E: Exception do
     begin
-      MainOutMessage('[Error] KF Login Verify Failed. unexpect exception! error. respData: ' + respData);
+      MainOutMessage('[Error] KF Login Verify Failed. unexpect exception! error. respData: '
+        + respData);
       retjs.Free;
       Exit;
     end;
@@ -4100,26 +3588,31 @@ begin
     jsdata := TlkJSON.ParseText(Data) as TlkJSONobject;
     if not assigned(jsdata) then
     begin
-      MainOutMessage('[Error] Letv Login Request Failed. Client Data error. Data: ' + Data);
+      MainOutMessage('[Error] Letv Login Request Failed. Client Data error. Data: '
+        + Data);
       exit;
     end;
 
-    if (jsdata.IndexOfName('uid') >= 0) and (jsdata.IndexOfName('token') >= 0) then
+    if (jsdata.IndexOfName('uid') >= 0) and (jsdata.IndexOfName('token') >= 0)
+      then
     begin
       uid := jsdata.Field['uid'].Value;
       token := jsdata.Field['token'].Value;
-      url := LETV_LOGIN_URL + '?client_id=' + LETV_APP_ID + '&uid=' + uid + '&access_token=' + token;
+      url := LETV_LOGIN_URL + '?client_id=' + LETV_APP_ID + '&uid=' + uid +
+        '&access_token=' + token;
       MainOutMessage('请求：' + url + SLineBreak);
 
       respData := Utf8ToAnsi(HttpHelper.HttpsGet(url));
       MainOutMessage('返回结果：' + respData + SLineBreak);
     end
     else
-      MainOutMessage('[Error] Letv Login Request Failed. Client Data error: Parameter is not Exists! Data: ' + Data);
+      MainOutMessage('[Error] Letv Login Request Failed. Client Data error: Parameter is not Exists! Data: '
+        + Data);
 
   except on E: Exception do
     begin
-      MainOutMessage('[Error] Letv Login Request Failed. Client Data error: unknown exception. Data: ' + Data);
+      MainOutMessage('[Error] Letv Login Request Failed. Client Data error: unknown exception. Data: '
+        + Data);
       jsdata.Free;
       Exit;
     end;
@@ -4132,21 +3625,25 @@ begin
     retjs := TlkJSON.ParseText(respData) as TlkJSONobject;
     if not assigned(retjs) then
     begin
-      MainOutMessage('[Error] Letv Login Verify Failed. Response Data error. respData: ' + respData);
+      MainOutMessage('[Error] Letv Login Verify Failed. Response Data error. respData: '
+        + respData);
       exit;
     end;
 
     if retjs.IndexOfName('status') < 0 then
     begin
-      MainOutMessage('[Error] Letv Login Verify Failed. Parameter status not exists!. respData: ' + respData);
+      MainOutMessage('[Error] Letv Login Verify Failed. Parameter status not exists!. respData: '
+        + respData);
       exit;
     end;
 
-      //当status=1时验证成功，否则验证失败。
-    if (retjs.IndexOfName('result') >= 0) and (retjs.Field['status'].Value = 1) then
+    //当status=1时验证成功，否则验证失败。
+    if (retjs.IndexOfName('result') >= 0) and (retjs.Field['status'].Value = 1)
+      then
     begin
 
-      if (retjs.Field['result'] as TlkJSONobject).IndexOfName('letv_uid') >= 0 then
+      if (retjs.Field['result'] as TlkJSONobject).IndexOfName('letv_uid') >= 0
+        then
       begin
         uid := (retjs.Field['result'] as TlkJSONobject).Field['letv_uid'].Value;
         MainOutMessage('[log] Letv Login Verify Success! UID: ' +
@@ -4167,7 +3664,8 @@ begin
 
   except on E: Exception do
     begin
-      MainOutMessage('[Error] Letv Login Verify Failed. unexpect exception! error. respData: ' + respData);
+      MainOutMessage('[Error] Letv Login Verify Failed. unexpect exception! error. respData: '
+        + respData);
       retjs.Free;
       Exit;
     end;
@@ -4202,14 +3700,16 @@ var
 
 begin
   //Get请求发送过来的数据。
-  Data := 'app_id=229700&lepay_order_no=1532016041313376959361064961&letv_user_id=122648700' +
+  Data := 'app_id=229700&lepay_order_no=1532016041313376959361064961&letv_user_id=122648700'
+    +
     '&out_trade_no=20160413192132122648700&pay_time=2016-04-13 19:21:53&price=0.01&product_id=8888' +
     '&sign=e159f0627f6e4d56b134c08b04449333&sign_type=MD5&trade_result=TRADE_SUCCESS' +
     '&version=2.0&cooperator_order_no=96557439&extra_info=测试自定义参数&original_price=0.01';
 
   retList := TStringList.Create;
   //第一个参数是分隔符; 第二个参数是开头被忽略的字符
-  ExtractStrings(['&'], [], PChar(HttpDecode(Data)), retList); //ExtractStrings能避免空格也被视作分隔符的bug
+  ExtractStrings(['&'], [], PChar(HttpDecode(Data)), retList);
+  //ExtractStrings能避免空格也被视作分隔符的bug
   retList.Sort;
 
   try
@@ -4222,9 +3722,11 @@ begin
       if signStr = '' then
         signStr := retList.Names[i] + '=' + retList.Values[retList.Names[i]]
       else
-        signStr := signStr + '&' + retList.Names[i] + '=' + retList.Values[retList.Names[i]];
+        signStr := signStr + '&' + retList.Names[i] + '=' +
+          retList.Values[retList.Names[i]];
 
-      MainOutMessage(retList.Names[i] + '  -->  ' + retList.Values[retList.Names[i]]);
+      MainOutMessage(retList.Names[i] + '  -->  ' +
+        retList.Values[retList.Names[i]]);
     end;
     signStr := signStr + '&key=' + LETV_SECRET_KEY;
 
@@ -4249,19 +3751,22 @@ begin
       extra_info := retList.Values['extra_info'];
       original_price := retList.Values['original_price'];
 
-      MainOutMessage('[Log] Letv Pay Verify Success: original_price: ' + original_price);
+      MainOutMessage('[Log] Letv Pay Verify Success: original_price: ' +
+        original_price);
       //验证订单数据CallbackInfo:extra_info
 
     end
     else
     begin
-      MainOutMessage('[Error] Letv Pay Verify Failed. 签名验证失败或支付失败! Data: ' + Data);
+      MainOutMessage('[Error] Letv Pay Verify Failed. 签名验证失败或支付失败! Data: '
+        + Data);
     end;
     retList.Free;
 
   except on E: Exception do
     begin
-      MainOutMessage('[Error] Letv Pay Verify Failed: unexpect exception! error(1). respData: ' + Data);
+      MainOutMessage('[Error] Letv Pay Verify Failed: unexpect exception! error(1). respData: '
+        + Data);
       retList.Free;
       Exit;
     end;
@@ -4290,31 +3795,39 @@ begin
     jsdata := TlkJSON.ParseText(Data) as TlkJSONobject;
     if not assigned(jsdata) then
     begin
-      MainOutMessage('[Error] DangLe Login Request Failed. Client Data error. Data: ' + Data);
+      MainOutMessage('[Error] DangLe Login Request Failed. Client Data error. Data: '
+        + Data);
       exit;
     end;
 
-    if (jsdata.IndexOfName('memberId') >= 0) and (jsdata.IndexOfName('token') >= 0) then
+    if (jsdata.IndexOfName('memberId') >= 0) and (jsdata.IndexOfName('token') >=
+      0) then
     begin
       memberId := jsdata.Field['memberId'].Value;
       token := jsdata.Field['token'].Value;
 
       //MD5(appId|appKey|token|umid)字符串
-      sign := MD5(UTF8Encode(DANGLE_APP_ID + '|' + DANGLE_APP_KEY + '|' + token + '|' + memberId));
+      sign := MD5(UTF8Encode(DANGLE_APP_ID + '|' + DANGLE_APP_KEY + '|' + token
+        +
+        '|' + memberId));
 
       //?appid=195&umid=36223535814&token=4C18A0AEAB1B4C9BBFD49E21E202025C&sig=9405aec7d7785d4cbfa6126004635406
-      url := DANGLE_LOGIN_URL + '?appid=' + DANGLE_APP_ID + '&umid=' + memberId + '&token=' + token + '&sig=' + sign;
+      url := DANGLE_LOGIN_URL + '?appid=' + DANGLE_APP_ID + '&umid=' + memberId
+        +
+        '&token=' + token + '&sig=' + sign;
       MainOutMessage('请求：' + url + SLineBreak);
 
       respData := Utf8ToAnsi(HttpHelper.HttpsGet(url));
       MainOutMessage('返回结果：' + respData + SLineBreak);
     end
     else
-      MainOutMessage('[Error] DangLe Login Request Failed. Client Data error: Parameter is not Exists! Data: ' + Data);
+      MainOutMessage('[Error] DangLe Login Request Failed. Client Data error: Parameter is not Exists! Data: '
+        + Data);
 
   except on E: Exception do
     begin
-      MainOutMessage('[Error] DangLe Login Request Failed. Client Data error: unknown exception. Data: ' + Data);
+      MainOutMessage('[Error] DangLe Login Request Failed. Client Data error: unknown exception. Data: '
+        + Data);
       jsdata.Free;
       Exit;
     end;
@@ -4328,24 +3841,28 @@ begin
     retjs := TlkJSON.ParseText(respData) as TlkJSONobject;
     if not assigned(retjs) then
     begin
-      MainOutMessage('[Error] DangLe Login Verify Failed. Response Data error. respData: ' + respData);
+      MainOutMessage('[Error] DangLe Login Verify Failed. Response Data error. respData: '
+        + respData);
       exit;
     end;
 
-      //当valid=1,msg_code=2000时验证成功，否则验证失败。
-    if (retjs.IndexOfName('valid') >= 0) and (retjs.IndexOfName('msg_code') >= 0) then
+    //当valid=1,msg_code=2000时验证成功，否则验证失败。
+    if (retjs.IndexOfName('valid') >= 0) and (retjs.IndexOfName('msg_code') >= 0)
+      then
     begin
 
-      if (retjs.Field['valid'].Value = '1') and (retjs.Field['msg_code'].Value = 2000) then
+      if (retjs.Field['valid'].Value = '1') and (retjs.Field['msg_code'].Value =
+        2000) then
       begin
-          //登录成功.
+        //登录成功.
         MainOutMessage('[log] DangLe Login Verify Success. 登录成功！UID: ' +
           memberId + SLineBreak);
       end
       else
       begin
         MainOutMessage(format('[Error] DangLe Login Verify Failed.请求失败! valid: %s, msg_desc: %s, respData: %s',
-          [retjs.Field['valid'].Value, retjs.Field['msg_desc'].Value, respData]));
+          [retjs.Field['valid'].Value, retjs.Field['msg_desc'].Value,
+          respData]));
       end;
 
     end
@@ -4357,7 +3874,8 @@ begin
 
   except on E: Exception do
     begin
-      MainOutMessage('[Error] DangLe Login Verify Failed. unexpect exception! error. respData: ' + respData);
+      MainOutMessage('[Error] DangLe Login Verify Failed. unexpect exception! error. respData: '
+        + respData);
       retjs.Free;
       Exit;
     end;
@@ -4367,7 +3885,8 @@ end;
 
 procedure TForm1.DangLePayBtnClick(Sender: TObject);
 const
-  DANGLE_PAYMENT_KEY = 'NIhmYdfPe05f'; //Demo测试密钥:NIhmYdfPe05f，刀塔西游支付密钥：w8hCFh5fqIbr
+  DANGLE_PAYMENT_KEY = 'NIhmYdfPe05f';
+  //Demo测试密钥:NIhmYdfPe05f，刀塔西游支付密钥：w8hCFh5fqIbr
 
 var
   Data, signStr, locSign: string;
@@ -4390,8 +3909,9 @@ begin
   try
     retList := TStringList.Create;
     //第一个参数是分隔符; 第二个参数是开头被忽略的字符
-    ExtractStrings(['&'], [], PChar(HttpDecode(Data)), retList); //ExtractStrings能避免空格也被视作分隔符的bug
-    //retList.Sort;
+    ExtractStrings(['&'], [], PChar(HttpDecode(Data)), retList);
+    //ExtractStrings能避免空格也被视作分隔符的bug
+  //retList.Sort;
 
     order := retList.Values['order'];
     money := retList.Values['money'];
@@ -4402,12 +3922,14 @@ begin
     signature := retList.Values['signature'];
 
     //签名：order=xxxx&money=xxxx&mid=xxxx&time=xxxx&result=x&ext=xxx&key=xxxx
-    signStr := 'order=' + order + '&money=' + money + '&mid=' + mid + '&time=' + time + '&result=' + result +
+    signStr := 'order=' + order + '&money=' + money + '&mid=' + mid + '&time=' +
+      time + '&result=' + result +
       '&ext=' + ext + '&key=' + DANGLE_PAYMENT_KEY;
 
     locSign := LowerCase(MD5(AnsiToUtf8(signStr)));
 
-    MainOutMessage('[Log] DangLe Pay Verify signStr: ' + signStr + ', sign: ' + locSign);
+    MainOutMessage('[Log] DangLe Pay Verify signStr: ' + signStr + ', sign: ' +
+      locSign);
 
     if (signature = locSign) and (result = '1') then
     begin
@@ -4418,13 +3940,15 @@ begin
     end
     else
     begin
-      MainOutMessage('[Error] DangLe Pay Verify Failed. 签名验证失败或支付失败! Data: ' + Data);
+      MainOutMessage('[Error] DangLe Pay Verify Failed. 签名验证失败或支付失败! Data: '
+        + Data);
     end;
     retList.Free;
 
   except on E: Exception do
     begin
-      MainOutMessage('[Error] DangLe Pay Verify Failed: unexpect exception! error(1). respData: ' + Data);
+      MainOutMessage('[Error] DangLe Pay Verify Failed: unexpect exception! error(1). respData: '
+        + Data);
       retList.Free;
       Exit;
     end;
@@ -4456,38 +3980,46 @@ begin
     jsdata := TlkJSON.ParseText(Data) as TlkJSONobject;
     if not assigned(jsdata) then
     begin
-      MainOutMessage('[Error] AnZhi Login Request Failed. Client Data error. Data: ' + Data);
+      MainOutMessage('[Error] AnZhi Login Request Failed. Client Data error. Data: '
+        + Data);
       exit;
     end;
 
-    if (jsdata.IndexOfName('uid') >= 0) and (jsdata.IndexOfName('token') >= 0) then
+    if (jsdata.IndexOfName('uid') >= 0) and (jsdata.IndexOfName('token') >= 0)
+      then
     begin
       uid := jsdata.Field['uid'].Value;
       sid := jsdata.Field['token'].Value;
-      time := FormatdateTime('yyyymmddhhmmsszzzz', Now); //获取当前系统时间，精确到毫秒
+      time := FormatdateTime('yyyymmddhhmmsszzzz', Now);
+      //获取当前系统时间，精确到毫秒
 
-      //Base64.encodeToString(appkey+sid+appsecret)
+    //Base64.encodeToString(appkey+sid+appsecret)
       sign := EncodeString(ANZHI_APP_KEY + sid + ANZHI_APP_SECRET);
       //删除加密后产生的换行
       sign := StringReplace(sign, #13, '', [rfReplaceAll]);
       sign := StringReplace(sign, #10, '', [rfReplaceAll]);
 
-      MainOutMessage('signStr：' + ANZHI_APP_KEY + sid + ANZHI_APP_SECRET + SLineBreak + 'sign:' + sign + SLineBreak);
+      MainOutMessage('signStr：' + ANZHI_APP_KEY + sid + ANZHI_APP_SECRET +
+        SLineBreak + 'sign:' + sign + SLineBreak);
 
       //uid,time,sid,sign:string;
-      postData := 'time=' + time + '&appkey=' + ANZHI_APP_KEY + '&sid=' + sid + '&sign=' + sign;
+      postData := 'time=' + time + '&appkey=' + ANZHI_APP_KEY + '&sid=' + sid +
+        '&sign=' + sign;
 
       MainOutMessage('请求postData：' + postData + SLineBreak);
 
-      respData := Utf8ToAnsi(HttpHelper.HttpsPost(ANZHI_LOGIN_URL, postData, Header));
+      respData := Utf8ToAnsi(HttpHelper.HttpsPost(ANZHI_LOGIN_URL, postData,
+        Header));
       MainOutMessage('返回结果：' + respData + SLineBreak);
     end
     else
-      MainOutMessage('[Error] AnZhi Login Request Failed. Client Data error: Parameter is not Exists! Data: ' + Data);
+      MainOutMessage('[Error] AnZhi Login Request Failed. Client Data error: Parameter is not Exists! Data: '
+        + Data);
 
   except on E: Exception do
     begin
-      MainOutMessage('[Error] AnZhi Login Request Failed. Client Data error: unknown exception. Data: ' + Data);
+      MainOutMessage('[Error] AnZhi Login Request Failed. Client Data error: unknown exception. Data: '
+        + Data);
       jsdata.Free;
       Exit;
     end;
@@ -4502,12 +4034,14 @@ begin
     retjs := TlkJSON.ParseText(respData) as TlkJSONobject;
     if not assigned(retjs) then
     begin
-      MainOutMessage('[Error] AnZhi Login Verify Failed. Response Data error. respData: ' + respData);
+      MainOutMessage('[Error] AnZhi Login Verify Failed. Response Data error. respData: '
+        + respData);
       exit;
     end;
 
-      //当valid=1,msg_code=2000时验证成功，否则验证失败。
-    if (retjs.IndexOfName('code') >= 0) and (retjs.IndexOfName('data') >= 0) then
+    //当valid=1,msg_code=2000时验证成功，否则验证失败。
+    if (retjs.IndexOfName('code') >= 0) and (retjs.IndexOfName('data') >= 0)
+      then
     begin
 
       if retjs.Field['code'].Value = 1 then
@@ -4517,25 +4051,28 @@ begin
         datajs := TlkJSON.ParseText(userData) as TlkJSONobject;
         if not assigned(datajs) then
         begin
-          MainOutMessage('[Error] AnZhi Login Verify Failed. 解析data出错. userData: ' + userData + ', respData: ' + respData);
+          MainOutMessage('[Error] AnZhi Login Verify Failed. 解析data出错. userData: '
+            + userData + ', respData: ' + respData);
           retjs.Free;
           exit;
         end;
 
         if datajs.IndexOfName('uid') >= 0 then
         begin
-            //登录成功.
+          //登录成功.
           MainOutMessage('[log] AnZhi Login Verify Success. 登录成功！UID: ' +
             datajs.Field['uid'].Value + SLineBreak);
         end
         else
-          MainOutMessage('[Error] AnZhi Login Request Failed. Parameter is not Exists(1)! userData: ' + userData + ', respData: ' + respData);
+          MainOutMessage('[Error] AnZhi Login Request Failed. Parameter is not Exists(1)! userData: '
+            + userData + ', respData: ' + respData);
 
         datajs.Free;
       end
       else
         MainOutMessage(format('[Error] AnZhi Login Verify Failed.请求失败! valid: %s, msg_desc: %s, respData: %s',
-          [retjs.Field['valid'].Value, retjs.Field['msg_desc'].Value, respData]));
+          [retjs.Field['valid'].Value, retjs.Field['msg_desc'].Value,
+          respData]));
 
     end
     else
@@ -4546,7 +4083,8 @@ begin
 
   except on E: Exception do
     begin
-      MainOutMessage('[Error] AnZhi Login Verify Failed. unexpect exception! error. respData: ' + respData);
+      MainOutMessage('[Error] AnZhi Login Verify Failed. unexpect exception! error. respData: '
+        + respData);
       retjs.Free;
       Exit;
     end;
@@ -4576,7 +4114,8 @@ var
 begin
   //Data:='data=scTgncngsXGmNTLNgU1KrS7Ct6EaZjBu9BXB5b8Gs24=';
   Data := AnZhiPayEdit.Text;
-  info := Copy(Data, Pos('=', Data) + 1, Length(Data) - Pos('=', Data)); //截取'='之后的字符串.
+  info := Copy(Data, Pos('=', Data) + 1, Length(Data) - Pos('=', Data));
+  //截取'='之后的字符串.
   des3 := CoDES3DllClass.Create;
   info := des3.Decrypt3DES(info, ANZHI_APP_SECRET);
   MainOutMessage('[log] AnZhi Pay Verify Data 解密：' + SLineBreak + info);
@@ -4589,12 +4128,16 @@ begin
     jsdata := TlkJSON.ParseText(info) as TlkJSONobject;
     if not assigned(jsdata) then
     begin
-      MainOutMessage('[Error] AnZhi Pay Verify Failed.返回数据解析出错. Data: ' + Data + ', 解析：' + info);
+      MainOutMessage('[Error] AnZhi Pay Verify Failed.返回数据解析出错. Data: '
+        + Data + ', 解析：' + info);
       exit;
     end;
 
-    if (jsdata.IndexOfName('code') >= 0) and (jsdata.IndexOfName('uid') >= 0) and (jsdata.IndexOfName('orderId') >= 0)
-      and (jsdata.IndexOfName('orderAmount') >= 0) and (jsdata.IndexOfName('cpInfo') >= 0) and (jsdata.IndexOfName('cpCustomInfo') >= 0) then
+    if (jsdata.IndexOfName('code') >= 0) and (jsdata.IndexOfName('uid') >= 0)
+      and (jsdata.IndexOfName('orderId') >= 0)
+      and (jsdata.IndexOfName('orderAmount') >= 0) and
+      (jsdata.IndexOfName('cpInfo') >= 0) and (jsdata.IndexOfName('cpCustomInfo')
+      >= 0) then
     begin
       code := jsdata.Field['code'].Value; // 订单状态 1为成功
 
@@ -4607,21 +4150,25 @@ begin
         cpCustomInfo := jsdata.Field['cpCustomInfo'].Value; //callbackInfo
 
         //验证订单信息，使用callbackInfo
-        MainOutMessage('[Log] AnZhi Pay Verify Success. uid:' + uid + ', orderAmount:' + orderAmount);
+        MainOutMessage('[Log] AnZhi Pay Verify Success. uid:' + uid +
+          ', orderAmount:' + orderAmount);
       end
       else
-        MainOutMessage('[Error] AnZhi Pay Verify Failed. 订单状态为支付失败! Data: ' + Data + ', 解析info：' + info);
+        MainOutMessage('[Error] AnZhi Pay Verify Failed. 订单状态为支付失败! Data: '
+          + Data + ', 解析info：' + info);
 
     end
     else
     begin
-      MainOutMessage('[Error] AnZhi Pay Verify Failed. Return Data error: Parameter is not Exists! Data: ' + Data + ', 解析info：' + info);
+      MainOutMessage('[Error] AnZhi Pay Verify Failed. Return Data error: Parameter is not Exists! Data: '
+        + Data + ', 解析info：' + info);
     end;
     jsdata.Free;
 
   except on E: Exception do
     begin
-      MainOutMessage('[Error] AnZhi Pay Verify Failed. unexpect exception! error. Data: ' + Data + ', 解析info：' + info);
+      MainOutMessage('[Error] AnZhi Pay Verify Failed. unexpect exception! error. Data: '
+        + Data + ', 解析info：' + info);
       jsdata.Free;
       Exit;
     end;
@@ -4652,40 +4199,47 @@ begin
     jsdata := TlkJSON.ParseText(Data) as TlkJSONobject;
     if not assigned(jsdata) then
     begin
-      MainOutMessage('[Error] CoolPad Login Request Failed. Client Data error. Data: ' + Data);
+      MainOutMessage('[Error] CoolPad Login Request Failed. Client Data error. Data: '
+        + Data);
       exit;
     end;
 
     if jsdata.IndexOfName('Authcode') >= 0 then
     begin
       Authcode := jsdata.Field['Authcode'].Value;
-      url := COOLPAD_LOGIN_URL + '?grant_type=' + grant_type + '&code=' + Authcode + '&client_id=' + COOLPAD_APP_ID
-        + '&client_secret=' + COOLPAD_APP_KEY + '&redirect_uri=' + COOLPAD_APP_KEY;
+      url := COOLPAD_LOGIN_URL + '?grant_type=' + grant_type + '&code=' +
+        Authcode + '&client_id=' + COOLPAD_APP_ID
+        + '&client_secret=' + COOLPAD_APP_KEY + '&redirect_uri=' +
+        COOLPAD_APP_KEY;
       MainOutMessage('请求：' + url + SLineBreak);
 
       respData := Utf8ToAnsi(HttpHelper.HttpsGet(url));
       MainOutMessage('返回结果：' + respData + SLineBreak);
     end
     else
-      MainOutMessage('[Error] CoolPad Login Request Failed. Client Data error: Parameter is not Exists! Data: ' + Data);
+      MainOutMessage('[Error] CoolPad Login Request Failed. Client Data error: Parameter is not Exists! Data: '
+        + Data);
 
   except on E: Exception do
     begin
-      MainOutMessage('[Error] CoolPad Login Request Failed. Client Data error: unknown exception. Data: ' + Data);
+      MainOutMessage('[Error] CoolPad Login Request Failed. Client Data error: unknown exception. Data: '
+        + Data);
       jsdata.Free;
       Exit;
     end;
   end;
   jsdata.Free;
 
-  respData := '{"openid":"76723093","expires_in":"7776000","refresh_token":"5.303d61b09ea4ed2abf9894a2c0419788",' +
+  respData := '{"openid":"76723093","expires_in":"7776000","refresh_token":"5.303d61b09ea4ed2abf9894a2c0419788",'
+    +
     '"access_token":"5.1fe53f68dfd249eea6554d6d05703dc9.862df48e73ed7df8b192599422094fd2.1478656156574"}';
   //登陆验证
   try
     retjs := TlkJSON.ParseText(respData) as TlkJSONobject;
     if not assigned(retjs) then
     begin
-      MainOutMessage('[Error] CoolPad Login Verify Failed. Response Data error. respData: ' + respData);
+      MainOutMessage('[Error] CoolPad Login Verify Failed. Response Data error. respData: '
+        + respData);
       exit;
     end;
 
@@ -4704,7 +4258,8 @@ begin
 
   except on E: Exception do
     begin
-      MainOutMessage('[Error] CoolPad Login Verify Failed. unexpect exception! error. respData: ' + respData);
+      MainOutMessage('[Error] CoolPad Login Verify Failed. unexpect exception! error. respData: '
+        + respData);
       retjs.Free;
       Exit;
     end;
@@ -4717,13 +4272,15 @@ const
   //以下都是西游的参数
   PAYORDER_URL = 'http://pay.coolyun.com:6988/payapi/order';
   COOLPAD_APP_ID = '5000002434';
- // COOLPAD_APP_KEY='8015073d41474b76adc1dbdaf08ce9d1';
+  // COOLPAD_APP_KEY='8015073d41474b76adc1dbdaf08ce9d1';
   COOLPAD_NOTITYURL = 'http://192.168.0.140:8094/monizhuang/api?type=100';
   Header = 'Content-Type: application/x-www-form-urlencoded';
-  COOLPAD_PUBLIC_KEY = 'MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDABF2g8r2lgf84eI9XIqUiOkRLOf+gP6J0aYGQT9oSRnkLMnRrocU8SGX1d3W/C3tqPIPrh/zBR0vL0vXlwxudG9QLz08baMvrAnkjqyuenSE1Gi9+u1MVMRZIqtS+KsVgzfoEHv7cXPqploxihH8uwa0ALYGj9Aehqh8CISQYCQIDAQAB';
+  COOLPAD_PUBLIC_KEY =
+    'MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDABF2g8r2lgf84eI9XIqUiOkRLOf+gP6J0aYGQT9oSRnkLMnRrocU8SGX1d3W/C3tqPIPrh/zBR0vL0vXlwxudG9QLz08baMvrAnkjqyuenSE1Gi9+u1MVMRZIqtS+KsVgzfoEHv7cXPqploxihH8uwa0ALYGj9Aehqh8CISQYCQIDAQAB';
 
   { 名验签使用的rsa私钥格式为pkcs8，酷派网站提供的rsa私钥为pkcs1，需要使用cptools工具，将pkcs1私钥转为pkcs8格式  }
-  COOLPAD_PRIVATE_KEY = 'MIICdgIBADANBgkqhkiG9w0BAQEFAASCAmAwggJcAgEAAoGBAKQ76WAwcwwaDl3DB8kqyEbXKm4YdXQt' +
+  COOLPAD_PRIVATE_KEY = 'MIICdgIBADANBgkqhkiG9w0BAQEFAASCAmAwggJcAgEAAoGBAKQ76WAwcwwaDl3DB8kqyEbXKm4YdXQt'
+    +
     '9AlbTXpZDag1ZU5AQK4BwolRP3MvIq/iwWnGojDL/a6eUlhP3tMIHxabzWEg55kfkU4F/ShLYPXhUFe9' +
     'l5Wkk2DjHp6I3nI+qfKX8EczmWJ2xPcqskBsVJO4nhpbtSK2JJ09NmjySBB1AgMBAAECgYAF1NbBgpbj' +
     'LB2seJtTKkC4OzWXeSjaejM7DdHfcUAJ4/N35tIlG4zjwU3GcjsCEcQaVGI351ZXl+mGlzdrONOZtFi5' +
@@ -4743,7 +4300,7 @@ var
   currency: string; // 货币类型
   appuserid: string; //  用户在商户应用的唯一标识 UserId
   cpprivateinfo: string; // 商户私有信息
- // notifyurl: string;  // 支付结果通知地址
+  // notifyurl: string;  // 支付结果通知地址
 
   sign, Data, respData, transdata, transid: string;
   dataJs, retJs: TlkJSONobject;
@@ -4780,28 +4337,33 @@ begin
   MainOutMessage('[Log] CoolPad Get Order Number. sign: ' + sign + SLineBreak);
 
   Data := 'transdata=' + Data + '&sign=' + sign + '&signtype=RSA';
-  Data := StringReplace(Data, ' ', '+', [rfReplaceAll]); //替换字符串中所有的空格为+
+  Data := StringReplace(Data, ' ', '+', [rfReplaceAll]);
+  //替换字符串中所有的空格为+
 
-  respData := Utf8ToAnsi(HttpDecode(HttpHelper.HttpsPost(PAYORDER_URL, Data, Header)));
-  MainOutMessage('[Log] CoolPad Get Order Number. postData：' + Data + SLineBreak);
-  MainOutMessage('[Log] CoolPad Get Order Number. 返回结果：' + respData + SLineBreak);
-
-
+  respData := Utf8ToAnsi(HttpDecode(HttpHelper.HttpsPost(PAYORDER_URL, Data,
+    Header)));
+  MainOutMessage('[Log] CoolPad Get Order Number. postData：' + Data +
+    SLineBreak);
+  MainOutMessage('[Log] CoolPad Get Order Number. 返回结果：' + respData +
+    SLineBreak);
 
   //成功：transdata={"transid":"11111"}&sign=xxxxxx&signtype=RSA
   //失败：transdata={"code":"1001","errmsg":"签名验证失败"}
   try
-    respData := StringReplace(respData, ' ', '+', [rfReplaceAll]); //替换字符串中所有的空格为+
+    respData := StringReplace(respData, ' ', '+', [rfReplaceAll]);
+    //替换字符串中所有的空格为+
     retList := TStringList.Create;
-      //第一个参数是分隔符; 第二个参数是开头被忽略的字符
-    ExtractStrings(['&'], [], PChar(respData), retList); //ExtractStrings能避免空格也被视作分隔符的bug
+    //第一个参数是分隔符; 第二个参数是开头被忽略的字符
+    ExtractStrings(['&'], [], PChar(respData), retList);
+    //ExtractStrings能避免空格也被视作分隔符的bug
 
     transdata := retList.Values['transdata'];
     sign := retList.Values['sign'];
 
     if (transdata = ' ') or (sign = '') then
     begin
-      MainOutMessage('[Error] CoolPad Get Order Number Failed. Request Failed! errmsg: ' + retList.Values['errmsg'] +
+      MainOutMessage('[Error] CoolPad Get Order Number Failed. Request Failed! errmsg: '
+        + retList.Values['errmsg'] +
         ', respData: ' + respData);
       retList.Free;
       exit;
@@ -4814,7 +4376,8 @@ begin
       retjs := TlkJSON.ParseText(transdata) as TlkJSONobject;
       if not assigned(retjs) then
       begin
-        MainOutMessage('[Error] CoolPad Get Order Number Failed. Response Data error. transdata: ' + retList.Values['transdata'] +
+        MainOutMessage('[Error] CoolPad Get Order Number Failed. Response Data error. transdata: '
+          + retList.Values['transdata'] +
           ', respData: ' + respData);
         exit;
       end;
@@ -4822,24 +4385,28 @@ begin
       if retjs.IndexOfName('transid') >= 0 then
       begin
         transid := retjs['transid'].value;
-        MainOutMessage('[Log] CoolPad Get Order Number. 获取到定单号：' + transid + SLineBreak);
-          //将order_no, submit_time, product_id发给客户端
+        MainOutMessage('[Log] CoolPad Get Order Number. 获取到定单号：' + transid
+          + SLineBreak);
+        //将order_no, submit_time, product_id发给客户端
       end
       else
       begin
-        MainOutMessage('[Error] CoolPad Get Order Number Failed. Parameter transid not Exist! respData: ' + respData);
+        MainOutMessage('[Error] CoolPad Get Order Number Failed. Parameter transid not Exist! respData: '
+          + respData);
       end;
 
     end
     else
     begin
-      MainOutMessage('[Log] CoolPad Get Order Number Failed. 验证签名失败! respData: ' + respData);
+      MainOutMessage('[Log] CoolPad Get Order Number Failed. 验证签名失败! respData: '
+        + respData);
     end;
     retjs.Free;
 
   except on E: Exception do
     begin
-      MainOutMessage('[Error] CoolPad Get Order Number Failed: unexpect exception! error. respData: ' + respData);
+      MainOutMessage('[Error] CoolPad Get Order Number Failed: unexpect exception! error. respData: '
+        + respData);
       retjs.Free;
       Exit;
     end;
@@ -4850,14 +4417,15 @@ end;
 procedure TForm1.CoolPadPayVerifyBtnClick(Sender: TObject);
 const
   //西游的参数
-  COOLPAD_PUBLIC_KEY = 'MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDABF2g8r2lgf84eI9XIqUiOkRLOf+gP6J0aYGQT9oSRnkLMnRrocU8SGX1d3W/C3tqPIPrh/zBR0vL0vXlwxudG9QLz08baMvrAnkjqyuenSE1Gi9+u1MVMRZIqtS+KsVgzfoEHv7cXPqploxihH8uwa0ALYGj9Aehqh8CISQYCQIDAQAB';
+  COOLPAD_PUBLIC_KEY =
+    'MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDABF2g8r2lgf84eI9XIqUiOkRLOf+gP6J0aYGQT9oSRnkLMnRrocU8SGX1d3W/C3tqPIPrh/zBR0vL0vXlwxudG9QLz08baMvrAnkjqyuenSE1Gi9+u1MVMRZIqtS+KsVgzfoEHv7cXPqploxihH8uwa0ALYGj9Aehqh8CISQYCQIDAQAB';
 
 var
-//  cporderid: string; // 商户订单号
+  //  cporderid: string; // 商户订单号
   transid: string; // 酷派交易流水号
- // appuserid: string;  //  用户在商户应用的唯一标识 UserId
-//  appid: string;  // 游戏id
-//  waresid: Integer; //商品编号
+  // appuserid: string;  //  用户在商户应用的唯一标识 UserId
+ //  appid: string;  // 游戏id
+ //  waresid: Integer; //商品编号
   money: Double; // 交易金额
   result: Integer; // 交易结果
   cpprivate: string; // 商户私有信息
@@ -4875,79 +4443,89 @@ begin
   //失败：transdata={"code":"1001","errmsg":"签名验证失败"}
   try
     retList := TStringList.Create;
-      //第一个参数是分隔符; 第二个参数是开头被忽略的字符
-    ExtractStrings(['&'], [], PChar(Data), retList); //ExtractStrings能避免空格也被视作分隔符的bug
+    //第一个参数是分隔符; 第二个参数是开头被忽略的字符
+    ExtractStrings(['&'], [], PChar(Data), retList);
+    //ExtractStrings能避免空格也被视作分隔符的bug
 
     transdata := retList.Values['transdata'];
     sign := retList.Values['sign'];
-    sign := StringReplace(sign, ' ', '+', [rfReplaceAll]); //替换字符串中所有的空格为+
+    sign := StringReplace(sign, ' ', '+', [rfReplaceAll]);
+    //替换字符串中所有的空格为+
     MainOutMessage('transdata: ' + transdata + ', sign: ' + sign);
 
     if (transdata = '') or (sign = '') then
     begin
-      MainOutMessage('[Error] process CoolPad Pay Result Failed. Purchase Failed! errmsg: ' + retList.Values['errmsg'] +
+      MainOutMessage('[Error] process CoolPad Pay Result Failed. Purchase Failed! errmsg: '
+        + retList.Values['errmsg'] +
         ', respData: ' + Data);
       retList.Free;
       exit;
     end;
     retList.Free;
 
-      //transdata:='{"transid":"32021611141119047614"}';
-      //sign:='U7rU4IbweDGn3KMHo3rbXXqFvmkTsW2pyrlEvdQxoJ+m2DbdkmZZFpfa7clr3vDTRfxxgh7LnyV4GAmnhOJ6sJGe7kOdNvnl+V0xkzbfLT/GJa5LbPTv339myHKTo+edlJGpdnNb0otvXABs5pValnbCQWhF2aZRnuybS1X/d7I=';
+    //transdata:='{"transid":"32021611141119047614"}';
+    //sign:='U7rU4IbweDGn3KMHo3rbXXqFvmkTsW2pyrlEvdQxoJ+m2DbdkmZZFpfa7clr3vDTRfxxgh7LnyV4GAmnhOJ6sJGe7kOdNvnl+V0xkzbfLT/GJa5LbPTv339myHKTo+edlJGpdnNb0otvXABs5pValnbCQWhF2aZRnuybS1X/d7I=';
     if not RsaMd5.RsaMd5Verify(transdata, COOLPAD_PUBLIC_KEY, sign) then
     begin
       retjs := TlkJSON.ParseText(transdata) as TlkJSONobject;
       if not assigned(retjs) then
       begin
-        MainOutMessage('[Error] process CoolPad Pay Result Failed. Return Data error. transdata: ' + retList.Values['transdata'] +
+        MainOutMessage('[Error] process CoolPad Pay Result Failed. Return Data error. transdata: '
+          + retList.Values['transdata'] +
           ', respData: ' + Data);
         exit;
       end;
 
-        {"transtype":0,"cporderid":"1","transid":"2","appuserid":"test","appid":"3","waresid":
-        31,"feetype":4,"money":5.00, "currency":"RMB", "result":0, "transtime":"2012-12-12
-        12:11:10","cpprivate":"test","paytype":1}
+      {"transtype":0,"cporderid":"1","transid":"2","appuserid":"test","appid":"3","waresid":
+      31,"feetype":4,"money":5.00, "currency":"RMB", "result":0, "transtime":"2012-12-12
+      12:11:10","cpprivate":"test","paytype":1}
 
-      if (retjs.IndexOfName('transid') >= 0) and (retjs.IndexOfName('appid') >= 0) and (retjs.IndexOfName('money') >= 0)
-        and (retjs.IndexOfName('result') >= 0) and (retjs.IndexOfName('cpprivate') >= 0) then
+      if (retjs.IndexOfName('transid') >= 0) and (retjs.IndexOfName('appid') >=
+        0) and (retjs.IndexOfName('money') >= 0)
+        and (retjs.IndexOfName('result') >= 0) and
+        (retjs.IndexOfName('cpprivate') >= 0) then
       begin
-         // cporderid := retjs['cporderid'].value;
+        // cporderid := retjs['cporderid'].value;
         transid := retjs['transid'].value; //第三方订单号
-         // appuserid := retjs['appuserid'].value;
-         // appid := retjs['appid'].value;
-         // waresid := retjs['waresid'].value;
+        // appuserid := retjs['appuserid'].value;
+        // appid := retjs['appid'].value;
+        // waresid := retjs['waresid'].value;
         money := retjs['money'].value;
         result := retjs['result'].value;
         cpprivate := retjs['cpprivate'].value;
 
         if result = 0 then //交易成功
         begin
-            //验证CallbackInfo
+          //验证CallbackInfo
 
-
-          MainOutMessage('[Log] process CoolPad Pay Result Success. 验证CallbackInfo！ money: ' + FloatToStr(money));
+          MainOutMessage('[Log] process CoolPad Pay Result Success. 验证CallbackInfo！ money: '
+            + FloatToStr(money));
         end
         else
         begin
-          MainOutMessage('[Error] process CoolPad Pay Result Failed. 交易失败！ respData: ' + Data);
+          MainOutMessage('[Error] process CoolPad Pay Result Failed. 交易失败！ respData: '
+            + Data);
         end;
 
       end
       else
       begin
-        MainOutMessage('[Error] process CoolPad Pay Result Failed. Parameter not Exist! respData: ' + Data);
+        MainOutMessage('[Error] process CoolPad Pay Result Failed. Parameter not Exist! respData: '
+          + Data);
       end;
 
     end
     else
     begin
-      MainOutMessage('[Error] process CoolPad Pay Result Failed. 验证签名失败！ transdata: ' + transdata + ', sign: ' + sign);
+      MainOutMessage('[Error] process CoolPad Pay Result Failed. 验证签名失败！ transdata: '
+        + transdata + ', sign: ' + sign);
     end;
     retjs.Free;
 
   except on E: Exception do
     begin
-      MainOutMessage('[Error] process CoolPad Pay Result Failed. unexpect exception! error. respData: ' + Data);
+      MainOutMessage('[Error] process CoolPad Pay Result Failed. unexpect exception! error. respData: '
+        + Data);
       retjs.Free;
       Exit;
     end;
@@ -4957,8 +4535,9 @@ end;
 
 procedure TForm1.YYHLoginVerifyBtnClick(Sender: TObject);
 const
-    //以下是Demo参数
-  YINGYONGHUI_LOGIN_URL = 'http://api.appchina.com/appchina-usersdk/user/v2/get.json';
+  //以下是Demo参数
+  YINGYONGHUI_LOGIN_URL =
+    'http://api.appchina.com/appchina-usersdk/user/v2/get.json';
   YINGYONGHUI_LOGIN_ID = '11533';
   YINGYONGHUI_LOGIN_KEY = '6Y9A2L4p5F83IYvg';
   Header = 'Content-Type: application/x-www-form-urlencoded';
@@ -4976,21 +4555,24 @@ begin
     jsdata := TlkJSON.ParseText(Data) as TlkJSONobject;
     if not assigned(jsdata) then
     begin
-      MainOutMessage('[Error] YingYongHui Login Request Failed. Client Data error. Data: ' + Data);
+      MainOutMessage('[Error] YingYongHui Login Request Failed. Client Data error. Data: '
+        + Data);
       exit;
     end;
     //http://api.appchina.com/appchina-usersdk/user/v2/get.json?login_id=1&login_key=3c480af8&ticket=926d1cc2-1c66-4dcf-b0df-13ba294c9107%20%7F%C2%A0
     if jsdata.IndexOfName('ticket') >= 0 then
     begin
       ticket := jsdata.Field['ticket'].Value;
-      url := YINGYONGHUI_LOGIN_URL + '?login_id=' + YINGYONGHUI_LOGIN_ID + '&login_key=' + YINGYONGHUI_LOGIN_KEY + '&ticket=' + ticket;
+      url := YINGYONGHUI_LOGIN_URL + '?login_id=' + YINGYONGHUI_LOGIN_ID +
+        '&login_key=' + YINGYONGHUI_LOGIN_KEY + '&ticket=' + ticket;
       MainOutMessage('请求：' + url + SLineBreak);
 
       respData := Utf8ToAnsi(HttpHelper.HttpsGet(url));
       MainOutMessage('返回结果：' + respData + SLineBreak);
     end
     else
-      MainOutMessage('[Error] YingYongHui Login Request Failed. Client Data error: Parameter is not Exists! Data: ' + Data);
+      MainOutMessage('[Error] YingYongHui Login Request Failed. Client Data error: Parameter is not Exists! Data: '
+        + Data);
 
   except on E: Exception do
     begin
@@ -5023,24 +4605,28 @@ begin
     retjs := TlkJSON.ParseText(respData) as TlkJSONobject;
     if not assigned(retjs) then
     begin
-      MainOutMessage('[Error] YingYongHui Login Verify Failed. Response Data error. respData: ' + respData);
+      MainOutMessage('[Error] YingYongHui Login Verify Failed. Response Data error. respData: '
+        + respData);
       exit;
     end;
 
-      //Data := retjs.Field['data'].Value;
-      //MainOutMessage('[Log] data:'+varToStr(retjs.Field['data'].Value)+', varIsEmpty: '+ Data);
+    //Data := retjs.Field['data'].Value;
+    //MainOutMessage('[Log] data:'+varToStr(retjs.Field['data'].Value)+', varIsEmpty: '+ Data);
 
-    if (retjs.IndexOfName('data') >= 0) and (retjs.IndexOfName('status') >= 0) then
+    if (retjs.IndexOfName('data') >= 0) and (retjs.IndexOfName('status') >= 0)
+      then
     begin
 
-        //当status=0时验证成功，否则验证失败。
-      if (retjs.Field['status'].Value = 0) then // and (not varIsEmpty(retjs.Field['data'].Value))
+      //当status=0时验证成功，否则验证失败。
+      if (retjs.Field['status'].Value = 0) then
+        // and (not varIsEmpty(retjs.Field['data'].Value))
       begin
 
         datajs := retjs.Field['data'] as TlkJSONobject;
         if not assigned(datajs) then
         begin
-          MainOutMessage('[Error] YingYongHui Login Verify Failed. Response Data error. respData: ' + respData);
+          MainOutMessage('[Error] YingYongHui Login Verify Failed. Response Data error. respData: '
+            + respData);
           exit;
         end;
 
@@ -5082,13 +4668,14 @@ end;
 procedure TForm1.YYHPayVerifyBtnClick(Sender: TObject);
 const
   //西游的参数
-  YINGYONGHUI_PUBLIC_KEY = 'MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCrw2xnHc/3EUMZoaVfPyh8bzEV3ZbrOQLiJTbfkfLQAUiTt6uzVj2OK5GOq1n+P5CSFIPCpn8mOQGeWWnBkLF+cpFi0WNn5gADnFzPSF3CXyg2KAqybSV0HZaA653CtJ7krq6cxgHm8aEnXIegkq9DeImiJfluvbVj+8nTOME1YQIDAQAB';
+  YINGYONGHUI_PUBLIC_KEY =
+    'MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCrw2xnHc/3EUMZoaVfPyh8bzEV3ZbrOQLiJTbfkfLQAUiTt6uzVj2OK5GOq1n+P5CSFIPCpn8mOQGeWWnBkLF+cpFi0WNn5gADnFzPSF3CXyg2KAqybSV0HZaA653CtJ7krq6cxgHm8aEnXIegkq9DeImiJfluvbVj+8nTOME1YQIDAQAB';
 var
-//  cporderid: string; // 商户订单号
+  //  cporderid: string; // 商户订单号
   transid: string; // 酷派交易流水号
-//  appuserid: string;  //  用户在商户应用的唯一标识 UserId
-//  appid: string;  // 游戏id
-//  waresid: Integer; //商品编号
+  //  appuserid: string;  //  用户在商户应用的唯一标识 UserId
+  //  appid: string;  // 游戏id
+  //  waresid: Integer; //商品编号
   money: Double; // 交易金额
   result: Integer; // 交易结果
   cpprivate: string; // 商户私有信息
@@ -5110,45 +4697,51 @@ begin
   //失败：transdata={"code":"1001","errmsg":"签名验证失败"}
   try
     retList := TStringList.Create;
-      //第一个参数是分隔符; 第二个参数是开头被忽略的字符
-    ExtractStrings(['&'], [], PChar(Data), retList); //ExtractStrings能避免空格也被视作分隔符的bug
+    //第一个参数是分隔符; 第二个参数是开头被忽略的字符
+    ExtractStrings(['&'], [], PChar(Data), retList);
+    //ExtractStrings能避免空格也被视作分隔符的bug
 
     transdata := retList.Values['transdata'];
     sign := retList.Values['sign'];
-    sign := StringReplace(sign, ' ', '+', [rfReplaceAll]); //替换字符串中所有的空格为+
+    sign := StringReplace(sign, ' ', '+', [rfReplaceAll]);
+    //替换字符串中所有的空格为+
     MainOutMessage('transdata: ' + transdata + ', sign: ' + sign);
 
     if (transdata = '') or (sign = '') then
     begin
-      MainOutMessage('[Error] process YingYongHui Pay Result Failed. Purchase Failed! errmsg: ' + retList.Values['errmsg'] +
+      MainOutMessage('[Error] process YingYongHui Pay Result Failed. Purchase Failed! errmsg: '
+        + retList.Values['errmsg'] +
         ', respData: ' + Data);
       retList.Free;
       exit;
     end;
-      //retList.Free;
+    //retList.Free;
 
     if not RsaMd5.RsaMd5Verify(transdata, YINGYONGHUI_PUBLIC_KEY, sign) then
     begin
       retjs := TlkJSON.ParseText(transdata) as TlkJSONobject;
       if not assigned(retjs) then
       begin
-        MainOutMessage('[Error] process YingYongHui Pay Result Failed. Return Data error. transdata: ' + retList.Values['transdata'] +
+        MainOutMessage('[Error] process YingYongHui Pay Result Failed. Return Data error. transdata: '
+          + retList.Values['transdata'] +
           ', respData: ' + Data);
         exit;
       end;
 
-        {"transtype":0,"cporderid":"1","transid":"2","appuserid":"test","appid":"3","waresid":
-        31,"feetype":4,"money":5.00, "currency":"RMB", "result":0, "transtime":"2012-12-12
-        12:11:10","cpprivate":"test","paytype":1}
+      {"transtype":0,"cporderid":"1","transid":"2","appuserid":"test","appid":"3","waresid":
+      31,"feetype":4,"money":5.00, "currency":"RMB", "result":0, "transtime":"2012-12-12
+      12:11:10","cpprivate":"test","paytype":1}
 
-      if (retjs.IndexOfName('transid') >= 0) and (retjs.IndexOfName('appid') >= 0) and (retjs.IndexOfName('money') >= 0)
-        and (retjs.IndexOfName('result') >= 0) and (retjs.IndexOfName('cpprivate') >= 0) then
+      if (retjs.IndexOfName('transid') >= 0) and (retjs.IndexOfName('appid') >=
+        0) and (retjs.IndexOfName('money') >= 0)
+        and (retjs.IndexOfName('result') >= 0) and
+        (retjs.IndexOfName('cpprivate') >= 0) then
       begin
-         // cporderid := retjs['cporderid'].value;
+        // cporderid := retjs['cporderid'].value;
         transid := retjs['transid'].value; //第三方订单号
-         // appuserid := retjs['appuserid'].value;
-         // appid := retjs['appid'].value;
-         // waresid := retjs['waresid'].value;
+        // appuserid := retjs['appuserid'].value;
+        // appid := retjs['appid'].value;
+        // waresid := retjs['waresid'].value;
         money := retjs['money'].value;
         result := retjs['result'].value;
         cpprivate := retjs['cpprivate'].value;
@@ -5162,32 +4755,36 @@ begin
 
         if result = 0 then //交易成功
         begin
-            //验证CallbackInfo
+          //验证CallbackInfo
 
-
-          MainOutMessage('[Log] process YingYongHui Pay Result Success. 验证CallbackInfo！ money: ' + FloatToStr(money));
+          MainOutMessage('[Log] process YingYongHui Pay Result Success. 验证CallbackInfo！ money: '
+            + FloatToStr(money));
         end
         else
         begin
-          MainOutMessage('[Error] process YingYongHui Pay Result Failed. 交易失败！ respData: ' + Data);
+          MainOutMessage('[Error] process YingYongHui Pay Result Failed. 交易失败！ respData: '
+            + Data);
         end;
 
       end
       else
       begin
-        MainOutMessage('[Error] process YingYongHui Pay Result Failed. Parameter not Exist! respData: ' + Data);
+        MainOutMessage('[Error] process YingYongHui Pay Result Failed. Parameter not Exist! respData: '
+          + Data);
       end;
 
     end
     else
     begin
-      MainOutMessage('[Error] process YingYongHui Pay Result Failed. 验证签名失败！ transdata: ' + transdata + ', sign: ' + sign);
+      MainOutMessage('[Error] process YingYongHui Pay Result Failed. 验证签名失败！ transdata: '
+        + transdata + ', sign: ' + sign);
     end;
     retjs.Free;
 
   except on E: Exception do
     begin
-      MainOutMessage('[Error] process YingYongHui Pay Result Failed. unexpect exception! error. respData: ' + Data);
+      MainOutMessage('[Error] process YingYongHui Pay Result Failed. unexpect exception! error. respData: '
+        + Data);
       retjs.Free;
       Exit;
     end;
@@ -5197,7 +4794,7 @@ end;
 
 procedure TForm1.AIYouXiLoginBtnClick(Sender: TObject);
 const
-    //以下是刀塔参数
+  //以下是刀塔参数
   AIYOUXI_LOGIN_URL = 'https://open.play.cn/oauth/token';
   AIYOUXI_CLIENT_ID = '59969702';
   AIYOUXI_CLIENT_SECRET = 'b900ae2f68894597a61538906371b9cf';
@@ -5218,7 +4815,8 @@ begin
     jsdata := TlkJSON.ParseText(Data) as TlkJSONobject;
     if not assigned(jsdata) then
     begin
-      MainOutMessage('[Error] AiYouXi Login Request Failed. Client Data error. Data: ' + Data);
+      MainOutMessage('[Error] AiYouXi Login Request Failed. Client Data error. Data: '
+        + Data);
       exit;
     end;
     //http://api.appchina.com/appchina-usersdk/user/v2/get.json?login_id=1&login_key=3c480af8&ticket=926d1cc2-1c66-4dcf-b0df-13ba294c9107%20%7F%C2%A0
@@ -5228,12 +4826,15 @@ begin
       timestamp := IntToStr(DateTimeToUnix(Now) - 8 * 60 * 60);
 
       //签名顺序：timestamp+sign_method+client_secret+client_id+version
-      sign := MD5(UTF8Encode(timestamp + 'MD5' + AIYOUXI_CLIENT_SECRET + AIYOUXI_CLIENT_ID + AIYOUXI_VERSION));
+      sign := MD5(UTF8Encode(timestamp + 'MD5' + AIYOUXI_CLIENT_SECRET +
+        AIYOUXI_CLIENT_ID + AIYOUXI_VERSION));
 
       {client_id=XXX&client_secret=XXX&code=XXX&grant_type=authorization_code&sign_method=MD5&timestamp=XXX
       &sign_sort=timestamp%26sign_method%26client_secret%26client_id%26version&signature=XXX&version=XXX}
-      url := AIYOUXI_LOGIN_URL + '?client_id=' + AIYOUXI_CLIENT_ID + '&client_secret=' + AIYOUXI_CLIENT_SECRET + '&code=' + Token
-        + '&grant_type=authorization_code&sign_method=MD5' + '&timestamp=' + timestamp + '&sign_sort=timestamp%26sign_method%26client_secret%26client_id%26version'
+      url := AIYOUXI_LOGIN_URL + '?client_id=' + AIYOUXI_CLIENT_ID +
+        '&client_secret=' + AIYOUXI_CLIENT_SECRET + '&code=' + Token
+        + '&grant_type=authorization_code&sign_method=MD5' + '&timestamp=' +
+        timestamp + '&sign_sort=timestamp%26sign_method%26client_secret%26client_id%26version'
         + '&signature=' + sign + '&version=' + AIYOUXI_VERSION;
       MainOutMessage('请求：' + url + SLineBreak);
 
@@ -5241,7 +4842,8 @@ begin
       MainOutMessage('返回结果：' + respData + SLineBreak);
     end
     else
-      MainOutMessage('[Error] AiYouXi Login Request Failed. Client Data error: Parameter is not Exists! Data: ' + Data);
+      MainOutMessage('[Error] AiYouXi Login Request Failed. Client Data error: Parameter is not Exists! Data: '
+        + Data);
 
   except on E: Exception do
     begin
@@ -5253,13 +4855,15 @@ begin
   end;
   jsdata.Free;
 
-  respData := '{"scope":"权限","re_expires_in":"15552000","user_id":"74006459","token_type":"Bearer","expires_in":5184000,"refresh_token":"b703dd5c6d8f7ec48eb85095cf9fb4a7","access_token":"8c968cde45e2436f5ccfc9a0084c8d94","login_type":"1"}';
+  respData :=
+    '{"scope":"权限","re_expires_in":"15552000","user_id":"74006459","token_type":"Bearer","expires_in":5184000,"refresh_token":"b703dd5c6d8f7ec48eb85095cf9fb4a7","access_token":"8c968cde45e2436f5ccfc9a0084c8d94","login_type":"1"}';
   //登陆验证
   try
     retjs := TlkJSON.ParseText(respData) as TlkJSONobject;
     if not assigned(retjs) then
     begin
-      MainOutMessage('[Error] AiYouXi Login Verify Failed. Response Data error. respData: ' + respData);
+      MainOutMessage('[Error] AiYouXi Login Verify Failed. Response Data error. respData: '
+        + respData);
       exit;
     end;
 
@@ -5278,7 +4882,8 @@ begin
 
   except on E: Exception do
     begin
-      MainOutMessage('[Error] AiYouXi Login Verify Failed. unexpect exception! error. respData: ' + respData);
+      MainOutMessage('[Error] AiYouXi Login Verify Failed. unexpect exception! error. respData: '
+        + respData);
       retjs.Free;
       Exit;
     end;
@@ -5293,26 +4898,32 @@ var
   Data: string;
   cp_order_id: string; // 	CP业务流水号（32位以内不含特殊字符）-(IF1-2)
   correlator: string; // 	爱游戏平台流水号（32位以内）-(IF1-2)
-  method: string; // 	固定值 "check" - 短信请求扣费，"callback" -扣费成功回调-(IF1-2)
-  sign: string; // 	MD5(cp_order_id+correlator+result_code+fee+paytype+method+appKey)-(IF1-2)
+  method: string;
+  // 	固定值 "check" - 短信请求扣费，"callback" -扣费成功回调-(IF1-2)
+  sign: string;
+  // 	MD5(cp_order_id+correlator+result_code+fee+paytype+method+appKey)-(IF1-2)
   version: string; // 	回调接口版本号，当前为1。-(IF1-2)
 
   order_time: string; // 订单时间戳，14位时间格式(yyyyMMddHHmmss)-(IF1)
-  result_code: string; //   00为扣费成功，其他 状态码均为扣费不成功请勿发放道具-(IF2)
-  fee: string; //   计费金额，单位：元，服务器端请务必自行校验订购金额和计费金额是否一致-(IF2)
+  result_code: string;
+  //   00为扣费成功，其他 状态码均为扣费不成功请勿发放道具-(IF2)
+  fee: string;
+  //   计费金额，单位：元，服务器端请务必自行校验订购金额和计费金额是否一致-(IF2)
   pay_type: string; // 	计费类型，smsPay：短代；alipay：支付宝；ipay：爱贝-(IF2)
 
   retList: TStringList;
   retData, mySign, accountInfo, money: string;
   retCode: Integer;
 begin
-  Data := 'method=check&cp_order_id=1398232&correlator=20329021&sign=oijkuguiyttydfre5656' +
+  Data := 'method=check&cp_order_id=1398232&correlator=20329021&sign=oijkuguiyttydfre5656'
+    +
     '&version=1&result_code=00&pay_type=ipay&fee=1';
   try
     retCode := 1; // 0-成功/同意，1-失败/不同意
     retList := TStringList.Create;
-      //第一个参数是分隔符; 第二个参数是开头被忽略的字符
-    ExtractStrings(['&'], [], PChar(Data), retList); //ExtractStrings能避免空格也被视作分隔符的bug
+    //第一个参数是分隔符; 第二个参数是开头被忽略的字符
+    ExtractStrings(['&'], [], PChar(Data), retList);
+    //ExtractStrings能避免空格也被视作分隔符的bug
 
     method := retList.Values['method'];
     cp_order_id := retList.Values['cp_order_id'];
@@ -5322,26 +4933,30 @@ begin
 
     MainOutMessage('[Log] request method: ' + method);
 
-    if (trim(method) = '') or (trim(cp_order_id) = '') or (trim(correlator) = '') or (trim(sign) = '') then // or (trim(version)='') then
+    if (trim(method) = '') or (trim(cp_order_id) = '') or (trim(correlator) = '')
+      or (trim(sign) = '') then // or (trim(version)='') then
     begin
       MainOutMessage(format('[Error] process AiYouXi Pay Result Failed. Request Data Error: One or more Parameter not exists! Data: %s', [Data]));
       Exit;
     end;
 
-      //两个验证接口，详见：http://180.96.63.72/Documents/PaySDK.html#Title3_3
+    //两个验证接口，详见：http://180.96.63.72/Documents/PaySDK.html#Title3_3
     if method = 'check' then //短信扣费确认
     begin
       order_time := retList.Values['order_time'];
 
-        //MD5(cp_order_id+correlator+order_time+method+appKey)
-      mySign := MD5(UTF8Encode(cp_order_id + correlator + order_time + method + AIYOUXI_APP_KEY));
-      MainOutMessage('signStr: ' + cp_order_id + correlator + order_time + method + AIYOUXI_APP_KEY
+      //MD5(cp_order_id+correlator+order_time+method+appKey)
+      mySign := MD5(UTF8Encode(cp_order_id + correlator + order_time + method +
+        AIYOUXI_APP_KEY));
+      MainOutMessage('signStr: ' + cp_order_id + correlator + order_time + method
+        + AIYOUXI_APP_KEY
         + ', mySign: ' + mySign);
 
       if sign = mySign then
       begin
         retCode := 0;
-        order_time := FormatdateTime('yyyymmddhhmmss', Now); //返回数据需要获取当前系统时间
+        order_time := FormatdateTime('yyyymmddhhmmss', Now);
+        //返回数据需要获取当前系统时间
 
         accountInfo := 'UserID|ServerID'; //网游游戏账号信息需要另外获取
         money := '1'; //计费金额
@@ -5370,8 +4985,10 @@ begin
       pay_type := retList.Values['pay_type'];
 
       //MD5(cp_order_id+correlator+result_code+fee+paytype+method+appKey)
-      sign := MD5(UTF8Encode(cp_order_id + correlator + result_code + fee + pay_type + method + AIYOUXI_APP_KEY));
-      MainOutMessage('signStr: ' + cp_order_id + correlator + result_code + fee + pay_type + method + AIYOUXI_APP_KEY
+      sign := MD5(UTF8Encode(cp_order_id + correlator + result_code + fee +
+        pay_type + method + AIYOUXI_APP_KEY));
+      MainOutMessage('signStr: ' + cp_order_id + correlator + result_code + fee
+        + pay_type + method + AIYOUXI_APP_KEY
         + ', mySign: ' + mySign);
 
       if sign = mySign then
@@ -5392,14 +5009,15 @@ begin
     end
     else
     begin
-         //未知方法 method
+      //未知方法 method
       MainOutMessage(format('[Error] process AiYouXi Pay Result Failed. 所请求方法不存在！ Method: %s, Data: %s',
         [method, Data]));
     end;
 
   except on E: Exception do
     begin
-      MainOutMessage('[Error] process YingYongHui Pay Result Failed. unexpect exception! error. respData: ' + Data);
+      MainOutMessage('[Error] process YingYongHui Pay Result Failed. unexpect exception! error. respData: '
+        + Data);
       Exit;
     end;
   end;
@@ -5418,10 +5036,10 @@ var
   id: Int64;
   post: string;
 begin
-//豌豆荚的 "sid":"ssh1wndj86ecfbe86d5b461483d3f98c9b666a63158184"
-//UC 登录成功: ssh1game3edb9a212864407a823e293cc1777c46177926
+  //豌豆荚的 "sid":"ssh1wndj86ecfbe86d5b461483d3f98c9b666a63158184"
+  //UC 登录成功: ssh1game3edb9a212864407a823e293cc1777c46177926
 
-  //url := 'http://sdk.g.uc.cn/cp/account.verifySession';
+    //url := 'http://sdk.g.uc.cn/cp/account.verifySession';
   url := 'http://sdk.test4.9game.cn/cp/account.verifySession';
 
   gamejs := TlkJSONobject.Create();
@@ -5456,7 +5074,6 @@ begin
   //,"data":{"accountId":"229777554","nickName":"","creator":"WDJ"}}
 end;
 
-
 procedure TForm1.AliOrderBtnClick(Sender: TObject);
 const
   ALI_API_KEY = 'f350c8a80c728eadc88fa36c3250e232';
@@ -5474,15 +5091,18 @@ o":"VXNlcklEPThfNTFAMTY1Jkl0ZW1JRD0xJkJpbGxJRD0xNDgyOTI0OTAzMDAwMCZTZXJ2ZXJJRD0y
 
   accountId := '5f30b4af0bc5c7322bd10558ad5ece2b';
   amount := 600;
-  callbackInfo := 'VXNlcklEPThfNTFAMTY1Jkl0ZW1JRD0xJkJpbGxJRD0xNDgyOTI0OTAzMDAwMCZTZXJ2ZXJJRD0y' + #13#10;
-  cpOrderId := '14829249030000'; //FormatDateTime('yyyymmddhhnnss',now());//测试时使用当前时间为订单号.
+  callbackInfo := 'VXNlcklEPThfNTFAMTY1Jkl0ZW1JRD0xJkJpbGxJRD0xNDgyOTI0OTAzMDAwMCZTZXJ2ZXJJRD0y'
+    + #13#10;
+  cpOrderId := '14829249030000';
+  //FormatDateTime('yyyymmddhhnnss',now());//测试时使用当前时间为订单号.
 
-  //删除构造callBackInfo产生的换行
+//删除构造callBackInfo产生的换行
   callbackInfo := StringReplace(callbackInfo, #13, '', [rfReplaceAll]);
   callbackInfo := StringReplace(callbackInfo, #10, '', [rfReplaceAll]);
 
   //保留2位小数
-  signStr := 'accountId=' + accountId + 'amount=' + formatfloat('0.00', amount / 100) + 'callbackInfo=' + callbackInfo + 'cpOrderId=' + cpOrderId
+  signStr := 'accountId=' + accountId + 'amount=' + formatfloat('0.00', amount /
+    100) + 'callbackInfo=' + callbackInfo + 'cpOrderId=' + cpOrderId
     + ALI_API_KEY;
 
   //C#中\n = Delphi中#10, #13 - 回车, #10 - 换行
@@ -5492,7 +5112,6 @@ o":"VXNlcklEPThfNTFAMTY1Jkl0ZW1JRD0xJkJpbGxJRD0xNDgyOTI0OTAzMDAwMCZTZXJ2ZXJJRD0y
   sign := MD5(signStr);
 
   MainOutMessage('[Log] ALi signStr: ' + signStr + ', sign: ' + sign);
-
 
   //支付回调
   {"sign":"217bfc8631e84523ad24b21e85f2b2d5",
@@ -5525,30 +5144,37 @@ begin
     jsdata := TlkJSON.ParseText(Data) as TlkJSONobject;
     if not assigned(jsdata) then
     begin
-      MainOutMessage('[Error] MeiZu Login Request Failed. Client Data error. Data: ' + Data);
+      MainOutMessage('[Error] MeiZu Login Request Failed. Client Data error. Data: '
+        + Data);
       exit;
     end;
     //http://api.appchina.com/appchina-usersdk/user/v2/get.json?login_id=1&login_key=3c480af8&ticket=926d1cc2-1c66-4dcf-b0df-13ba294c9107%20%7F%C2%A0
-    if (jsdata.IndexOfName('session') >= 0) and (jsdata.IndexOfName('mUid') >= 0) then
+    if (jsdata.IndexOfName('session') >= 0) and (jsdata.IndexOfName('mUid') >= 0)
+      then
     begin
       Token := jsdata.Field['session'].Value;
       user_id := jsdata.Field['mUid'].Value;
 
-       //得到十三位的时间戳
+      //得到十三位的时间戳
       GetSystemTime(SysTime);
-      timestamp := FormatFloat('#', CompToDouble(TimeStampToMSecs(DateTimeToTimeStamp(SystemTimeToDateTime(SysTime)))) - TimeStampToMSecs(DateTimeToTimeStamp(StrToDateTime('1970/1/1'))));
+      timestamp := FormatFloat('#',
+        CompToDouble(TimeStampToMSecs(DateTimeToTimeStamp(SystemTimeToDateTime(SysTime)))) - TimeStampToMSecs(DateTimeToTimeStamp(StrToDateTime('1970/1/1'))));
 
       //sign=MD5(app_id=appId&session_id=session_id&ts=时间戳&uid=魅族用户ID:appsecret)
-      sign := MD5(UTF8Encode('app_id=' + MZ_APP_ID + '&session_id=' + Token + '&ts=' + timestamp + '&uid=' + user_id + ':' + MZ_APP_SECRET));
+      sign := MD5(UTF8Encode('app_id=' + MZ_APP_ID + '&session_id=' + Token +
+        '&ts=' + timestamp + '&uid=' + user_id + ':' + MZ_APP_SECRET));
 
-      PostData := 'app_id=' + MZ_APP_ID + '&session_id=' + Token + '&uid=' + user_id + '&ts=' + timestamp + '&sign_type=md5&sign=' + sign;
+      PostData := 'app_id=' + MZ_APP_ID + '&session_id=' + Token + '&uid=' +
+        user_id + '&ts=' + timestamp + '&sign_type=md5&sign=' + sign;
       MainOutMessage('请求PostData：' + PostData + SLineBreak);
 
-      respData := Utf8ToAnsi(HttpHelper.HttpsPost(MZ_LOGIN_URL, PostData, Header));
+      respData := Utf8ToAnsi(HttpHelper.HttpsPost(MZ_LOGIN_URL, PostData,
+        Header));
       MainOutMessage('返回结果：' + respData + SLineBreak);
     end
     else
-      MainOutMessage('[Error] MeiZu Login Request Failed. Client Data error: Parameter is not Exists! Data: ' + Data);
+      MainOutMessage('[Error] MeiZu Login Request Failed. Client Data error: Parameter is not Exists! Data: '
+        + Data);
 
   except on E: Exception do
     begin
@@ -5566,7 +5192,8 @@ begin
     retjs := TlkJSON.ParseText(respData) as TlkJSONobject;
     if not assigned(retjs) then
     begin
-      MainOutMessage('[Error] MeiZu Login Verify Failed. Response Data error. respData: ' + respData);
+      MainOutMessage('[Error] MeiZu Login Verify Failed. Response Data error. respData: '
+        + respData);
       exit;
     end;
 
@@ -5581,7 +5208,8 @@ begin
       end
       else
       begin
-        MainOutMessage(format('[Error] MeiZu Login Verify Failed. respData: %s', [respData]));
+        MainOutMessage(format('[Error] MeiZu Login Verify Failed. respData: %s',
+          [respData]));
       end;
 
     end
@@ -5593,7 +5221,8 @@ begin
 
   except on E: Exception do
     begin
-      MainOutMessage('[Error] MeiZu Login Verify Failed. unexpect exception! error. respData: ' + respData);
+      MainOutMessage('[Error] MeiZu Login Verify Failed. unexpect exception! error. respData: '
+        + respData);
       retjs.Free;
       Exit;
     end;
@@ -5643,19 +5272,25 @@ begin
   product_per_price := '0.01'; //  游戏道具单价，默认值：总金额
   total_price := '0.01'; //  总金额
   pay_type := '0'; //  支付方式，默认值：”0”（即定额支付）
-  user_info := 'tnyoo'; //'Happy Birthday! From Future, I am You.';//  CP 自定义信息，默认值：””
+  user_info := 'tnyoo';
+  //'Happy Birthday! From Future, I am You.';//  CP 自定义信息，默认值：””
   sign_type := 'md5'; //  签名算法，默认值：”md5”(不能为空)
 
   GetSystemTime(SysTime);
   //得到十三位的时间戳
-  timestamp := FormatFloat('#', CompToDouble(TimeStampToMSecs(DateTimeToTimeStamp(SystemTimeToDateTime(SysTime)))) - TimeStampToMSecs(DateTimeToTimeStamp(StrToDateTime('1970/1/1'))));
+  timestamp := FormatFloat('#',
+    CompToDouble(TimeStampToMSecs(DateTimeToTimeStamp(SystemTimeToDateTime(SysTime)))) - TimeStampToMSecs(DateTimeToTimeStamp(StrToDateTime('1970/1/1'))));
   timestamp := '1483087434330';
 
   //签名字符串的顺序一定不能乱
-  signstr := 'app_id=' + MZ_APP_ID + '&buy_amount=' + buy_amount + '&cp_order_id=' + cp_order_id + '&create_time=' + timestamp +
-    '&pay_type=' + pay_type + '&product_body=' + product_body + '&product_id=' + product_id + '&product_per_price=' +
-    product_per_price + '&product_subject=' + product_subject + '&product_unit=' + product_unit + '&total_price=' +
-    total_price + '&uid=' + uid + '&user_info=' + user_info + ':' + MZ_APP_SECRET;
+  signstr := 'app_id=' + MZ_APP_ID + '&buy_amount=' + buy_amount +
+    '&cp_order_id=' + cp_order_id + '&create_time=' + timestamp +
+    '&pay_type=' + pay_type + '&product_body=' + product_body + '&product_id=' +
+    product_id + '&product_per_price=' +
+    product_per_price + '&product_subject=' + product_subject + '&product_unit='
+    + product_unit + '&total_price=' +
+    total_price + '&uid=' + uid + '&user_info=' + user_info + ':' +
+    MZ_APP_SECRET;
 
   sign := MD5(AnsiToUtf8(signstr));
   sign := MD5(AnsiToUtf8('中国'));
@@ -5670,7 +5305,8 @@ const
 var
   Data, signStr, locSign: string;
 
-  notify_time: string; //支付成功时间：CP 需要保存该时间进行后续的对账，对账时间以支付成功时间为统计
+  notify_time: string;
+  //支付成功时间：CP 需要保存该时间进行后续的对账，对账时间以支付成功时间为统计
   notify_id: string; //  Y  通知 id
   order_id: string; //  Y  订单 id
   app_id: string; //  Y  应用 id
@@ -5682,7 +5318,8 @@ var
   buy_amount: string; //  N  购买数量
   product_per_price: string; //  n  产品单价
   total_price: string; //  Y  购买总价
-  trade_status: string; //  Y  交易状态：1：待支付（订单已创建）2：支付中3：已支付4：取消订单5：未知异常取消订单
+  trade_status: string;
+  //  Y  交易状态：1：待支付（订单已创建）2：支付中3：已支付4：取消订单5：未知异常取消订单
   create_time: string; //  Y  订单时间
   pay_time: string; //  Y  支付时间
   pay_type: string; //  N  支付类型：1  不定金额充值，0  购买
@@ -5695,15 +5332,16 @@ var
 begin
   Data := PayDataEdit.Text;
 
-{app_id=464013&buy_amount=1&cp_order_id=2680&create_time=1413776092239&notify_id=1413776113206&notify_ti
-me=2014-10-2011:35:13&order_id=14102000000298934&partner_id=5458428&pay_time=1413776113219&pay_type=0
-&product_id=2&product_per_price=1.0&product_unit=枚&total_price=1.0&trade_status=3&uid=9700193&user_info=这里填写游戏相
-关附加信息，发货时将回传该字段:appSecret   }
+  {app_id=464013&buy_amount=1&cp_order_id=2680&create_time=1413776092239&notify_id=1413776113206&notify_ti
+  me=2014-10-2011:35:13&order_id=14102000000298934&partner_id=5458428&pay_time=1413776113219&pay_type=0
+  &product_id=2&product_per_price=1.0&product_unit=枚&total_price=1.0&trade_status=3&uid=9700193&user_info=这里填写游戏相
+  关附加信息，发货时将回传该字段:appSecret   }
 
   try
     retList := TStringList.Create;
     //第一个参数是分隔符; 第二个参数是开头被忽略的字符
-    ExtractStrings(['&'], [], PChar(HttpDecode(Data)), retList); //ExtractStrings能避免空格也被视作分隔符的bug
+    ExtractStrings(['&'], [], PChar(HttpDecode(Data)), retList);
+    //ExtractStrings能避免空格也被视作分隔符的bug
     retList.Sort;
 
     signStr := '';
@@ -5715,14 +5353,16 @@ me=2014-10-2011:35:13&order_id=14102000000298934&partner_id=5458428&pay_time=141
       if signStr = '' then
         signStr := retList.Names[i] + '=' + retList.Values[retList.Names[i]]
       else
-        signStr := signStr + '&' + retList.Names[i] + '=' + retList.Values[retList.Names[i]];
+        signStr := signStr + '&' + retList.Names[i] + '=' +
+          retList.Values[retList.Names[i]];
 
       //MainOutMessage(retList.Names[i] + '  -->  ' + retList.Values[retList.Names[i]]);
     end;
     signStr := signStr + ':' + MZ_APP_SECRET;
 
     locSign := LowerCase(MD5(AnsiToUtf8(signStr)));
-    MainOutMessage('[Log] MeiZu Pay Verify signStr: ' + signStr + ', sign: ' + locSign);
+    MainOutMessage('[Log] MeiZu Pay Verify signStr: ' + signStr + ', sign: ' +
+      locSign);
 
     sign := retList.Values['sign'];
     trade_status := retList.Values['trade_status'];
@@ -5737,13 +5377,15 @@ me=2014-10-2011:35:13&order_id=14102000000298934&partner_id=5458428&pay_time=141
       total_price := retList.Values['total_price'];
       user_info := retList.Values['user_info']; //callbackInfo
 
-      MainOutMessage('[Log] MeiZu Pay Verify Success: total_price: ' + total_price);
+      MainOutMessage('[Log] MeiZu Pay Verify Success: total_price: ' +
+        total_price);
       //验证CallbackInfo，*需要校验回调的金额是否跟商品的真实价格一致：total_price 和 CP 创建订单时该订单的总金额是否一致。：
 
     end
     else
     begin
-      MainOutMessage('[Error] MeiZu Pay Verify Failed. 签名验证失败或未支付成功! sign: ' + sign + ', locSign: ' + locSign + '; Data: ' + Data);
+      MainOutMessage('[Error] MeiZu Pay Verify Failed. 签名验证失败或未支付成功! sign: '
+        + sign + ', locSign: ' + locSign + '; Data: ' + Data);
     end;
     retList.Free;
 
@@ -5762,7 +5404,8 @@ var
 
 begin
   GoogleOAuth2 := TGoogleOAuth2.Create;
-  GoogleOAuth2.RefreshAccessToken(googleAccessTokenJs); //传入Js对象，其中保存了access_token和有效时间
+  GoogleOAuth2.RefreshAccessToken(googleAccessTokenJs);
+  //传入Js对象，其中保存了access_token和有效时间
 end;
 
 procedure TForm1.GooglePayBtnClick(Sender: TObject);
@@ -5789,7 +5432,8 @@ begin
   begin
     access_token := googleAccessTokenJs.getString('access_token');
 
-    retStr := UTF8Decode(GoogleOAuth2.GetVerifyJson(PkgNameEdit.Text, ProductIdEdit.Text, PurchaseTokenEdit.Text, access_token));
+    retStr := UTF8Decode(GoogleOAuth2.GetVerifyJson(PkgNameEdit.Text,
+      ProductIdEdit.Text, PurchaseTokenEdit.Text, access_token));
     MainOutMessage('GetVerifiJson 返回结果：' + retStr + SLineBreak);
   end
   else
@@ -5805,6 +5449,573 @@ begin
    3、调用RefreshAccessToken刷新access_token为最新
    4、使用GetVerifyJson替换原来的BillVerify方法（DLL方法）
   }
+end;
+
+procedure TForm1.ReadXml(Node: IXMLNode; var List: TStringList);
+var
+  NodeList: IXMLNodeList;
+  myNode: IXMLNode;
+  strName: string;
+  i: Integer;
+
+begin
+  //MainOutMessage('in ReadXml');
+
+  if not Node.HasChildNodes then
+    Exit;
+  nodeList := node.ChildNodes;
+
+  for i := 0 to nodeList.Count - 1 do
+  begin
+    strName := nodeList[i].NodeName;
+    if nodeList[i].IsTextElement then //如果是元素
+    begin
+      List.Add(strName + '=' + NodeList[i].NodeValue); //解析出来的数据放入List
+      MainOutMessage(strName + '=' + NodeList[i].NodeValue);
+    end
+      //GV的节点解析
+    else if nodeList[i].HasAttribute('currency') and
+      nodeList[i].HasAttribute('nominal') then
+      //如果属性 <amount currency="IDR" nominal="150000"/>
+    begin
+      List.Add('currency=' + NodeList[i].Attributes['currency']);
+      //解析出来的数据放入List
+      List.Add('amount=' + NodeList[i].Attributes['nominal']);
+      //解析出来的数据放入List
+      MainOutMessage('currency=' + NodeList[i].Attributes['currency']);
+      MainOutMessage('amount=' + NodeList[i].Attributes['nominal']);
+    end
+    else if nodeList[i].HasChildNodes then //如果有子节点
+    begin
+      if NodeList[i].text <> '' then
+      begin
+        //List.Add(strName + '=' + NodeList[i].text); //解析出来的数据放入List
+        MainOutMessage(strName + '=' + NodeList[i].text);
+      end;
+
+      ReadXml(NodeList[i], List);
+    end
+
+  end;
+end;
+
+procedure TForm1.Button52Click(Sender: TObject);
+var
+  amount: Integer;
+begin
+  MainOutMessage('http://dev-id.gudangvoucher.com/payment.php?merchantid=70&amount=150000&'
+    +
+    'product=10%20FaceBook%20Credit&custom=FBorder23May12-123456&demo=1');
+  //amount
+  //product
+  //custom
+  amount := 144657700;
+  MainOutMessage('amount: ' + IntToStr(amount));
+end;
+
+procedure TForm1.GVPayVerifyBtnClick(Sender: TObject);
+var
+  Data: string;
+  retList: TStringList;
+
+  //读取xml参数
+  xmlDocument: IXMLDocument;
+  mainNode: IXMLNode;
+
+  reference: string; //订单号
+  //voucher_code: string; //
+  amount: string; //支付金额
+  currency: string; // 支付货币类型
+  status: string; // SUCCESS / FAIL
+  custom: string; //自定义信息
+
+begin
+  Data := 'data=%3Ctrans_doc%3E%3Cmerchant_id%3E403%3C%2Fmerchant_id%3E%3Cmerchant%3ECIBMall+Card%3C%2Fmerchant%3E%3Creference%3EGV35331562572546'
+    +
+    '%3C%2Freference%3E%3Camount+currency%3D%22IDR%22+nominal%3D%22150000%22%2F%3E%3Cpurpose%3E10+FaceBook+Credit%3C%2Fpurpose%3E%3Ccustom%3EFa' +
+    'aBorder23May1212345678%3C%2Fcustom%3E%3Cstatus%3EFAIL%3C%2Fstatus%3E%3C%2Ftrans_doc%3E';
+  Data := 'data=%3Ctrans_doc%3E%3Cmerchant_id%3E403%3C%2Fmerchant_id%3E%3Cmerchant%3ECIBMall+Card%3C%2Fmerchant%3E%3Creference%3EGV34531429874869%3C%2Freference%3E%3C'
+    +
+    'voucher_code%3Elj8Rf-giaSW-soxcC-tGtwX%3C%2Fvoucher_code%3E%3Camount+currency%3D%22IDR%22+nominal%3D%2213500%22%2F%3E%3Cpurpose%3E10+FaceqwBook+Credit%3C%2Fpurpose' +
+    '%3E%3Ccustom%3EFBorder7May1312348856%3C%2Fcustom%3E%3Cstatus%3ESUCCESS%3C%2Fstatus%3E%3C%2Ftrans_doc%3E';
+
+  Data := HTTPDecode(Data);
+  Data := StringReplace(Data, 'data=', '', []); //替换字符串中第一个 data=为空
+  MainOutMessage('Data: ' + Data);
+
+  //从返回的Xml中获取帐号标识：AccountID
+  retList := TStringList.Create;
+  try //异常处理，保证程序的稳定性，能够正常处理异常而不至于在发生异常的时候导致程序崩溃
+    xmlDocument := LoadXMLData(Data);
+    mainNode := xmlDocument.DocumentElement;
+    readXML(mainNode, retList);
+
+    reference := retList.Values['reference']; //订单号
+    amount := retList.Values['amount']; //支付金额
+    currency := retList.Values['currency']; // 支付货币类型
+    status := retList.Values['status']; // SUCCESS / FAIL
+    custom := retList.Values['custom']; //自定义信息
+
+    if status = 'SUCCESS' then
+    begin
+      MainOutMessage('支付成功! 金额：' + amount + ', 订单号：' + reference +
+        '，callbackInfo：' + custom);
+    end
+    else
+    begin
+      MainOutMessage('支付失败! ');
+    end;
+
+  except
+    on E: Exception do
+    begin
+      MainOutMessage('[Error] GV Pay Verify Failed. Response Data error: unknown exception: '
+        + E.Message + ' Data: ' + Data);
+    end;
+  end;
+
+end;
+
+procedure TForm1.AlipayOrdeBtnClick(Sender: TObject);
+const
+  APP_ID = '2016080400162673';
+  APP_PRIVATE_KEY = 'MIIEpAIBAAKCAQEAtYUKdMN9a8/V39apMTnAcen6JmQ1zXV1qGjf7Quu6tA65bbm8Bfsbx8PqcECwfP/tpoWavfpdRtO99o/kY0WCPRjPctAQL2D/vJTE5hW1dK5H4WAWqSpupB5I'
+    +
+    'mypyeBEHFTXEPnYFH5huQajG8uAnktI1jW7XKqTArRaoY3HH2iTLnT2ehi09b3jvl3juZ2/SZrgURl+hkVkwv+0OeOkwsLop+abeEip5WCOaq99huEHvcziuuTwY9C3roey67KKLhdEjO/t3n9w3G3Y' +
+    '485ylnUtKP/R2pxdpnZ8REuLeAkaEv5RnwiHZldrwN0FcYcIdSA828mq4Yj3UU3E/RM2YQIDAQABAoIBAQCLqSk6XY8KfIaaCpdzAHRJMTT+hOvAgTddtBNWVz7l/ADU7b0RzdZkSQnMGmz8vbdpz3S' +
+    'gKM6/A5vmp01xt5PUn/Qbf16YcTg12EyDLxrguZkl35m6JCdTHAWXrvOUF7FP+xbeQN04J2UY7zpgEFuNb29DIWRfD/68ffedhXBHgOkOfVgGB3giRczReu7U5K2c914LAYBK0NcYfImB/NZ2ZEwnhw' +
+    'klE4fT9g0E+3CQXytCm/0ruDEWWjxSCMcBaq+lCM2lelSoqIjRiZ8e+UgHkU3uSxlyCVrqAgW/JAYlGNC15/ANP9jiUv22h0jgJsTPHcRrdRnOOHANBNIvBQaBAoGBAO6gS3d7wTLYeJx4+EMt8cv6U' +
+    'jy07UJMtiD7mEe00jXLoo2vC8ZSLvANyB9B8DeoqXXXuVkyULLheKrnDNjo4WByjlO+CO4NukMotYElE+EVO98T6nIYVCEijQDfju9kaGtbjx3GZ/IQQw/lrNsHEvvGx6JmfE8Y0hoQGAftp6F1AoGB' +
+    'AMK8WaIReW58+K6ZzCOnUCWAkNacdZxhcDmJfMcPNcg41BD93/zEzWzMB+DeDYLQCyidNz1MrzmodxEQEx03+Whc+sXDsUttMfCGQkUZdkIOb/x82d+hnO9zUNmTO4wRhVv9NWq7bNk8BnfVJtO+u4H' +
+    '9VJCATSD0sIl6Smp4IZe9AoGBALdotRiNIh22jF2YDRl1gtfI+tR2K7Y9x+7p8k2LCdcXQUWtOVuhZzpTHXII+F2PYVCWEnwgVC5pZpnVJObDeBbtdb+f3LU8D+H2tCsjGHh0HaSEZjpzwJYHPGFjcz' +
+    'VE840wvnugN9yx6xmY6pcehNTIIEEOjJUu+q3VmOLfI2zRAoGAHedunESysRTf23AiuRboZ9nmZA6CwRD1euByGN9tEuInLrTNwLM4GIz8aLuwt3XbQNFjujYccm48WpJtXP9LfYtJtzTl9P8/u//iD' +
+    'Vprnpk4+Tzy+DSJNPwwXjkN2+SU5htsKIe/n1xoYd6Jp9qSUNPmOIp7TaRFt9bftpncDsECgYBPigXrRmocMG/SDWrWySrZw2B1dLuW6suj8aDN+jPufE3I7TbltVMZf7CxIcEykzPyDYn7oh4jQMiL' +
+    'KkVb74u3Gju1XAy79VGoboM0DqrJrP61cWKigZuwpFkWB7h9v249tQCJyzac3U3eVlKbnIf3Y0SaN16ddpqd4rcVX37bwA==';
+
+  ALIPAY_PUBLIC_KEY = 'MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAxvcUUIuarxuws7PCXt3X2iiovbRLc27LTvdRf/pGtP6Qd7MqWdKvGuqnVUAx3MMlYOUo23y'
+    +
+    'Ruse/V/JR0QqYU04wHWMZSgf8M6CZvX0bLdPaf7EAw8fMOZCJMI6i1styGHJSIkF58rjIpNYavUf3mdNv4JbX1UDEzdtw30tkgAdl9fwJLNCZFsg1KbWbj8heoeO1rFHr8Fw51' +
+    'tfZhA97mUxB7KU2rP7dVmlcqzXQQ8/EqxBcS4aigpT17EYL1+T4Ney+RuvNdAonGxtwIiOLC1uqCEiaqsD/tT1UN2SxxMwYiqJVL3aovu5GcelXvcadCwcmgXW9zXRLVXESBua8cwIDAQAB';
+
+var
+  aClass: Variant;
+  aliOrder: string;
+  subject, total_amount, our_trade_no, callbackInfo: string;
+  notify_url: string;
+
+begin
+  subject := '元宝元宝';
+  total_amount := OrderpriceEdit.Text;
+  our_trade_no := GetRandStr(10);
+
+  callbackInfo := EncodeString('UserID=' + '15_62@164' + '&ItemID=1&BillID=' +
+    our_trade_no + '&ServerID=1');
+  callbackInfo := StringReplace(callbackInfo, #13, '', [rfReplaceAll]);
+  callbackInfo := StringReplace(callbackInfo, #10, '', [rfReplaceAll]);
+  callbackInfo := HttpEncode(callbackInfo); //本参数必须进行UrlEncode
+
+  notify_url := 'http://182.254.244.236:3358/aliapppay';
+  //notify_url := 'http://121.52.203.124:3358/idwebpay';
+  MainOutMessage('our_trade_no：' + our_trade_no
+    + ', callbackInfo：' + callbackInfo);
+
+  aliOrder := AliAppPayUnit.AliAppPayGetOrder(APP_PRIVATE_KEY,
+    ALIPAY_PUBLIC_KEY,
+    subject, total_amount,
+    our_trade_no, notify_url, callbackInfo);
+
+  MainOutMessage('获取到的订单：' + aliOrder); //订单直接返回客户端，拉起支付
+
+end;
+
+procedure TForm1.AlipayVerifyBtnClick(Sender: TObject);
+const
+  ALIPAY_PUBLIC_KEY = 'MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAxvcUUIuarxuws7PCXt3X2iiovbRLc27LTvdRf/pGtP6Qd7MqWdKvGuqnVUAx3MMlYOUo23y'
+    +
+    'Ruse/V/JR0QqYU04wHWMZSgf8M6CZvX0bLdPaf7EAw8fMOZCJMI6i1styGHJSIkF58rjIpNYavUf3mdNv4JbX1UDEzdtw30tkgAdl9fwJLNCZFsg1KbWbj8heoeO1rFHr8Fw51' +
+    'tfZhA97mUxB7KU2rP7dVmlcqzXQQ8/EqxBcS4aigpT17EYL1+T4Ney+RuvNdAonGxtwIiOLC1uqCEiaqsD/tT1UN2SxxMwYiqJVL3aovu5GcelXvcadCwcmgXW9zXRLVXESBua8cwIDAQAB';
+var
+  Data: string;
+  aClass: Variant;
+  verifyResult: Boolean;
+
+begin
+
+  Data := AlipayEdit.Text;
+  Data := 'total_amount=99.00&buyer_id=2088102170237795&trade_no=2017022521001004790200085088&notify_time=2017-02-25+16%3A52%3A11&subject=%E5%85%83%E5'
+    +
+    '%AE%9D%E5%85%83%E5%AE%9D&sign_type=RSA2&buyer_logon_id=kut***%40sandbox.com&auth_app_id=2016080400162673&charset=utf-8&notify_type=trade_status_sy' +
+    'nc&invoice_amount=99.00&out_trade_no=20170225test233&trade_status=TRADE_SUCCESS&gmt_payment=2017-02-25+16%3A52%3A08&version=1.0&point_amount=0.00&' +
+    'sign=Jh78HFoe0Sja6fGiVhzdcrWnetkNtEfg%2BTEuVZNeZNxIC2z%2ByNFK9jOcZSYnt%2B37DBqzPt9CuVCt9Ynd0T9L9jke3xZwdx%2B4zW9jXYPEJh2IlM%2BUKkphOJSwWnxvoh3ZdUJ' +
+    'D%2BF7o%2  BG9S1Na6t9fCxh3XBObk3XJYlH0h3GUT0f%2BUjBwjoSg77f3EYybPb9s4DFrIAWxrMk5YtG1FxOc2HP%2BH%2F%2FoomT90w0KW4RYEWdL' +
+    '%2BnCA9gO504moLI1cosdJrD517BAoslu93SHi14Lebov9AEuKUpq152isuh9oojZTXs%2FEU9KiZU5XdfFORbctEOrVB0PZWmOmcEXvMPhuxFQ%3D%3D&gmt_create=2017-02-25+16%3A52' +
+    '%3A07&buyer_pay_amount=99.00&receipt_amount=99.00&passback_params=merchantBizType%253d3C%2526merchantBizNo%253d2016010101111&fund_bill_list=%5B%7B%' +
+    '22amount%22%3A%2299.00%22%2C%22fundChannel%22%3A%22ALIPAYACCOUNT%22%7D%5D&app_id=2016080400162673&seller_id=2088102169863750&notify_id=6dfa606b57597325bdbf8caf92e5331m3i&seller_email=wmaunk5878%40sandbox.com';
+
+  verifyResult := AliAppPayUnit.AliAppPayVerify(Data, ALIPAY_PUBLIC_KEY);
+  if verifyResult then
+    MainOutMessage('支付验证成功！')
+  else
+    MainOutMessage('支付验证失败！');
+
+end;
+
+function TForm1.postXml(const xmlstr, url: WideString): WideString;
+var
+  idHttp: TIdHTTP;
+  //sends: tstrings;
+  //IdEncoderMIME1: TIdEncoderMIME;
+
+  mStream: TMemoryStream;
+  poststr: string;
+
+begin
+  result := '';
+  mStream := TMemoryStream.Create;
+  try
+    idHttp := TIdHTTP.Create(nil);
+    idHttp.Request.ContentType := 'application/x-www-form-urlencoded';
+    {   IdEncoderMIME1 := TIdEncoderMIME.Create(nil);
+      sends := tstringlist.Create;
+
+      //
+      MainOutMessage('postXml: ' + IdEncoderMIME1.Encode(xmlstr));
+      sends.Add('data=' + IdEncoderMIME1.Encode(xmlstr));
+
+      result := idhttp.Post(url, sends);       }
+    poststr := AnsiString(xmlStr);
+    mStream.Write(poststr[1], length(poststr));
+    result := IdHttp.Post(url, mStream);
+  finally
+    mStream.Free;
+  end;
+  {  except
+     on E: Exception do
+     begin
+       result := e.Message;
+     end;
+   end;
+  idHttp.Free;
+   IdEncoderMIME1.Free;
+   sends.Free;       }
+
+end;
+
+function TForm1.WXAPPPAYReadXml(xmlStr: string): TStringList;
+var
+  //读取xml参数
+  NodeList: IXMLNodeList;
+  myNode: IXMLNode;
+  xmlDocument: IXMLDocument;
+  mainNode: IXMLNode;
+
+  strName: string;
+  i: Integer;
+  retList: TStringList;
+begin
+
+  try
+    xmlDocument := LoadXMLData(xmlStr);
+    mainNode := xmlDocument.DocumentElement;
+    retList := TStringList.Create;
+
+    if not mainNode.HasChildNodes then
+    begin
+      MainOutMessage('[Error] WXAPPPAYReadXml. 解析XML出错: 无子节点 xmlStr: ' +
+        xmlStr);
+      Exit;
+    end;
+    nodeList := mainNode.ChildNodes;
+
+    for i := 0 to nodeList.Count - 1 do
+    begin
+      strName := nodeList[i].NodeName;
+
+      if nodeList[i].HasChildNodes then //如果有子节点
+      begin
+        if NodeList[i].text <> '' then
+        begin
+          retList.Add(strName + '=' + NodeList[i].text); //解析出来的数据放入List
+          //MainOutMessage(strName + '=' + NodeList[i].text);
+        end;
+      end;
+
+    end;
+    Result := retList;
+
+  except
+    on E: Exception do
+    begin
+      MainOutMessage('[Error] WXAPPPAYReadXml. 解析XML出错: unknown exception: '
+        + E.Message + ' xmlStr: ' + xmlStr);
+    end;
+  end;
+
+end;
+
+procedure TForm1.WXPayOrderBtnClick(Sender: TObject);
+var
+  callbackInfo: string; //callbackInfo
+  body: string; //商品描述
+  out_trade_no: string; //订单号
+  spbill_create_ip: string; //用户ip
+  total_fee: string; //总金额： 分
+  orderInfo: string;
+
+begin
+  body := '瓜娃子';
+  out_trade_no := GetRandStr(10);
+  spbill_create_ip := '10.43.234.3'; //'192.168.21.216';
+  total_fee := '1';
+  callbackInfo := EncodeString('UserID=' + '15_62@164' + '&ItemID=1&BillID=' +
+    out_trade_no + '&ServerID=1');
+  callbackInfo := StringReplace(callbackInfo, #13, '', [rfReplaceAll]);
+  callbackInfo := StringReplace(callbackInfo, #10, '', [rfReplaceAll]);
+
+  orderInfo := WXAppPayUnit.WXAppPayGetOrder(body, out_trade_no,
+    spbill_create_ip, total_fee, callbackInfo);
+  MainOutMessage('orderInfo' + SLineBreak + orderInfo);
+
+end;
+
+procedure TForm1.WXPayVerifyBtnClick(Sender: TObject);
+var
+  Data: string;
+  payResult: string;
+
+begin
+  Data := '<xml>' +
+    '<appid><![CDATA[wx8b163c8fb479c29e]]></appid>' +
+    '<attach><![CDATA[TnyooCallbackInfo]]></attach>' +
+    '<bank_type><![CDATA[CFT]]></bank_type>' +
+    '<cash_fee><![CDATA[1]]></cash_fee>' +
+    '<fee_type><![CDATA[CNY]]></fee_type>' +
+    '<is_subscribe><![CDATA[N]]></is_subscribe>' +
+    '<mch_id><![CDATA[1444147502]]></mch_id>' +
+    '<nonce_str><![CDATA[6bx10r2s7iJSH4eN]]></nonce_str>' +
+    '<openid><![CDATA[o1B2B1ZTyDaRtkzuXeLEuuCPemhA]]></openid>' +
+    '<out_trade_no><![CDATA[ioW7pS58RC]]></out_trade_no>' +
+    '<result_code><![CDATA[SUCCESS]]></result_code>' +
+    '<return_code><![CDATA[SUCCESS]]></return_code>' +
+    '<sign><![CDATA[D417D44CB6E1FF32985358F7898D1A8B]]></sign>' +
+    '<time_end><![CDATA[20170317140910]]></time_end>' +
+    '<total_fee>1</total_fee>' +
+    '<trade_type><![CDATA[APP]]></trade_type>' +
+    '<transaction_id><![CDATA[4003772001201703173668708109]]></transaction_id>' +
+    '</xml>';
+
+  payResult := WXAppPayUnit.AliAppPayVerify(Data);
+  MainOutMessage('payResult:' + SLineBreak + payResult);
+
+end;
+
+procedure TForm1.testClick(Sender: TObject);
+var
+  UserID, ItemID, BillID, callbackInfo: string;
+  ServerID: byte;
+
+  //读取xml参数
+  xmlDocument: IXMLDocument;
+  mainNode: IXMLNode;
+  Data: string;
+  root: IXMLNode;
+  IdHttp: TIdHTTP;
+  mStream: TMemoryStream;
+  url, respstr, poststr: string;
+  strList: TStringList;
+  s, s1, s2: string;
+  key: string;
+begin
+  UserID := '29302';
+  ItemID := '60_Medals_Pack';
+  BillID := '20170615092209320';
+  ServerID := 1;
+  key := 'LGRnbEHmskcsvRXkZDRfBj3WKuLma6iF'; //32位hex加密密钥
+
+  s :=
+    'VXNlcklEPTE1XzEyOEA0MCZJdGVtSUQ9NjBfTWVkYWxzX1BhY2smQmlsbElEPTE0OTA5ODExNjUwMDAwJlNlcnZlcklEPTE=';
+  MainOutMessage('callbackInfo 0: ' + DecodeString(s));
+
+  //UserID=0_101@40&ItemID=vip_m_30days&BillID=14914723470000&ServerID=1
+  s := 'UserID=0_101@40&ItemID=vip_m_30days&BillID=14914723470000&ServerID=1';
+
+  s1 := xDex.EncryStrHex(s, key);
+  s2 := xDex.DecryStrHex(s1, key);
+  MainOutMessage('xDex.EncryStrHex: ' + s1);
+  MainOutMessage('xDex.DecryStrHex: ' + s2);
+  MainOutMessage('EncodeString: ' + EncodeString(s));
+
+  MainOutMessage('生成32位随机数: ' + SLineBreak + GetRandStr(32));
+  exit;
+
+  //Node的类型为 IXMLNode。
+  //现在有一个节点名称为 values 怎么取值？xml内容如下：
+
+  Data := '<values><![CDATA[valuename=blue]]></values>';
+  xmlDocument := LoadXMLData(Data);
+  mainNode := xmlDocument.DocumentElement;
+  if mainNode.HasChildNodes then
+    MainOutMessage(mainNode.text);
+
+end;
+
+procedure TForm1.UnionPayOrderBtnClick(Sender: TObject);
+var
+  order_id: string;
+  order_time: string;
+  order_amount: string; //价格，分
+  callbackInfo: string;
+  union_order_id: string;
+
+begin
+  {
+    UserID := '29302';
+    ItemID := '1';
+    BillID := '20160615092209320';
+    ServerID := 1;
+    }
+
+  order_id := FormatDateTime('yyyymmddhhnnssff', now()); //格式化时间
+  order_time := FormatDateTime('yyyymmddhhnnss', now()); //格式化时间
+  order_amount := '1';
+  callbackInfo := EncodeString('UserID=' + '15_62@164' + '&ItemID=1&BillID=' +
+    order_id + '&ServerID=1');
+  callbackInfo := StringReplace(callbackInfo, #13, '', [rfReplaceAll]);
+  callbackInfo := StringReplace(callbackInfo, #10, '', [rfReplaceAll]);
+
+  MainOutMessage('callbackInfo: ' + callbackInfo);
+
+  {callbackInfo :=
+    'VXNlcklEPTI5MzAyJkl0ZW1JRD0xJkJpbGxJRD0yMDE2MDYxNTA5MjIwOTMyMCZTZXJ2ZXJJRD0x==';
+  }
+  union_order_id := UnionAppPayUnit.UnionAppPayGetOrder(order_id, order_time,
+    order_amount, callbackInfo);
+
+  MainOutMessage('请求到订单号: ' + union_order_id);
+
+end;
+
+procedure TForm1.UnionPayVerifyBtnClick(Sender: TObject);
+var
+  Data: string;
+  verifyresult: bool;
+
+begin
+  Data := 'accessType=0&bizType=000201&currencyCode=156&encoding=UTF-8&merId=777290058143823&orderId=20160615092209323&queryId=201703241511197447698'
+    +
+    '&reqReserved=VXNlcklEPTI5MzAyJkl0ZW1JRD0xJkJpbGxJRD0yMDE2MDYxNTA5MjIwOTMyMCZTZXJ2ZXJJRD0x&respCode=00&respMsg=成功[0000000]&settleAmt=1&settleCurrencyCode=156&settleDate=0324&signMethod=01&signPubKeyCert=-----BEGIN CERTIFICATE-----' + #13#10
+    +
+    'MIIEOjCCAyKgAwIBAgIFEAJkAUkwDQYJKoZIhvcNAQEFBQAwWDELMAkGA1UEBhMC' + #13#10
+    +
+    'Q04xMDAuBgNVBAoTJ0NoaW5hIEZpbmFuY2lhbCBDZXJ0aWZpY2F0aW9uIEF1dGhv' + #13#10
+    +
+    'cml0eTEXMBUGA1UEAxMOQ0ZDQSBURVNUIE9DQTEwHhcNMTUxMjA0MDMyNTIxWhcN' + #13#10
+    +
+    'MTcxMjA0MDMyNTIxWjB5MQswCQYDVQQGEwJjbjEXMBUGA1UEChMOQ0ZDQSBURVNU' + #13#10
+    +
+    'IE9DQTExEjAQBgNVBAsTCUNGQ0EgVEVTVDEUMBIGA1UECxMLRW50ZXJwcmlzZXMx' + #13#10
+    +
+    'JzAlBgNVBAMUHjA0MUBaMTJAMDAwNDAwMDA6U0lHTkAwMDAwMDA2MjCCASIwDQYJ' + #13#10
+    +
+    'KoZIhvcNAQEBBQADggEPADCCAQoCggEBAMUDYYCLYvv3c911zhRDrSWCedAYDJQe' + #13#10
+    +
+    'fJUjZKI2avFtB2/bbSmKQd0NVvh+zXtehCYLxKOltO6DDTRHwH9xfhRY3CBMmcOv' + #13#10
+    +
+    'd2xQQvMJcV9XwoqtCKqhzguoDxJfYeGuit7DpuRsDGI0+yKgc1RY28v1VtuXG845' + #13#10
+    +
+    'fTP7PRtJrareQYlQXghMgHFAZ/vRdqlLpVoNma5C56cJk5bfr2ngDlXbUqPXLi1j' + #13#10
+    +
+    'iXAFb/y4b8eGEIl1LmKp3aPMDPK7eshc7fLONEp1oQ5Jd1nE/GZj+lC345aNWmLs' + #13#10
+    +
+    'l/09uAvo4Lu+pQsmGyfLbUGR51KbmHajF4Mrr6uSqiU21Ctr1uQGkccCAwEAAaOB' + #13#10
+    +
+    '6TCB5jAfBgNVHSMEGDAWgBTPcJ1h6518Lrj3ywJA9wmd/jN0gDBIBgNVHSAEQTA/' + #13#10
+    +
+    'MD0GCGCBHIbvKgEBMDEwLwYIKwYBBQUHAgEWI2h0dHA6Ly93d3cuY2ZjYS5jb20u' + #13#10
+    +
+    'Y24vdXMvdXMtMTQuaHRtMDgGA1UdHwQxMC8wLaAroCmGJ2h0dHA6Ly91Y3JsLmNm' + #13#10
+    +
+    'Y2EuY29tLmNuL1JTQS9jcmw0NDkxLmNybDALBgNVHQ8EBAMCA+gwHQYDVR0OBBYE' + #13#10
+    +
+    'FAFmIOdt15XLqqz13uPbGQwtj4PAMBMGA1UdJQQMMAoGCCsGAQUFBwMCMA0GCSqG' + #13#10
+    +
+    'SIb3DQEBBQUAA4IBAQB8YuMQWDH/Ze+e+2pr/914cBt94FQpYqZOmrBIQ8kq7vVm' + #13#10
+    +
+    'TTy94q9UL0pMMHDuFJV6Wxng4Me/cfVvWmjgLg/t7bdz0n6UNj4StJP17pkg68WG' + #13#10
+    +
+    'zMlcjuI7/baxtDrD+O8dKpHoHezqhx7dfh1QWq8jnqd3DFzfkhEpuIt6QEaUqoWn' + #13#10
+    +
+    't5FxSUiykTfjnaNEEGcn3/n2LpwrQ+upes12/B778MQETOsVv4WX8oE1Qsv1XLRW' + #13#10
+    +
+    'i0DQetTU2RXTrynv+l4kMy0h9b/Hdlbuh2s0QZqlUMXx2biy0GvpF2pR8f+OaLuT' + #13#10
+    +
+    'AtaKdU4T2+jO44+vWNNN2VoAaw0xY6IZ3/A1GL0x' + #13#10 +
+    '-----END CERTIFICATE-----&traceNo=744769&traceTime=0324151119&txnAmt=1&txnSubType=01&txnTime=20170324151119&txnType=01&version=5.1.0' +
+    '&signature=KHnZ5C3fytjSLAIVS9zkzc2SR5QDs9L00cvq1cGK8fYXopRAFbZID+eV9qjiDFhn5DUxsXFZUMBXoyzlZ5MOvTk143DMkrRyWOgFnT3+puxq9KC7IJunQFVWa6zTiSrkZP844' +
+    'azoypRbAPmP6NdIVkRq5PTO00cakDdsvuQYohq98LOTsxYuGKuKUWIUsQzQxjsroBWi6qh778r00ywWIQTqWpQgZDWPKBhN62Db84Cvw/q/5YGRKtzR6NiUwhdQqEkV00ud6SYVBe8lp0cFMilyuyiiLjJxSFoa5kwxemI3CiKtN/AhqQjfTDJpBD1QAjrITmjqjUoGfYNuc6xzhw==';
+
+  Data := 'accessType=0&bizType=000201&currencyCode=156&encoding=UTF-8&merId=777290058143823&orderId=20160615092209320&queryId=201703231509556241618'
+    +
+    '&reqReserved=VXNlcklEPTI5MzAyJkl0ZW1JRD0xJkJpbGxJRD0yMDE2MDYxNTA5MjIwOTMyMCZTZXJ2ZXJJRD0x&respCode=00&respMsg=成功[0000000]&settleAmt=1&settleCurrencyCode=156&settleDate=0323&signMethod=01&signPubKeyCert=-----BEGIN CERTIFICATE-----' + #13#10
+    +
+    'MIIEOjCCAyKgAwIBAgIFEAJkAUkwDQYJKoZIhvcNAQEFBQAwWDELMAkGA1UEBhMC' + #13#10
+    +
+    'Q04xMDAuBgNVBAoTJ0NoaW5hIEZpbmFuY2lhbCBDZXJ0aWZpY2F0aW9uIEF1dGhv' + #13#10
+    +
+    'cml0eTEXMBUGA1UEAxMOQ0ZDQSBURVNUIE9DQTEwHhcNMTUxMjA0MDMyNTIxWhcN' + #13#10
+    +
+    'MTcxMjA0MDMyNTIxWjB5MQswCQYDVQQGEwJjbjEXMBUGA1UEChMOQ0ZDQSBURVNU' + #13#10
+    +
+    'IE9DQTExEjAQBgNVBAsTCUNGQ0EgVEVTVDEUMBIGA1UECxMLRW50ZXJwcmlzZXMx' + #13#10
+    +
+    'JzAlBgNVBAMUHjA0MUBaMTJAMDAwNDAwMDA6U0lHTkAwMDAwMDA2MjCCASIwDQYJ' + #13#10
+    +
+    'KoZIhvcNAQEBBQADggEPADCCAQoCggEBAMUDYYCLYvv3c911zhRDrSWCedAYDJQe' + #13#10
+    +
+    'fJUjZKI2avFtB2/bbSmKQd0NVvh+zXtehCYLxKOltO6DDTRHwH9xfhRY3CBMmcOv' + #13#10
+    +
+    'd2xQQvMJcV9XwoqtCKqhzguoDxJfYeGuit7DpuRsDGI0+yKgc1RY28v1VtuXG845' + #13#10
+    +
+    'fTP7PRtJrareQYlQXghMgHFAZ/vRdqlLpVoNma5C56cJk5bfr2ngDlXbUqPXLi1j' + #13#10
+    +
+    'iXAFb/y4b8eGEIl1LmKp3aPMDPK7eshc7fLONEp1oQ5Jd1nE/GZj+lC345aNWmLs' + #13#10
+    +
+    'l/09uAvo4Lu+pQsmGyfLbUGR51KbmHajF4Mrr6uSqiU21Ctr1uQGkccCAwEAAaOB' + #13#10
+    +
+    '6TCB5jAfBgNVHSMEGDAWgBTPcJ1h6518Lrj3ywJA9wmd/jN0gDBIBgNVHSAEQTA/' + #13#10
+    +
+    'MD0GCGCBHIbvKgEBMDEwLwYIKwYBBQUHAgEWI2h0dHA6Ly93d3cuY2ZjYS5jb20u' + #13#10
+    +
+    'Y24vdXMvdXMtMTQuaHRtMDgGA1UdHwQxMC8wLaAroCmGJ2h0dHA6Ly91Y3JsLmNm' + #13#10
+    +
+    'Y2EuY29tLmNuL1JTQS9jcmw0NDkxLmNybDALBgNVHQ8EBAMCA+gwHQYDVR0OBBYE' + #13#10
+    +
+    'FAFmIOdt15XLqqz13uPbGQwtj4PAMBMGA1UdJQQMMAoGCCsGAQUFBwMCMA0GCSqG' + #13#10
+    +
+    'SIb3DQEBBQUAA4IBAQB8YuMQWDH/Ze+e+2pr/914cBt94FQpYqZOmrBIQ8kq7vVm' + #13#10
+    +
+    'TTy94q9UL0pMMHDuFJV6Wxng4Me/cfVvWmjgLg/t7bdz0n6UNj4StJP17pkg68WG' + #13#10
+    +
+    'zMlcjuI7/baxtDrD+O8dKpHoHezqhx7dfh1QWq8jnqd3DFzfkhEpuIt6QEaUqoWn' + #13#10
+    +
+    't5FxSUiykTfjnaNEEGcn3/n2LpwrQ+upes12/B778MQETOsVv4WX8oE1Qsv1XLRW' + #13#10
+    +
+    'i0DQetTU2RXTrynv+l4kMy0h9b/Hdlbuh2s0QZqlUMXx2biy0GvpF2pR8f+OaLuT' + #13#10
+    +
+    'AtaKdU4T2+jO44+vWNNN2VoAaw0xY6IZ3/A1GL0x' + #13#10 +
+    '-----END CERTIFICATE-----&traceNo=624161&traceTime=0323150955&txnAmt=1&txnSubType=01&txnTime=20170323150955&txnType=01&version=5.1.0' +
+    '&signature=vvZVjyn8MLKgCroYOE8dwBBCkT5fyfbRKQJkl1Lk9SmLspGW0N8SI95GZCNleN3pyTMDY5CjrmVDQsnHhPS8Iur3JiFbIUp64ssPSGkKw3q7RyJbvLjp8527pv' +
+    '95PlRLq47adphFTzctBi0pDzV7IdycjafI9if7vjRSTLYWY1Pelo7/SNsHAUl2jjBC7c6E/6od51Uf4LK8U7k00fmfoDGI+xpReGotGptIS9gajh/KFaE62C88TqcTcObDifbQiY7P7sv+Ysoc7iPMa/Tw3iDUwYVGQexl2pkOtdV4sDbuWpR7AgUqtl2kPsYyqzLKFmeNIJzxCtULMnvBaY6QJg==';
+
+  Memo1.Lines.Add('支付回调1：' + Data);
+  Memo1.Lines.Add('支付回调2：' + HttpDecode(Data));
+
+  verifyresult := UnionAppPayUnit.UnionAppPayVerify(Data);
+
+  if verifyresult then
+    Memo1.Lines.Add('支付验证成功! ' + BoolToStr(verifyresult))
+  else
+    Memo1.Lines.Add('支付验证失败! ' + BoolToStr(verifyresult));
 end;
 
 end.

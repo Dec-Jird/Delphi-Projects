@@ -57,18 +57,12 @@ type
     function GetVerifyJson(package_name, product_id, purchase_token, access_token: string): string;
   end;
 
-{从google后台获取的参数client_id，client_secret；refresh_token（通过请求得到）}
-const
-  OAUTH2_REFRESH_TOKEN = '1/qnU8Dk6JDvrGewjdXtdUdvspeR1GdLSwjkiMComJ6QfJVHrhjV_4k1wh2GuxheOO';
-  OAUTH2_CLIENT_ID = '747314688519-ee34q2qdgomlh35knesaue51trrn0d1u.apps.googleusercontent.com';
-  OAUTH2_CLIENT_SECRET = '8K2eNCH08ov95QsrkOiibRyl';
-
 var
   mHttpHelper: THttpHelper;
   //accessTokenJs: TlkJSONobject;
 
 implementation
-uses Unit1, TUTools; //, AsphyreMD5, IniFiles;
+uses Unit1, TUTools, SDKConst; //, AsphyreMD5, IniFiles;
 
 { TGoogleOAuth2 }
 
