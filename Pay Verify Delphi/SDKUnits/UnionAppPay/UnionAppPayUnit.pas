@@ -24,7 +24,7 @@ var
 
 begin
   Result := '';
-  //to all those who said that i can't, i have provied once more, yes i can.
+  
   try
     CoInitialize(nil);
 
@@ -40,7 +40,7 @@ begin
       Form1.MainOutMessage('[Error] UnionAppPayGetOrder. 请求订单号出错，请确认DLL是否注册。merc_id='
         +
         UNION_MERCHANT_ID + ', order_id=' + order_id + ', order_time=' +
-        order_time + ', order_amount=' + order_amount + ', callbackInfo=' +
+        order_time + ', orde    r_amount=' + order_amount + ', callbackInfo=' +
         callbackInfo + ', order_url=' + UNION_ORDER_URL +
         ', notify_url=' + UNION_NOTIFY_URL + ' Error: ' + E.Message);
       Exit;
