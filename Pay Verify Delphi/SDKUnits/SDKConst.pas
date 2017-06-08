@@ -33,7 +33,7 @@ const
   //支付宝商户支付所需参数：阿里商户应用id，商户私钥，阿里公钥
   ALI_APP_ID = '2016080400162673';
 
-  //微信商户支付
+  //微信商户支付      
   WX_APPPAY_ORDER_URL = 'https://api.mch.weixin.qq.com/pay/unifiedorder';
   WX_APPPAY_APP_ID = 'wx8b163c8fb479c29e'; //应用Id
   WX_APPPAY_MCH_ID = '1444147502'; //商户号

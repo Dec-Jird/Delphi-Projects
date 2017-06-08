@@ -5833,7 +5833,7 @@ begin
   key := 'LGRnbEHmskcsvRXkZDRfBj3WKuLma6iF'; //32Œªhexº”√‹√‹‘ø
 
   s :=
-    'VXNlcklEPTE1XzEyOEA0MCZJdGVtSUQ9NjBfTWVkYWxzX1BhY2smQmlsbElEPTE0OTA5ODExNjUwMDAwJlNlcnZlcklEPTE=';
+    'VXNlcklEPTEzXzE2OTkxQDQwJkl0ZW1JRD12aXBfbV8xODBkYXlzJkJpbGxJRD0xNDk2NTEzOTEwMDAwMCZTZXJ2ZXJJRD0x';
   MainOutMessage('callbackInfo 0: ' + DecodeString(s));
 
   //UserID=0_101@40&ItemID=vip_m_30days&BillID=14914723470000&ServerID=1
